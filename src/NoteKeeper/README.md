@@ -11,11 +11,12 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - rich text blocks with bold, italic, underline, strikethrough, inline code, quotes, expandable containers, dividers, text sizing, numbered lists, bullet lists, dash lists, and a quick symbol palette;
 - rich-text keyboard shortcuts for `Ctrl+B`, `Ctrl+I`, and `Ctrl+U`;
 - link blocks with a title, URL, and optional comment;
-- image blocks with captions;
+- image blocks with captions, compact thumbnails, and click-to-open full-size previews;
 - automatically convert opaque uploaded images to JPEG while preserving transparency and animated images;
 - paste images from the clipboard with `Ctrl+V`;
 - upload PNG, JPEG, WEBP, and GIF images up to 12 MB;
 - reorder blocks with drag and drop or the ↑ / ↓ buttons;
+- new text, link, and image blocks are always appended to the end of the note before any manual reordering;
 - save notes with `Ctrl+S`;
 - return to the note list with `Esc`;
 - styled in-app confirmation dialogs for destructive actions and unsaved internal navigation;

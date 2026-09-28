@@ -25,6 +25,8 @@
         ["linkTitlePlaceholder"] = Localizer["Editor_LinkTitlePlaceholder"].Value,
         ["linkCommentPlaceholder"] = Localizer["Editor_LinkCommentPlaceholder"].Value,
         ["imageAlt"] = Localizer["Editor_ImageAlt"].Value,
+        ["openImagePreview"] = Localizer["Editor_OpenImagePreview"].Value,
+        ["closeImagePreview"] = Localizer["Editor_CloseImagePreview"].Value,
         ["imageCaptionPlaceholder"] = Localizer["Editor_ImageCaptionPlaceholder"].Value,
         ["replaceImage"] = Localizer["Editor_ReplaceImage"].Value,
         ["uploadFailed"] = Localizer["Editor_UploadFailed"].Value,
@@ -130,7 +132,7 @@
         <div class="add-actions">
             <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddText"]</button>
             <button class="button button-secondary" type="button" data-add-block="link">@Localizer["Edit_AddLink"]</button>
-            <button class="button button-secondary" type="button" id="addImageButton">@Localizer["Edit_AddImage"]</button>
+            <button class="button button-secondary" type="button" id="addImageButton" data-add-image-button>@Localizer["Edit_AddImage"]</button>
             <input id="imageFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
         </div>
         <div class="paste-hint"><kbd>Ctrl+V</kbd> @Localizer["Edit_PasteHint"]</div>
@@ -139,7 +141,11 @@
     <div id="blocksContainer" class="blocks-list" aria-live="polite"></div>
 
     <div class="editor-footer-actions">
-        <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddTextBlock"]</button>
+        <div class="footer-add-actions">
+            <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddText"]</button>
+            <button class="button button-secondary" type="button" data-add-block="link">@Localizer["Edit_AddLink"]</button>
+            <button class="button button-secondary" type="button" data-add-image-button>@Localizer["Edit_AddImage"]</button>
+        </div>
         <button id="saveButtonBottom" class="button button-primary" type="button">@Localizer["Edit_SaveChanges"]</button>
     </div>
 </section>

@@ -63,6 +63,8 @@
   <data name="Editor_LinkTitlePlaceholder" xml:space="preserve"><value>Link title</value></data>
   <data name="Editor_LinkCommentPlaceholder" xml:space="preserve"><value>Link comment (optional)</value></data>
   <data name="Editor_ImageAlt" xml:space="preserve"><value>Image in note</value></data>
+  <data name="Editor_OpenImagePreview" xml:space="preserve"><value>Open image preview</value></data>
+  <data name="Editor_CloseImagePreview" xml:space="preserve"><value>Close image preview</value></data>
   <data name="Editor_ImageCaptionPlaceholder" xml:space="preserve"><value>Image caption (optional)</value></data>
   <data name="Editor_ReplaceImage" xml:space="preserve"><value>Replace</value></data>
   <data name="Editor_UploadFailed" xml:space="preserve"><value>Could not upload the image.</value></data>

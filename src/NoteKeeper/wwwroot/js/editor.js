@@ -7,7 +7,7 @@
     const saveButton = document.getElementById('saveButton');
     const saveButtonBottom = document.getElementById('saveButtonBottom');
     const saveStatus = document.getElementById('saveStatus');
-    const addImageButton = document.getElementById('addImageButton');
+    const addImageButtons = Array.from(document.querySelectorAll('[data-add-image-button]'));
     const imageFileInput = document.getElementById('imageFileInput');
     const deleteNoteForm = document.getElementById('deleteNoteForm');
     const exportNoteLink = document.getElementById('exportNoteLink');
@@ -930,8 +930,12 @@
         const body = document.createElement('div');
         body.className = 'block-body image-wrap';
 
-        const frame = document.createElement('div');
-        frame.className = 'image-preview-frame';
+        const frame = document.createElement('button');
+        frame.type = 'button';
+        frame.className = 'image-preview-frame image-preview-button';
+        frame.title = strings.openImagePreview;
+        frame.setAttribute('aria-label', strings.openImagePreview);
+
         const img = document.createElement('img');
         img.alt = data.caption || strings.imageAlt;
         img.loading = 'lazy';
@@ -957,7 +961,7 @@
         return body;
     }
 
-    function createBlock(type, data = {}, insertAfter = null, markDirty = true) {
+    function createBlock(type, data = {}, markDirty = true) {
         const block = document.createElement('article');
         block.className = 'note-block';
         block.dataset.type = type;
@@ -972,15 +976,48 @@
         if (type === 'link') block.appendChild(createLinkBlock(data));
         if (type === 'image') block.appendChild(createImageBlock(data));
 
-        if (insertAfter?.parentElement === blocksContainer) {
-            blocksContainer.insertBefore(block, insertAfter.nextSibling);
-        } else {
-            blocksContainer.appendChild(block);
-        }
+        blocksContainer.appendChild(block);
 
         setActiveBlock(block);
         if (markDirty) setDirty(true);
         return block;
+    }
+
+    function openImagePreview(block) {
+        const source = block.querySelector('.image-preview-frame img');
+        if (!source?.src) return;
+
+        let dialog = document.getElementById('imageViewerDialog');
+        if (!dialog) {
+            dialog = document.createElement('dialog');
+            dialog.id = 'imageViewerDialog';
+            dialog.className = 'image-viewer-dialog';
+            dialog.innerHTML = `
+                <div class="image-viewer-card">
+                    <button type="button" class="image-viewer-close" aria-label="${escapeHtml(strings.closeImagePreview)}" title="${escapeHtml(strings.closeImagePreview)}">×</button>
+                    <img class="image-viewer-image" alt="">
+                    <div class="image-viewer-caption"></div>
+                </div>`;
+
+            dialog.querySelector('.image-viewer-close').addEventListener('click', () => dialog.close());
+            dialog.addEventListener('click', (event) => {
+                if (event.target === dialog) dialog.close();
+            });
+            document.body.appendChild(dialog);
+        }
+
+        const image = dialog.querySelector('.image-viewer-image');
+        const caption = dialog.querySelector('.image-viewer-caption');
+        const captionText = block.querySelector('.image-caption')?.value?.trim() || '';
+
+        image.src = source.src;
+        image.alt = captionText || strings.imageAlt;
+        caption.textContent = captionText;
+        caption.hidden = !captionText;
+
+        if (!dialog.open) {
+            dialog.showModal();
+        }
     }
 
     function setActiveBlock(block) {
@@ -1026,15 +1063,15 @@
         return await response.json();
     }
 
-    async function addImageFiles(files, insertAfter = activeBlock, replaceTarget = null) {
+    async function addImageFiles(files, replaceTarget = null) {
         const images = Array.from(files).filter(file => file.type.startsWith('image/'));
         if (images.length === 0) return;
 
-        addImageButton.disabled = true;
+        addImageButtons.forEach(button => { button.disabled = true; });
         setStatus(strings.uploading, 'is-saving');
 
         try {
-            let anchor = insertAfter;
+            let lastAddedBlock = null;
             for (let index = 0; index < images.length; index++) {
                 const result = await uploadImage(images[index]);
 
@@ -1044,17 +1081,18 @@
                     image.src = result.path;
                     setActiveBlock(replaceTarget);
                     setDirty(true);
-                    anchor = replaceTarget;
                 } else {
-                    anchor = createBlock('image', { imagePath: result.path, caption: '' }, anchor, true);
+                    lastAddedBlock = createBlock('image', { imagePath: result.path, caption: '' }, true);
                 }
             }
+
+            lastAddedBlock?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             showToast(images.length === 1 ? strings.imageAdded : format(strings.imagesAdded, images.length));
         } catch (error) {
             showToast(error.message || strings.uploadError, true);
             setStatus(strings.uploadErrorStatus, 'is-error');
         } finally {
-            addImageButton.disabled = false;
+            addImageButtons.forEach(button => { button.disabled = false; });
             if (dirty) setDirty(true);
         }
     }
@@ -1184,7 +1222,7 @@
 
     initialBlocks.forEach((block) => {
         const type = block.type === 1 ? 'text' : block.type === 2 ? 'link' : 'image';
-        createBlock(type, block, null, false);
+        createBlock(type, block, false);
     });
     dirty = false;
 
@@ -1228,6 +1266,11 @@
             } catch {
                 showToast(strings.openLinkInvalid, true);
             }
+            return;
+        }
+
+        if (event.target.closest('.image-preview-button')) {
+            openImagePreview(block);
             return;
         }
 
@@ -1284,22 +1327,24 @@
     document.querySelectorAll('[data-add-block]').forEach((button) => {
         button.addEventListener('click', () => {
             const type = button.dataset.addBlock;
-            const block = createBlock(type, {}, activeBlock, true);
+            const block = createBlock(type, {}, true);
             const focusTarget = block.querySelector('[contenteditable="true"], textarea, input');
             focusTarget?.focus();
         });
     });
 
-    addImageButton.addEventListener('click', () => {
-        imageReplaceTarget = null;
-        imageFileInput.multiple = true;
-        imageFileInput.click();
+    addImageButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            imageReplaceTarget = null;
+            imageFileInput.multiple = true;
+            imageFileInput.click();
+        });
     });
 
     imageFileInput.addEventListener('change', async () => {
         const files = imageFileInput.files;
         if (files?.length) {
-            await addImageFiles(files, activeBlock, imageReplaceTarget);
+            await addImageFiles(files, imageReplaceTarget);
         }
         imageReplaceTarget = null;
         imageFileInput.value = '';
@@ -1315,7 +1360,7 @@
             if (files.length === 0) return;
 
             event.preventDefault();
-            await addImageFiles(files, activeBlock, null);
+            await addImageFiles(files, null);
             return;
         }
 
