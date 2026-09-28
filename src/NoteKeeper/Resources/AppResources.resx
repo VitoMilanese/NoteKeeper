@@ -100,6 +100,14 @@
   <data name="Editor_FormatUnderline" xml:space="preserve"><value>Underline</value></data>
   <data name="Editor_FormatStrike" xml:space="preserve"><value>Strikethrough</value></data>
   <data name="Editor_FormatCode" xml:space="preserve"><value>Inline code</value></data>
+  <data name="Editor_FormatHyperlink" xml:space="preserve"><value>Hyperlink</value></data>
+  <data name="Editor_HyperlinkDialogTitle" xml:space="preserve"><value>Hyperlink</value></data>
+  <data name="Editor_HyperlinkUrlLabel" xml:space="preserve"><value>URL</value></data>
+  <data name="Editor_HyperlinkApply" xml:space="preserve"><value>Apply link</value></data>
+  <data name="Editor_HyperlinkRemove" xml:space="preserve"><value>Remove link</value></data>
+  <data name="Editor_HyperlinkCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Editor_HyperlinkSelectText" xml:space="preserve"><value>Select some text first.</value></data>
+  <data name="Editor_HyperlinkInvalidUrl" xml:space="preserve"><value>Enter a valid HTTP or HTTPS URL.</value></data>
   <data name="Editor_FormatQuote" xml:space="preserve"><value>Quote</value></data>
   <data name="Editor_FormatExpander" xml:space="preserve"><value>Expandable container</value></data>
   <data name="Editor_FormatDivider" xml:space="preserve"><value>Divider</value></data>

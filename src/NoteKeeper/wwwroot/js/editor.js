@@ -18,7 +18,7 @@
     const format = (template, value) => String(template || '').replace('{0}', value);
     const richTextPrefix = '<!--NKHTML1-->';
     const allowedRichTags = new Set([
-        'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE',
+        'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE', 'A',
         'BLOCKQUOTE', 'DETAILS', 'SUMMARY', 'HR', 'OL', 'UL', 'LI',
         'DIV', 'P', 'BR', 'SPAN'
     ]);
@@ -98,6 +98,23 @@
         return button;
     }
 
+    function normalizeHyperlinkUrl(value) {
+        let url = String(value || '').trim();
+        if (!url) return null;
+
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) {
+            url = `https://${url}`;
+        }
+
+        try {
+            const parsed = new URL(url);
+            if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+            return parsed.toString();
+        } catch {
+            return null;
+        }
+    }
+
     function sanitizeRichHtml(html) {
         const template = document.createElement('template');
         template.innerHTML = html || '';
@@ -113,6 +130,25 @@
 
                 if (!allowedRichTags.has(child.tagName)) {
                     child.replaceWith(...Array.from(child.childNodes));
+                    continue;
+                }
+
+                if (child.tagName === 'A') {
+                    const href = normalizeHyperlinkUrl(child.getAttribute('href'));
+                    sanitizeNode(child);
+
+                    if (!href) {
+                        child.replaceWith(...Array.from(child.childNodes));
+                        continue;
+                    }
+
+                    for (const attribute of Array.from(child.attributes)) {
+                        child.removeAttribute(attribute.name);
+                    }
+
+                    child.setAttribute('href', href);
+                    child.setAttribute('target', '_blank');
+                    child.setAttribute('rel', 'noopener noreferrer');
                     continue;
                 }
 
@@ -706,6 +742,177 @@
         notifyRichInput(richEditor);
     }
 
+    function closestHyperlink(node, richEditor) {
+        const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+        const link = element?.closest?.('a[href]');
+        return link && richEditor.contains(link) ? link : null;
+    }
+
+    function hyperlinkForSelection(richEditor, range) {
+        const startLink = closestHyperlink(range.startContainer, richEditor);
+        const endLink = closestHyperlink(range.endContainer, richEditor);
+        return startLink && startLink === endLink ? startLink : null;
+    }
+
+    function restoreHyperlinkRange(context) {
+        const range = context.range.cloneRange();
+        context.richEditor.focus({ preventScroll: true });
+
+        const selection = window.getSelection();
+        if (!selection) return null;
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+        context.richEditor._savedRange = range.cloneRange();
+        return selection;
+    }
+
+    function ensureHyperlinkDialog() {
+        let dialog = document.getElementById('hyperlinkDialog');
+        if (dialog) return dialog;
+
+        dialog = document.createElement('dialog');
+        dialog.id = 'hyperlinkDialog';
+        dialog.className = 'app-dialog hyperlink-dialog';
+        dialog.innerHTML = `
+            <form class="app-dialog-card hyperlink-dialog-card">
+                <div class="app-dialog-icon">🔗</div>
+                <div class="app-dialog-copy">
+                    <h2>${escapeHtml(strings.hyperlinkDialogTitle)}</h2>
+                    <label class="hyperlink-dialog-field">
+                        <span>${escapeHtml(strings.hyperlinkUrlLabel)}</span>
+                        <input class="hyperlink-url-input" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com">
+                    </label>
+                    <p class="hyperlink-dialog-error" hidden></p>
+                </div>
+                <div class="app-dialog-actions hyperlink-dialog-actions">
+                    <button type="button" class="button button-ghost hyperlink-remove">${escapeHtml(strings.hyperlinkRemove)}</button>
+                    <button type="button" class="button button-secondary hyperlink-cancel">${escapeHtml(strings.hyperlinkCancel)}</button>
+                    <button type="submit" class="button button-primary hyperlink-apply">${escapeHtml(strings.hyperlinkApply)}</button>
+                </div>
+            </form>`;
+
+        const form = dialog.querySelector('form');
+        const input = dialog.querySelector('.hyperlink-url-input');
+        const error = dialog.querySelector('.hyperlink-dialog-error');
+        const removeButton = dialog.querySelector('.hyperlink-remove');
+
+        const closeAndRestore = () => {
+            const context = dialog._hyperlinkContext;
+            dialog.close();
+            if (context) restoreHyperlinkRange(context);
+        };
+
+        dialog.querySelector('.hyperlink-cancel').addEventListener('click', closeAndRestore);
+        dialog.addEventListener('cancel', (event) => {
+            event.preventDefault();
+            closeAndRestore();
+        });
+
+        removeButton.addEventListener('click', () => {
+            const context = dialog._hyperlinkContext;
+            if (!context?.existingLink) return;
+
+            const range = document.createRange();
+            range.selectNodeContents(context.existingLink);
+            context.range = range;
+            restoreHyperlinkRange(context);
+            document.execCommand('unlink', false, null);
+            notifyRichInput(context.richEditor);
+            dialog.close();
+        });
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const context = dialog._hyperlinkContext;
+            if (!context) return;
+
+            const href = normalizeHyperlinkUrl(input.value);
+            if (!href) {
+                error.textContent = strings.hyperlinkInvalidUrl;
+                error.hidden = false;
+                input.focus();
+                return;
+            }
+
+            error.hidden = true;
+            const selection = restoreHyperlinkRange(context);
+            if (!selection) return;
+
+            document.execCommand('createLink', false, href);
+
+            if (selection.rangeCount > 0) {
+                const linkedRange = selection.getRangeAt(0);
+                context.richEditor.querySelectorAll('a[href]').forEach((link) => {
+                    try {
+                        if (!linkedRange.intersectsNode(link)) return;
+                    } catch {
+                        return;
+                    }
+
+                    link.setAttribute('href', href);
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                });
+            }
+
+            notifyRichInput(context.richEditor);
+            dialog.close();
+        });
+
+        document.body.appendChild(dialog);
+        return dialog;
+    }
+
+    function openHyperlinkDialog(richEditor) {
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        let range = selection.getRangeAt(0);
+        if (!richEditor.contains(range.commonAncestorContainer) && range.commonAncestorContainer !== richEditor) {
+            return;
+        }
+
+        const existingLink = hyperlinkForSelection(richEditor, range);
+        if (range.collapsed && !existingLink) {
+            showToast(strings.hyperlinkSelectText, true);
+            return;
+        }
+
+        if (existingLink) {
+            const linkRange = document.createRange();
+            linkRange.selectNodeContents(existingLink);
+            range = linkRange;
+        } else {
+            range = range.cloneRange();
+        }
+
+        const dialog = ensureHyperlinkDialog();
+        const input = dialog.querySelector('.hyperlink-url-input');
+        const error = dialog.querySelector('.hyperlink-dialog-error');
+        const removeButton = dialog.querySelector('.hyperlink-remove');
+
+        dialog._hyperlinkContext = {
+            richEditor,
+            range,
+            existingLink
+        };
+
+        input.value = existingLink?.getAttribute('href') || '';
+        error.hidden = true;
+        error.textContent = '';
+        removeButton.hidden = !existingLink;
+
+        dialog.showModal();
+        window.setTimeout(() => {
+            input.focus();
+            input.select();
+        }, 0);
+    }
+
     function makeFormatButton(label, title, onClick, className = '') {
         const button = document.createElement('button');
         button.type = 'button';
@@ -733,6 +940,7 @@
                 const selected = selectedRichText(richEditor);
                 insertRichHtml(richEditor, `<code>${escapeHtml(selected || 'code')}</code><span>&nbsp;</span>`);
             }),
+            makeFormatButton('🔗', strings.formatHyperlink, () => openHyperlinkDialog(richEditor), 'is-hyperlink'),
             makeFormatButton('❝', strings.formatQuote, () => toggleQuote(richEditor)),
             makeFormatButton('▸', strings.formatExpander, () => {
                 const selected = selectedRichText(richEditor);

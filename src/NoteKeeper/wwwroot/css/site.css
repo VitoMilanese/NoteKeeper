@@ -445,20 +445,20 @@ html[data-theme="light"] .image-caption {
 
 html[data-theme="light"] .tag-chip,
 html[data-theme="light"] .note-tags span {
-    border-color: rgba(70, 86, 210, 0.28);
-    background: rgba(86, 102, 225, 0.11);
-    color: #4352bd;
+    border-color: rgba(76, 89, 177, 0.22);
+    background: rgba(96, 108, 192, 0.075);
+    color: #56639f;
 }
 
 html[data-theme="light"] .tag-chip span {
-    color: #5d6785;
+    color: #69728d;
 }
 
 html[data-theme="light"] .tag-chip:hover,
 html[data-theme="light"] .tag-chip.is-active {
-    border-color: rgba(63, 77, 194, 0.48);
-    background: rgba(86, 102, 225, 0.19);
-    color: #3342aa;
+    border-color: rgba(69, 82, 169, 0.36);
+    background: rgba(96, 108, 192, 0.13);
+    color: #485797;
 }
 
 .list-heading {
@@ -1269,6 +1269,17 @@ html[data-theme="light"] .emoji-item:hover {
     font-size: 0.9em;
 }
 
+.rich-text-editor a {
+    color: var(--accent-strong);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.rich-text-editor a:hover {
+    color: var(--accent);
+}
+
 .rich-text-editor details {
     margin: 8px 0;
     padding: 9px 11px;
@@ -1407,6 +1418,52 @@ html[data-theme="light"] .rich-text-editor code {
     justify-content: flex-end;
     gap: 9px;
     margin-top: 5px;
+}
+
+.hyperlink-dialog-card {
+    width: min(520px, calc(100vw - 28px));
+}
+
+.hyperlink-dialog-field {
+    display: grid;
+    gap: 7px;
+    margin-top: 14px;
+}
+
+.hyperlink-dialog-field > span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.hyperlink-url-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    background: #0d1527;
+    color: var(--text);
+}
+
+.hyperlink-url-input:focus {
+    border-color: rgba(124, 140, 255, 0.62);
+    box-shadow: 0 0 0 4px rgba(124, 140, 255, 0.09);
+}
+
+.hyperlink-dialog-error {
+    margin: 7px 0 0 !important;
+    color: var(--danger) !important;
+    font-size: 0.8rem;
+}
+
+html[data-theme="light"] .hyperlink-url-input {
+    background: #ffffff;
+}
+
+.hyperlink-dialog-actions .hyperlink-remove {
+    margin-right: auto;
 }
 
 html[data-theme="light"] .app-dialog-card {
