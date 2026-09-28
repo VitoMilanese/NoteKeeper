@@ -25,6 +25,13 @@ public sealed class WindowsTrayIconService(
             return Task.CompletedTask;
         }
 
+        if (Debugger.IsAttached)
+        {
+            logger.LogInformation(
+                "Skipping the NoteKeeper tray helper while a debugger is attached. Run NoteKeeper.exe directly to test tray integration.");
+            return Task.CompletedTask;
+        }
+
         _startedRegistration = applicationLifetime.ApplicationStarted.Register(TryStartTrayProcess);
         return Task.CompletedTask;
     }

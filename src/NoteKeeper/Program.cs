@@ -6,6 +6,11 @@ using NoteKeeper.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Build output can be launched directly outside the Development environment.
+// Explicitly enable the static web assets manifest so CSS, JavaScript, icons,
+// and other wwwroot assets are still served without requiring dotnet run.
+builder.WebHost.UseStaticWebAssets();
+
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services
     .AddControllersWithViews()
