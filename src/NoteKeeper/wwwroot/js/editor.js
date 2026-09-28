@@ -775,7 +775,7 @@
         dialog.id = 'hyperlinkDialog';
         dialog.className = 'app-dialog hyperlink-dialog';
         dialog.innerHTML = `
-            <form class="app-dialog-card hyperlink-dialog-card">
+            <div class="app-dialog-card hyperlink-dialog-card">
                 <div class="app-dialog-icon">🔗</div>
                 <div class="app-dialog-copy">
                     <h2>${escapeHtml(strings.hyperlinkDialogTitle)}</h2>
@@ -790,9 +790,8 @@
                     <button type="button" class="button button-secondary hyperlink-cancel">${escapeHtml(strings.hyperlinkCancel)}</button>
                     <button type="button" class="button button-primary hyperlink-apply">${escapeHtml(strings.hyperlinkApply)}</button>
                 </div>
-            </form>`;
+            </div>`;
 
-        const form = dialog.querySelector('form');
         const input = dialog.querySelector('.hyperlink-url-input');
         const error = dialog.querySelector('.hyperlink-dialog-error');
         const removeButton = dialog.querySelector('.hyperlink-remove');
@@ -804,7 +803,6 @@
             if (context) restoreHyperlinkRange(context);
         };
 
-        form.addEventListener('submit', (event) => event.preventDefault());
         dialog.querySelector('.hyperlink-cancel').addEventListener('click', closeAndRestore);
         dialog.addEventListener('cancel', (event) => {
             event.preventDefault();
@@ -813,15 +811,29 @@
 
         removeButton.addEventListener('click', () => {
             const context = dialog._hyperlinkContext;
-            if (!context?.existingLink) return;
+            const link = context?.existingLink;
+            if (!context || !link?.isConnected) return;
 
-            const range = document.createRange();
-            range.selectNodeContents(context.existingLink);
-            context.range = range;
-            restoreHyperlinkRange(context);
-            document.execCommand('unlink', false, null);
+            const parent = link.parentNode;
+            const firstChild = link.firstChild;
+            const lastChild = link.lastChild;
+
+            while (link.firstChild) {
+                parent.insertBefore(link.firstChild, link);
+            }
+            link.remove();
+
+            if (firstChild && lastChild) {
+                const range = document.createRange();
+                range.setStartBefore(firstChild);
+                range.setEndAfter(lastChild);
+                context.range = range;
+                context.richEditor._savedRange = range.cloneRange();
+            }
+
             notifyRichInput(context.richEditor);
             dialog.close();
+            restoreHyperlinkRange(context);
         });
 
         const applyHyperlink = () => {
@@ -837,38 +849,47 @@
             }
 
             error.hidden = true;
-            const selection = restoreHyperlinkRange(context);
-            if (!selection) return;
 
-            document.execCommand('createLink', false, href);
+            let link = context.existingLink;
+            if (link?.isConnected) {
+                link.setAttribute('href', href);
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+            } else {
+                const range = context.range.cloneRange();
+                if (range.collapsed || !context.richEditor.contains(range.commonAncestorContainer)) {
+                    return;
+                }
 
-            if (selection.rangeCount > 0) {
-                const linkedRange = selection.getRangeAt(0);
-                context.richEditor.querySelectorAll('a[href]').forEach((link) => {
-                    try {
-                        if (!linkedRange.intersectsNode(link)) return;
-                    } catch {
-                        return;
-                    }
-
-                    link.setAttribute('href', href);
-                    link.setAttribute('target', '_blank');
-                    link.setAttribute('rel', 'noopener noreferrer');
-                });
+                const fragment = range.extractContents();
+                link = document.createElement('a');
+                link.setAttribute('href', href);
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+                link.appendChild(fragment);
+                range.insertNode(link);
             }
+
+            const linkedRange = document.createRange();
+            linkedRange.selectNodeContents(link);
+            context.range = linkedRange;
+            context.existingLink = link;
+            context.richEditor._savedRange = linkedRange.cloneRange();
 
             notifyRichInput(context.richEditor);
             dialog.close();
+            restoreHyperlinkRange(context);
         };
 
         applyButton.addEventListener('click', applyHyperlink);
-        input.addEventListener('keydown', (event) => {
-            if (event.key !== 'Enter' || event.isComposing) return;
+
+        dialog.addEventListener('keydown', (event) => {
+            if (event.target !== input || event.key !== 'Enter' || event.isComposing) return;
 
             event.preventDefault();
-            event.stopPropagation();
+            event.stopImmediatePropagation();
             applyHyperlink();
-        });
+        }, true);
 
         document.body.appendChild(dialog);
         return dialog;
