@@ -1073,6 +1073,18 @@
             }
         });
         richEditor.addEventListener('click', (event) => {
+            const hyperlink = event.target.closest?.('a[href]');
+            if (hyperlink && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const href = normalizeHyperlinkUrl(hyperlink.getAttribute('href'));
+                if (href) {
+                    window.open(href, '_blank', 'noopener,noreferrer');
+                }
+                return;
+            }
+
             const divider = event.target.closest?.('hr');
             richEditor.querySelectorAll('hr.is-selected-divider').forEach((item) => {
                 if (item !== divider) item.classList.remove('is-selected-divider');
