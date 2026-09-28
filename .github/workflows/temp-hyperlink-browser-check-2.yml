@@ -1,0 +1,124 @@
+name: Temporary hyperlink browser verification 2
+on:
+  push:
+    branches:
+      - ci/pr2-hyperlink-browser-check-2
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53117 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53117/notes/new >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Verify create link, Enter, and Ctrl Z
+        shell: bash
+        run: |
+          cat > hyperlink-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage();
+
+          try {
+            await page.goto('http://127.0.0.1:53117/notes/new');
+
+            const editor = page.locator('.rich-text-editor').first();
+            await editor.fill('hello world');
+
+            await page.evaluate(() => {
+              const editor = document.querySelector('.rich-text-editor');
+              const textNode = editor.firstChild;
+              const range = document.createRange();
+              range.setStart(textNode, 0);
+              range.setEnd(textNode, 5);
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
+              editor._savedRange = range.cloneRange();
+              editor.focus();
+            });
+
+            await page.keyboard.press('Control+K');
+            await page.locator('#hyperlinkDialog[open]').waitFor();
+
+            const input = page.locator('.hyperlink-url-input');
+            await input.fill('https://example.com/path');
+            await input.press('Enter');
+
+            await page.locator('#hyperlinkDialog').waitFor({ state: 'hidden' });
+            await page.waitForTimeout(100);
+
+            const link = page.locator('.rich-text-editor a[href]').first();
+            if (await link.count() !== 1) {
+              throw new Error('Hyperlink was not attached to the selected text.');
+            }
+
+            const text = await link.textContent();
+            const href = await link.getAttribute('href');
+            if (text !== 'hello') {
+              throw new Error(`Unexpected linked text: ${text}`);
+            }
+            if (!href?.startsWith('https://example.com/path')) {
+              throw new Error(`Unexpected hyperlink href: ${href}`);
+            }
+
+            await editor.focus();
+            await page.keyboard.press('Control+Z');
+            await page.waitForTimeout(100);
+
+            if (await page.locator('.rich-text-editor a[href]').count() !== 0) {
+              throw new Error('Ctrl+Z did not undo hyperlink creation.');
+            }
+
+            const finalText = await editor.textContent();
+            if (finalText !== 'hello world') {
+              throw new Error(`Undo changed the text unexpectedly: ${finalText}`);
+            }
+
+            console.log('Browser hyperlink create/Enter/Ctrl+Z verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node hyperlink-check.mjs
+
+      - name: Show app log on failure
+        if: failure()
+        run: cat /tmp/notekeeper.log || true
+
+      - name: Stop NoteKeeper
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then
+            kill "$(cat /tmp/notekeeper.pid)" || true
+          fi
