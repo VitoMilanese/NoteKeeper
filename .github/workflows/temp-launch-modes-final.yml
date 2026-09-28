@@ -1,0 +1,88 @@
+name: Temporary final launch mode verification
+on:
+  push:
+    branches:
+      - ci/pr2-launch-modes-final
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Development startup stress
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\src\NoteKeeper\bin\Release\net8.0\NoteKeeper.exe"
+          $env:ASPNETCORE_ENVIRONMENT = "Development"
+          Push-Location "$env:GITHUB_WORKSPACE\src\NoteKeeper"
+          try {
+            for ($i = 1; $i -le 20; $i++) {
+              $port = 52800 + $i
+              $process = Start-Process -FilePath $exe -ArgumentList "--urls","http://127.0.0.1:$port" -PassThru
+              Start-Sleep -Milliseconds 850
+              if ($process.HasExited) { throw "Development startup failed on run $i." }
+              if (Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue) { throw "Tray helper started in Development." }
+              Stop-Process -Id $process.Id -Force
+              $process.WaitForExit()
+            }
+          } finally {
+            Pop-Location
+            Remove-Item Env:ASPNETCORE_ENVIRONMENT
+          }
+
+      - name: Direct executable with explicit URL serves assets
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\src\NoteKeeper\bin\Release\net8.0\NoteKeeper.exe"
+          $process = Start-Process -FilePath $exe -WorkingDirectory "$env:RUNNER_TEMP" -ArgumentList "--urls","http://127.0.0.1:52917" -PassThru
+          try {
+            Start-Sleep -Seconds 4
+            if ($process.HasExited) { throw "Direct executable exited." }
+
+            $css = Invoke-WebRequest -Uri "http://127.0.0.1:52917/css/site.css" -UseBasicParsing
+            $js = Invoke-WebRequest -Uri "http://127.0.0.1:52917/js/site.js" -UseBasicParsing
+            if ($css.StatusCode -ne 200 -or $css.Content -notmatch "\.site-header") { throw "CSS failed." }
+            if ($js.StatusCode -ne 200 -or $js.Content.Length -lt 100) { throw "JS failed." }
+
+            if (-not (Test-Path "$env:GITHUB_WORKSPACE\src\NoteKeeper\bin\Release\net8.0\App_Data\notekeeper.db")) {
+              throw "Database is not under the executable content root."
+            }
+
+            if (-not (Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue)) {
+              throw "Tray helper did not start."
+            }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+            Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Direct executable uses Visual Studio default ports
+        shell: pwsh
+        run: |
+          dotnet dev-certs https | Out-Host
+          $exe = "$env:GITHUB_WORKSPACE\src\NoteKeeper\bin\Release\net8.0\NoteKeeper.exe"
+          $process = Start-Process -FilePath $exe -WorkingDirectory "$env:RUNNER_TEMP" -PassThru
+          try {
+            Start-Sleep -Seconds 5
+            if ($process.HasExited) { throw "Default direct executable launch exited." }
+
+            $https = Invoke-WebRequest -Uri "https://localhost:7147/css/site.css" -SkipCertificateCheck -UseBasicParsing
+            if ($https.StatusCode -ne 200 -or $https.Content -notmatch "\.site-header") {
+              throw "HTTPS port 7147 did not serve the application."
+            }
+
+            $http = Invoke-WebRequest -Uri "http://localhost:5147/" -MaximumRedirection 0 -SkipHttpErrorCheck
+            if ($http.StatusCode -notin 200,307,308) {
+              throw "HTTP port 5147 did not respond."
+            }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+            Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          }
