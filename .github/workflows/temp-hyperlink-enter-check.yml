@@ -1,0 +1,35 @@
+name: Temporary hyperlink Enter verification
+on:
+  push:
+    branches:
+      - ci/pr2-hyperlink-enter-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check editor JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify explicit Enter apply path
+        shell: bash
+        run: |
+          grep -F "const applyHyperlink = () =>" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "if (event.key !== 'Enter' || event.isComposing) return;" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "event.stopPropagation();" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "applyButton.addEventListener('click', applyHyperlink);" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "form.addEventListener('submit', (event) => event.preventDefault());" src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
