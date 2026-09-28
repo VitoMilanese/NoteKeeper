@@ -497,7 +497,7 @@ public sealed class WindowsTrayIconService(
     private static extern nint DefWindowProc(nint windowHandle, uint message, nint wParam, nint lParam);
 
     [DllImport("user32.dll")]
-    private static extern sbyte GetMessage(out Message message, nint windowHandle, uint minimumMessage, uint maximumMessage);
+    private static extern int GetMessage(out Message message, nint windowHandle, uint minimumMessage, uint maximumMessage);
 
     [DllImport("user32.dll")]
     private static extern bool TranslateMessage(ref Message message);
