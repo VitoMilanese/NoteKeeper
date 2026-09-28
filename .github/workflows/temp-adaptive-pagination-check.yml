@@ -1,0 +1,128 @@
+name: Temporary adaptive pagination verification
+on:
+  push:
+    branches:
+      - ci/pr2-adaptive-pagination-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/index.js
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          rm -f src/NoteKeeper/App_Data/notekeeper.db*
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53118 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53118/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Seed notes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from datetime import datetime, timezone, timedelta
+
+          db = sqlite3.connect("src/NoteKeeper/App_Data/notekeeper.db")
+          now = datetime.now(timezone.utc)
+          for i in range(1, 66):
+              prefix = "small" if i <= 29 else "large"
+              stamp = (now + timedelta(seconds=i)).isoformat()
+              db.execute(
+                  "INSERT INTO Notes (Title, CreatedAtUtc, UpdatedAtUtc) VALUES (?, ?, ?)",
+                  (f"{prefix} note {i:02d}", stamp, stamp)
+              )
+          db.commit()
+          db.close()
+          PY
+
+      - name: Verify adaptive page size and pager
+        shell: bash
+        run: |
+          cat > pagination-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+
+          try {
+            await page.goto('http://127.0.0.1:53118/');
+            await page.waitForURL(url => url.searchParams.get('pageSize') === '32');
+
+            const cards = page.locator('.note-card');
+            const count = await cards.count();
+            if (count !== 32) throw new Error(`Expected 32 cards, got ${count}`);
+
+            const columns = await page.locator('.notes-grid').evaluate((grid) =>
+              getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length
+            );
+            if (columns !== 4) throw new Error(`Expected 4 columns at test viewport, got ${columns}`);
+            if (count % columns !== 0) throw new Error('Last row on the page is not complete.');
+
+            if (await page.locator('.pagination').count() !== 1) {
+              throw new Error('Pagination should be visible for multiple pages.');
+            }
+
+            if ((await page.locator('.pagination-link.is-current').textContent())?.trim() !== '1') {
+              throw new Error('Current page marker is incorrect.');
+            }
+
+            await page.goto('http://127.0.0.1:53118/?q=small');
+            await page.waitForLoadState('networkidle');
+
+            if (await page.locator('.note-card').count() !== 29) {
+              throw new Error('Filtered one-page result should contain 29 notes.');
+            }
+
+            if (await page.locator('.pagination').count() !== 0) {
+              throw new Error('Pagination must be hidden when only one page is needed.');
+            }
+
+            console.log('Adaptive pagination browser verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node pagination-check.mjs
+
+      - name: Show app log on failure
+        if: failure()
+        run: cat /tmp/notekeeper.log || true
+
+      - name: Stop NoteKeeper
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then
+            kill "$(cat /tmp/notekeeper.pid)" || true
+          fi
