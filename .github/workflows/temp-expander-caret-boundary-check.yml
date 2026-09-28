@@ -1,0 +1,160 @@
+name: Temporary expander caret boundary verification
+on:
+  push:
+    branches:
+      - ci/pr2-expander-caret-boundary-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Build and test
+        run: |
+          dotnet build src/NoteKeeper.sln --configuration Release
+          dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          rm -f src/NoteKeeper/App_Data/notekeeper.db*
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53125 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53125/notes/new >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Verify caret access around expandable container
+        shell: bash
+        run: |
+          cat > expander-boundary-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+
+          try {
+            await page.goto('http://127.0.0.1:53125/notes/new');
+
+            const editor = page.locator('.rich-text-editor');
+            const addExpander = page.locator('.format-button[title="Expandable container"]');
+
+            await addExpander.click();
+
+            if (await editor.locator('details').count() !== 1) {
+              throw new Error('Expandable container was not inserted.');
+            }
+
+            let boundaries = editor.locator('[data-expander-boundary]');
+            if (await boundaries.count() !== 2) {
+              throw new Error('Expected compact caret anchors before and after a lone expander.');
+            }
+
+            const heights = await boundaries.evaluateAll(nodes =>
+              nodes.map(node => node.getBoundingClientRect().height)
+            );
+            if (heights.some(height => height > 9)) {
+              throw new Error(`Caret anchors are too tall: ${heights.join(', ')}`);
+            }
+
+            // Simulate both surrounding empty rows being removed. The editor
+            // must restore compact anchors automatically.
+            await page.evaluate(() => {
+              const rich = document.querySelector('.rich-text-editor');
+              rich.querySelectorAll('[data-expander-boundary]').forEach(node => node.remove());
+              rich.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
+            });
+
+            boundaries = editor.locator('[data-expander-boundary]');
+            if (await boundaries.count() !== 2) {
+              throw new Error('Caret anchors were not restored after surrounding rows were removed.');
+            }
+
+            // Click after the expander and type normal content. The editor-only
+            // anchor must turn into ordinary note text.
+            const after = boundaries.last();
+            await after.click({ position: { x: 2, y: 3 } });
+            await page.keyboard.type('after expander');
+
+            if (!(await editor.textContent()).includes('after expander')) {
+              throw new Error('Could not type after the expandable container.');
+            }
+
+            if (await editor.locator('[data-expander-boundary]').count() !== 1) {
+              throw new Error('Typed caret anchor did not become ordinary note content.');
+            }
+
+            // Save payload must not contain editor-only anchors.
+            let savePayload = null;
+            page.on('request', request => {
+              if (request.method() === 'POST' && request.url().endsWith('/notes/save')) {
+                try { savePayload = request.postDataJSON(); } catch {}
+              }
+            });
+
+            await page.locator('#titleInput').fill('Expander boundary test');
+            await page.locator('#saveButton').click();
+            await page.waitForResponse(response =>
+              response.url().endsWith('/notes/save') && response.request().method() === 'POST'
+            );
+
+            if (!savePayload?.blocks?.length) {
+              throw new Error('Save payload was not captured.');
+            }
+
+            const textContent = savePayload.blocks[0].textContent || '';
+            if (textContent.includes('data-expander-boundary') ||
+                textContent.includes('expander-boundary')) {
+              throw new Error('Editor-only caret anchors leaked into saved note HTML.');
+            }
+
+            // Ctrl+Z must still remove a newly inserted expander cleanly.
+            await page.goto('http://127.0.0.1:53125/notes/new');
+            const freshEditor = page.locator('.rich-text-editor');
+            const freshAdd = page.locator('.format-button[title="Expandable container"]');
+            await freshAdd.click();
+            await freshEditor.focus();
+            await page.keyboard.press('Control+Z');
+            await page.waitForTimeout(100);
+
+            if (await freshEditor.locator('details').count() !== 0) {
+              throw new Error('Ctrl+Z no longer undoes expandable-container insertion.');
+            }
+            if (await freshEditor.locator('[data-expander-boundary]').count() !== 0) {
+              throw new Error('Orphan caret anchors remained after Ctrl+Z.');
+            }
+
+            console.log('Expandable caret-boundary verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node expander-boundary-check.mjs
+
+      - name: Show app log on failure
+        if: failure()
+        run: cat /tmp/notekeeper.log || true
+
+      - name: Stop NoteKeeper
+        if: always()
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then kill "$(cat /tmp/notekeeper.pid)" || true; fi
