@@ -6,6 +6,8 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <UseAppHost>true</UseAppHost>
     <ApplicationIcon>Assets\notekeeper.ico</ApplicationIcon>
+    <TrayProject>$(MSBuildProjectDirectory)\..\NoteKeeper.Tray\NoteKeeper.Tray.csproj</TrayProject>
+    <TrayTargetFramework>net8.0-windows</TrayTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,4 +21,33 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
+
+  <Target Name="BuildWindowsTrayHelper"
+          AfterTargets="Build"
+          Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(DesignTimeBuild)' != 'true' and Exists('$(TrayProject)')">
+    <MSBuild Projects="$(TrayProject)"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false" />
+    <ItemGroup>
+      <TrayBuildFiles Include="$(MSBuildProjectDirectory)\..\NoteKeeper.Tray\bin\$(Configuration)\$(TrayTargetFramework)\**\*.*"
+                      Condition="'$(RuntimeIdentifier)' == ''" />
+      <TrayBuildFiles Include="$(MSBuildProjectDirectory)\..\NoteKeeper.Tray\bin\$(Configuration)\$(TrayTargetFramework)\$(RuntimeIdentifier)\**\*.*"
+                      Condition="'$(RuntimeIdentifier)' != ''" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TrayBuildFiles)"
+          DestinationFiles="@(TrayBuildFiles->'$(OutDir)Tray\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishWindowsTrayHelper"
+          AfterTargets="Publish"
+          Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(DesignTimeBuild)' != 'true' and Exists('$(TrayProject)')">
+    <PropertyGroup>
+      <TrayPublishDir>$(PublishDir)Tray\</TrayPublishDir>
+    </PropertyGroup>
+    <MSBuild Projects="$(TrayProject)"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishDir=$(TrayPublishDir)" />
+  </Target>
+
 </Project>

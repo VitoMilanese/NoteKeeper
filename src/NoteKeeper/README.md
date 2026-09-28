@@ -30,7 +30,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - English as the default language;
 - persist the selected language in a cookie;
 - switchable light and dark themes with the selected theme stored in a cookie;
-- Windows executable icon and system tray integration;
+- Windows executable icon and system tray integration through an isolated Windows Forms helper process, so tray failures cannot terminate the web application;
 - double-click the tray icon or choose `Open NoteKeeper` to open the home page, and choose `Exit` to stop the application;
 - responsive interface that uses the available viewport width;
 - no external JavaScript or CSS dependencies.
