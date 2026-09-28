@@ -4,6 +4,9 @@
 @{
     ViewData["Title"] = Localizer["Index_PageTitle"].Value;
     var hasFilters = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
+    var selectedTags = Model.Tag
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
 }
 
 <section class="hero-row">
@@ -56,7 +59,7 @@
         <div class="tag-cloud" aria-label="@Localizer["Index_PopularTagsAria"]">
             @foreach (var item in Model.Tags)
             {
-                <a class="tag-chip @(Model.Tag == item.Name ? "is-active" : "")"
+                <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "")"
                    href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction">
                     #@item.Name <span>@item.Count</span>
                 </a>

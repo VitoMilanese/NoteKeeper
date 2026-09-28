@@ -6,7 +6,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 
 - home page with a note list;
 - search by title, text, comments, links, and image captions;
-- filtering by `#tags` extracted automatically from text blocks;
+- filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
 - sorting by title, creation date, or last update;
 - text blocks;
 - link blocks with a title, URL, and optional comment;
@@ -46,10 +46,10 @@ To create a backup, save the database file and the `wwwroot/uploads` directory.
 
 ## Tags
 
-Add tags directly to a text block, for example:
+Add tags directly to a text block or a link comment, for example:
 
 ```text
 Review this idea later. #work #idea
 ```
 
-After saving the note, `work` and `idea` become available as filters on the home page.
+After saving the note, `work` and `idea` become available as filters on the home page. Enter multiple tags separated by commas to require all of them, for example `work, idea`.

@@ -14,8 +14,8 @@
   <data name="Index_CreateNote" xml:space="preserve"><value>+ Create note</value></data>
   <data name="Index_Search" xml:space="preserve"><value>Search</value></data>
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Title, text, link…</value></data>
-  <data name="Index_Tag" xml:space="preserve"><value>Tag</value></data>
-  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#idea</value></data>
+  <data name="Index_Tag" xml:space="preserve"><value>Tags</value></data>
+  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#idea, #work</value></data>
   <data name="Index_Sort" xml:space="preserve"><value>Sort by</value></data>
   <data name="Index_SortUpdated" xml:space="preserve"><value>Last updated</value></data>
   <data name="Index_SortCreated" xml:space="preserve"><value>Created</value></data>
@@ -43,7 +43,7 @@
   <data name="Edit_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Note title</value></data>
   <data name="Edit_HelpBefore" xml:space="preserve"><value>Add blocks below. </value></data>
-  <data name="Edit_HelpAfter" xml:space="preserve"><value> in text automatically become searchable.</value></data>
+  <data name="Edit_HelpAfter" xml:space="preserve"><value> in text blocks and link comments automatically become searchable.</value></data>
   <data name="Edit_AddText" xml:space="preserve"><value>＋ Text</value></data>
   <data name="Edit_AddLink" xml:space="preserve"><value>↗ Link</value></data>
   <data name="Edit_AddImage" xml:space="preserve"><value>▧ Image</value></data>

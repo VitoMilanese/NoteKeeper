@@ -14,8 +14,8 @@
   <data name="Index_CreateNote" xml:space="preserve"><value>+ Створити нотатку</value></data>
   <data name="Index_Search" xml:space="preserve"><value>Пошук</value></data>
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Назва, текст, посилання…</value></data>
-  <data name="Index_Tag" xml:space="preserve"><value>Тег</value></data>
-  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#ідея</value></data>
+  <data name="Index_Tag" xml:space="preserve"><value>Теги</value></data>
+  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#ідея, #робота</value></data>
   <data name="Index_Sort" xml:space="preserve"><value>Сортувати</value></data>
   <data name="Index_SortUpdated" xml:space="preserve"><value>За зміною</value></data>
   <data name="Index_SortCreated" xml:space="preserve"><value>За створенням</value></data>
@@ -43,7 +43,7 @@
   <data name="Edit_Save" xml:space="preserve"><value>Зберегти</value></data>
   <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Назва нотатки</value></data>
   <data name="Edit_HelpBefore" xml:space="preserve"><value>Додай блоки нижче. </value></data>
-  <data name="Edit_HelpAfter" xml:space="preserve"><value> в тексті автоматично стануть доступними для пошуку.</value></data>
+  <data name="Edit_HelpAfter" xml:space="preserve"><value> у текстових блоках і коментарях до посилань автоматично стануть доступними для пошуку.</value></data>
   <data name="Edit_AddText" xml:space="preserve"><value>＋ Текст</value></data>
   <data name="Edit_AddLink" xml:space="preserve"><value>↗ Посилання</value></data>
   <data name="Edit_AddImage" xml:space="preserve"><value>▧ Зображення</value></data>

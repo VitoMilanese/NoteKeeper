@@ -71,6 +71,7 @@
         }
 
         const drag = makeControl('⋮⋮', strings.dragBlock, 'drag-handle');
+        drag.draggable = true;
         const up = makeControl('↑', strings.moveUp, 'move-up');
         const down = makeControl('↓', strings.moveDown, 'move-down');
         const remove = makeControl('×', strings.removeBlock, 'remove');
@@ -166,7 +167,6 @@
         const block = document.createElement('article');
         block.className = 'note-block';
         block.dataset.type = type;
-        block.draggable = true;
 
         if (type === 'image') {
             block.dataset.imagePath = data.imagePath || '';
