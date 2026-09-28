@@ -1349,6 +1349,7 @@ html[data-theme="light"] .emoji-item:hover {
 }
 
 .rich-text-editor details {
+    position: relative;
     margin: 8px 0;
     padding: 9px 11px;
     border: 1px solid var(--border);
@@ -1357,9 +1358,59 @@ html[data-theme="light"] .emoji-item:hover {
 }
 
 .rich-text-editor summary {
-    cursor: pointer;
+    position: relative;
+    min-height: 28px;
+    padding: 3px 34px 3px 0;
+    list-style: none;
+    cursor: text;
     font-weight: 750;
     color: var(--accent-strong);
+}
+
+.rich-text-editor summary::-webkit-details-marker {
+    display: none;
+}
+
+.rich-text-editor summary::before {
+    content: "▸";
+    display: inline-block;
+    width: 18px;
+    margin-right: 3px;
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+}
+
+.rich-text-editor details[open] > summary::before {
+    content: "▾";
+}
+
+.rich-text-editor .expander-delete {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.rich-text-editor .expander-delete::before {
+    content: "×";
+    font-size: 1.05rem;
+}
+
+.rich-text-editor .expander-delete:hover,
+.rich-text-editor .expander-delete:focus-visible {
+    border-color: rgba(255, 110, 129, 0.42);
+    background: rgba(255, 110, 129, 0.08);
+    color: var(--danger);
 }
 
 .rich-text-editor hr {

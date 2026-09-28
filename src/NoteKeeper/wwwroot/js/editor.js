@@ -941,6 +941,110 @@
         }, 0);
     }
 
+    function summaryForSelection(richEditor) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        const node = selection.anchorNode;
+        const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+        const summary = element?.closest?.('summary');
+        return summary && richEditor.contains(summary) ? summary : null;
+    }
+
+    function pointIsOverSummaryText(summary, clientX, clientY) {
+        const walker = document.createTreeWalker(summary, NodeFilter.SHOW_TEXT);
+        let node;
+
+        while ((node = walker.nextNode())) {
+            if (!node.nodeValue) continue;
+
+            const range = document.createRange();
+            range.selectNodeContents(node);
+
+            for (const rect of range.getClientRects()) {
+                if (
+                    clientX >= rect.left &&
+                    clientX <= rect.right &&
+                    clientY >= rect.top &&
+                    clientY <= rect.bottom
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function deleteExpandableContainer(richEditor, details) {
+        if (!details?.isConnected || !richEditor.contains(details)) return;
+
+        richEditor.focus({ preventScroll: true });
+
+        const range = document.createRange();
+        range.selectNode(details);
+
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+        richEditor._savedRange = range.cloneRange();
+
+        // Native delete keeps removing an expander in the browser undo history.
+        document.execCommand('delete', false, null);
+        notifyRichInput(richEditor);
+    }
+
+    function decorateExpanders(richEditor) {
+        richEditor.querySelectorAll('details > summary').forEach((summary) => {
+            if (summary.querySelector(':scope > .expander-delete')) return;
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'expander-delete';
+            remove.contentEditable = 'false';
+            remove.title = strings.expanderDelete;
+            remove.setAttribute('aria-label', strings.expanderDelete);
+
+            remove.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            });
+
+            remove.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                deleteExpandableContainer(richEditor, summary.parentElement);
+            });
+
+            summary.appendChild(remove);
+        });
+    }
+
+    function insertExpandableContainer(richEditor) {
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        if (!richEditor.contains(range.commonAncestorContainer) &&
+            range.commonAncestorContainer !== richEditor) {
+            return;
+        }
+
+        const selectedHtml = range.collapsed ? '' : rangeHtml(range);
+        const contentHtml = selectedHtml || '<br>';
+        const html =
+            `<details><summary>${escapeHtml(strings.expanderSummary)}</summary><div>${contentHtml}</div></details><div><br></div>`;
+
+        // insertHTML records the entire expander insertion as one undoable edit.
+        document.execCommand('insertHTML', false, html);
+        decorateExpanders(richEditor);
+        notifyRichInput(richEditor);
+    }
+
     function makeFormatButton(label, title, onClick, className = '') {
         const button = document.createElement('button');
         button.type = 'button';
@@ -971,14 +1075,7 @@
             makeFormatButton('🔗', strings.formatHyperlink, () => openHyperlinkDialog(richEditor), 'is-hyperlink'),
             makeFormatButton('❝', strings.formatQuote, () => toggleQuote(richEditor)),
             makeFormatButton('▸', strings.formatExpander, () => {
-                const selected = selectedRichText(richEditor);
-                const details = document.createElement('details');
-                const summary = document.createElement('summary');
-                const content = document.createElement('div');
-                summary.textContent = strings.expanderSummary;
-                content.textContent = selected || strings.expanderContent;
-                details.append(summary, content);
-                insertBlockWithContinuation(richEditor, details);
+                insertExpandableContainer(richEditor);
             }),
             makeFormatButton('―', strings.formatDivider, () => {
                 insertBlockWithContinuation(richEditor, document.createElement('hr'));
@@ -1092,6 +1189,7 @@
         richEditor.setAttribute('aria-multiline', 'true');
 
         setRichEditorContent(richEditor, data.textContent || '');
+        decorateExpanders(richEditor);
         richEditor.addEventListener('mouseup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('keyup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('focus', () => saveRichSelection(richEditor));
@@ -1099,8 +1197,26 @@
             if (event.inputType === 'insertText' && event.data === '`') {
                 convertBacktickCodeAtCaret(richEditor);
             }
+
+            // Undo/redo can restore a saved semantic <details> without the
+            // editor-only delete control, so decorate it again when needed.
+            decorateExpanders(richEditor);
         });
         richEditor.addEventListener('click', (event) => {
+            const summary = event.target.closest?.('summary');
+            if (summary && richEditor.contains(summary)) {
+                if (event.target.closest?.('.expander-delete')) {
+                    return;
+                }
+
+                // Native <summary> toggles when any part is clicked. Keep that
+                // behavior only for the arrow or unused area to the right; a
+                // click on title text is reserved for placing/editing the caret.
+                if (pointIsOverSummaryText(summary, event.clientX, event.clientY)) {
+                    event.preventDefault();
+                }
+            }
+
             const hyperlink = event.target.closest?.('a[href]');
             if (hyperlink && (event.ctrlKey || event.metaKey)) {
                 event.preventDefault();
@@ -1126,6 +1242,17 @@
             }
         });
         richEditor.addEventListener('keydown', (event) => {
+            if (event.key === ' ' && summaryForSelection(richEditor)) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                // A focused native <summary> treats Space as activation. Insert
+                // a real space instead so the title behaves like editable text.
+                document.execCommand('insertText', false, ' ');
+                notifyRichInput(richEditor);
+                return;
+            }
+
             if (!['Backspace', 'Delete'].includes(event.key)) return;
             if (!richEditor._selectedDivider?.isConnected) return;
 

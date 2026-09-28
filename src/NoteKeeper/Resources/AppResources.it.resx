@@ -122,6 +122,7 @@
   <data name="Editor_FormatSymbols" xml:space="preserve"><value>Inserisci simbolo</value></data>
   <data name="Editor_ExpanderSummary" xml:space="preserve"><value>Dettagli</value></data>
   <data name="Editor_ExpanderContent" xml:space="preserve"><value>Contenuto espandibile</value></data>
+  <data name="Editor_ExpanderDelete" xml:space="preserve"><value>Elimina contenitore espandibile</value></data>
   <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Scartare le modifiche non salvate?</value></data>
   <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>Questa nota contiene modifiche non ancora salvate.</value></data>
   <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Esci senza salvare</value></data>
