@@ -110,4 +110,17 @@
   <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Відкинути незбережені зміни?</value></data>
   <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>У цій нотатці є зміни, які ще не збережено.</value></data>
   <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Вийти без збереження</value></data>
+  <data name="Index_ImportNote" xml:space="preserve"><value>⇩ Імпортувати нотатку</value></data>
+  <data name="Edit_ExportNote" xml:space="preserve"><value>⇧ Експорт</value></data>
+  <data name="Editor_FormatTextSize" xml:space="preserve"><value>Розмір тексту</value></data>
+  <data name="Editor_FormatSizeSmall" xml:space="preserve"><value>Малий</value></data>
+  <data name="Editor_FormatSizeNormal" xml:space="preserve"><value>Звичайний</value></data>
+  <data name="Editor_FormatSizeLarge" xml:space="preserve"><value>Великий</value></data>
+  <data name="Editor_FormatSizeExtraLarge" xml:space="preserve"><value>Дуже великий</value></data>
+  <data name="Editor_QuoteContent" xml:space="preserve"><value>Цитата</value></data>
+  <data name="Editor_DividerDeleteHint" xml:space="preserve"><value>Розділювач вибрано. Натисни Delete або Backspace, щоб видалити його.</value></data>
+  <data name="Editor_SystemEmoji" xml:space="preserve"><value>Системні emoji</value></data>
+  <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Браузер не може напряму відкрити системну панель emoji Windows. Натисни Win + . коли редактор у фокусі.</value></data>
+  <data name="Server_ImportInvalid" xml:space="preserve"><value>Це невалідний файл експорту нотатки NoteKeeper.</value></data>
+  <data name="Server_ImportTooLarge" xml:space="preserve"><value>Файл експорту нотатки порожній або завеликий для імпорту.</value></data>
 </root>

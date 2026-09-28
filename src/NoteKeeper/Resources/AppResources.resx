@@ -110,4 +110,17 @@
   <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Discard unsaved changes?</value></data>
   <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>This note contains changes that have not been saved.</value></data>
   <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Leave without saving</value></data>
+  <data name="Index_ImportNote" xml:space="preserve"><value>⇩ Import note</value></data>
+  <data name="Edit_ExportNote" xml:space="preserve"><value>⇧ Export</value></data>
+  <data name="Editor_FormatTextSize" xml:space="preserve"><value>Text size</value></data>
+  <data name="Editor_FormatSizeSmall" xml:space="preserve"><value>Small</value></data>
+  <data name="Editor_FormatSizeNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Editor_FormatSizeLarge" xml:space="preserve"><value>Large</value></data>
+  <data name="Editor_FormatSizeExtraLarge" xml:space="preserve"><value>Extra large</value></data>
+  <data name="Editor_QuoteContent" xml:space="preserve"><value>Quote</value></data>
+  <data name="Editor_DividerDeleteHint" xml:space="preserve"><value>Divider selected. Press Delete or Backspace to remove it.</value></data>
+  <data name="Editor_SystemEmoji" xml:space="preserve"><value>System emoji</value></data>
+  <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Browsers cannot open the Windows emoji panel directly. Press Win + . while the editor is focused.</value></data>
+  <data name="Server_ImportInvalid" xml:space="preserve"><value>This is not a valid NoteKeeper note export.</value></data>
+  <data name="Server_ImportTooLarge" xml:space="preserve"><value>The note export is empty or too large to import.</value></data>
 </root>

@@ -9,6 +9,8 @@
     const saveStatus = document.getElementById('saveStatus');
     const addImageButton = document.getElementById('addImageButton');
     const imageFileInput = document.getElementById('imageFileInput');
+    const deleteNoteForm = document.getElementById('deleteNoteForm');
+    const exportNoteLink = document.getElementById('exportNoteLink');
     const antiForgeryToken = editor.querySelector('input[name="__RequestVerificationToken"]').value;
     const initialBlocks = JSON.parse(document.getElementById('initialBlocks').textContent || '[]');
     const strings = JSON.parse(document.getElementById('editorStrings')?.textContent || '{}');
@@ -73,10 +75,6 @@
         const actions = document.createElement('div');
         actions.className = 'block-toolbar-actions';
 
-        if (type === 'link') {
-            actions.appendChild(makeControl('↗', strings.openLink, 'open-link'));
-        }
-
         const drag = makeControl('⋮⋮', strings.dragBlock, 'drag-handle');
         drag.draggable = true;
         const up = makeControl('↑', strings.moveUp, 'move-up');
@@ -121,8 +119,11 @@
                         attribute.name === 'data-marker' &&
                         ['bullet', 'dash'].includes(attribute.value);
                     const keepOpen = child.tagName === 'DETAILS' && attribute.name === 'open';
+                    const keepTextSize = child.tagName === 'SPAN' &&
+                        attribute.name === 'data-size' &&
+                        ['small', 'large', 'xlarge'].includes(attribute.value);
 
-                    if (!keepMarker && !keepOpen) {
+                    if (!keepMarker && !keepOpen && !keepTextSize) {
                         child.removeAttribute(attribute.name);
                     }
                 }
@@ -207,6 +208,45 @@
         notifyRichInput(richEditor);
     }
 
+    function normalizeFontSizeMarkup(richEditor) {
+        const sizeMap = {
+            '1': 'small',
+            '3': 'normal',
+            '5': 'large',
+            '7': 'xlarge'
+        };
+
+        richEditor.querySelectorAll('font[size]').forEach((font) => {
+            const size = sizeMap[font.getAttribute('size')] || 'normal';
+
+            if (size === 'normal') {
+                font.replaceWith(...Array.from(font.childNodes));
+                return;
+            }
+
+            const span = document.createElement('span');
+            span.dataset.size = size;
+            span.append(...Array.from(font.childNodes));
+            font.replaceWith(span);
+        });
+    }
+
+    function applyTextSize(richEditor, size) {
+        const commandSize = {
+            small: '1',
+            normal: '3',
+            large: '5',
+            xlarge: '7'
+        }[size];
+
+        if (!commandSize) return;
+
+        restoreRichSelection(richEditor);
+        document.execCommand('fontSize', false, commandSize);
+        normalizeFontSizeMarkup(richEditor);
+        notifyRichInput(richEditor);
+    }
+
     function applyListMarker(richEditor, marker) {
         const command = marker === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList';
         runRichCommand(richEditor, command);
@@ -248,9 +288,15 @@
             makeFormatButton('S', strings.formatStrike, () => runRichCommand(richEditor, 'strikeThrough'), 'is-strike'),
             makeFormatButton('</>', strings.formatCode, () => {
                 const selected = selectedRichText(richEditor);
-                insertRichHtml(richEditor, `<code>${escapeHtml(selected || 'code')}</code>`);
+                insertRichHtml(richEditor, `<code>${escapeHtml(selected || 'code')}</code><span>&nbsp;</span>`);
             }),
-            makeFormatButton('❝', strings.formatQuote, () => runRichCommand(richEditor, 'formatBlock', 'blockquote')),
+            makeFormatButton('❝', strings.formatQuote, () => {
+                const selected = selectedRichText(richEditor);
+                insertRichHtml(
+                    richEditor,
+                    `<blockquote>${escapeHtml(selected || strings.quoteContent)}</blockquote><div><br></div>`
+                );
+            }),
             makeFormatButton('▸', strings.formatExpander, () => {
                 const selected = selectedRichText(richEditor);
                 insertRichHtml(
@@ -260,6 +306,29 @@
             }),
             makeFormatButton('―', strings.formatDivider, () => insertRichHtml(richEditor, '<hr><div><br></div>'))
         );
+
+        const sizeSelect = document.createElement('select');
+        sizeSelect.className = 'format-select text-size-select';
+        sizeSelect.title = strings.formatTextSize;
+        sizeSelect.setAttribute('aria-label', strings.formatTextSize);
+        [
+            ['', strings.formatTextSize],
+            ['small', strings.formatSizeSmall],
+            ['normal', strings.formatSizeNormal],
+            ['large', strings.formatSizeLarge],
+            ['xlarge', strings.formatSizeExtraLarge]
+        ].forEach(([value, label]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            sizeSelect.appendChild(option);
+        });
+        sizeSelect.addEventListener('mousedown', () => saveRichSelection(richEditor));
+        sizeSelect.addEventListener('change', () => {
+            if (sizeSelect.value) applyTextSize(richEditor, sizeSelect.value);
+            sizeSelect.value = '';
+        });
+        toolbar.appendChild(sizeSelect);
 
         const listSelect = document.createElement('select');
         listSelect.className = 'format-select';
@@ -311,6 +380,23 @@
             symbolPanel.appendChild(button);
         });
 
+        const systemEmojiButton = document.createElement('button');
+        systemEmojiButton.type = 'button';
+        systemEmojiButton.className = 'system-emoji-button';
+        systemEmojiButton.textContent = '😀';
+        systemEmojiButton.title = strings.systemEmoji;
+        systemEmojiButton.setAttribute('aria-label', strings.systemEmoji);
+        systemEmojiButton.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            saveRichSelection(richEditor);
+        });
+        systemEmojiButton.addEventListener('click', () => {
+            symbols.open = false;
+            restoreRichSelection(richEditor);
+            showToast(strings.systemEmojiHint);
+        });
+        symbolPanel.appendChild(systemEmojiButton);
+
         symbols.append(summary, symbolPanel);
         toolbar.appendChild(symbols);
         return toolbar;
@@ -332,6 +418,28 @@
         richEditor.addEventListener('mouseup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('keyup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('focus', () => saveRichSelection(richEditor));
+        richEditor.addEventListener('click', (event) => {
+            const divider = event.target.closest?.('hr');
+            richEditor.querySelectorAll('hr.is-selected-divider').forEach((item) => {
+                if (item !== divider) item.classList.remove('is-selected-divider');
+            });
+
+            richEditor._selectedDivider = divider || null;
+
+            if (divider) {
+                divider.classList.add('is-selected-divider');
+                showToast(strings.dividerDeleteHint);
+            }
+        });
+        richEditor.addEventListener('keydown', (event) => {
+            if (!['Backspace', 'Delete'].includes(event.key)) return;
+            if (!richEditor._selectedDivider?.isConnected) return;
+
+            event.preventDefault();
+            richEditor._selectedDivider.remove();
+            richEditor._selectedDivider = null;
+            notifyRichInput(richEditor);
+        });
 
         body.append(createFormattingToolbar(richEditor), richEditor);
         return body;
@@ -350,18 +458,24 @@
         title.maxLength = 300;
         title.value = data.linkTitle || '';
 
+        const urlWrap = document.createElement('div');
+        urlWrap.className = 'link-url-row';
+
         const url = document.createElement('input');
         url.className = 'block-input link-url';
         url.type = 'url';
         url.placeholder = 'https://…';
         url.value = data.url || '';
 
+        const openLink = makeControl('↗', strings.openLink, 'open-link inline-link-open');
+        urlWrap.append(url, openLink);
+
         const comment = document.createElement('textarea');
         comment.className = 'block-textarea link-comment';
         comment.placeholder = strings.linkCommentPlaceholder;
         comment.value = data.textContent || '';
 
-        row.append(title, url);
+        row.append(title, urlWrap);
         body.append(row, comment);
         return body;
     }
@@ -587,6 +701,19 @@
             titleInput.value = result.title;
             dirty = false;
 
+            if (deleteNoteForm) {
+                deleteNoteForm.classList.remove('is-hidden');
+                deleteNoteForm.action = `/notes/${result.id}/delete`;
+                deleteNoteForm.dataset.confirmTitle = strings.deleteDialogTitle;
+                deleteNoteForm.dataset.confirmMessage = format(strings.deleteDialogMessage, result.title);
+                deleteNoteForm.dataset.confirmLabel = strings.deleteLabel;
+            }
+
+            if (exportNoteLink) {
+                exportNoteLink.classList.remove('is-hidden');
+                exportNoteLink.href = `/notes/${result.id}/export`;
+            }
+
             const url = `/notes/${result.id}`;
             if (window.location.pathname !== url) {
                 window.history.replaceState({}, '', url);
@@ -790,6 +917,23 @@
     }, true);
 
     window.addEventListener('keydown', (event) => {
+        const richEditor = event.target.closest?.('.rich-text-editor');
+        const hasFormatModifier = event.ctrlKey || event.metaKey;
+
+        if (richEditor && hasFormatModifier) {
+            const command = {
+                KeyB: 'bold',
+                KeyI: 'italic',
+                KeyU: 'underline'
+            }[event.code];
+
+            if (command) {
+                event.preventDefault();
+                runRichCommand(richEditor, command);
+                return;
+            }
+        }
+
         const isSaveShortcut =
             (event.ctrlKey || event.metaKey) &&
             (event.code === 'KeyS' || event.key.toLowerCase() === 's');

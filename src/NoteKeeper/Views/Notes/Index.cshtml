@@ -15,7 +15,21 @@
         <h1>@Localizer["Index_HeroTitle"]</h1>
         <p class="hero-copy">@Localizer["Index_HeroCopy"]</p>
     </div>
-    <a class="button button-primary hero-action" href="/notes/new">@Localizer["Index_CreateNote"]</a>
+    <div class="hero-actions">
+        <form method="post" action="/notes/import" enctype="multipart/form-data" class="import-note-form">
+            @Html.AntiForgeryToken()
+            <input id="noteImportInput"
+                   type="file"
+                   name="noteFile"
+                   accept=".json,.notekeeper.json,application/json"
+                   hidden
+                   onchange="if (this.files.length) this.form.submit();" />
+            <button class="button button-secondary" type="button" onclick="document.getElementById('noteImportInput').click();">
+                @Localizer["Index_ImportNote"]
+            </button>
+        </form>
+        <a class="button button-primary hero-action" href="/notes/new">@Localizer["Index_CreateNote"]</a>
+    </div>
 </section>
 
 <section class="panel filter-panel">

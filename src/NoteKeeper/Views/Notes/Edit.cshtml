@@ -57,7 +57,19 @@
         ["expanderContent"] = Localizer["Editor_ExpanderContent"].Value,
         ["unsavedDialogTitle"] = Localizer["Editor_UnsavedDialogTitle"].Value,
         ["unsavedDialogMessage"] = Localizer["Editor_UnsavedDialogMessage"].Value,
-        ["leaveWithoutSaving"] = Localizer["Editor_LeaveWithoutSaving"].Value
+        ["leaveWithoutSaving"] = Localizer["Editor_LeaveWithoutSaving"].Value,
+        ["deleteDialogTitle"] = Localizer["Index_DeleteDialogTitle"].Value,
+        ["deleteDialogMessage"] = Localizer["Index_DeleteDialogMessage"].Value,
+        ["deleteLabel"] = Localizer["Index_Delete"].Value,
+        ["formatTextSize"] = Localizer["Editor_FormatTextSize"].Value,
+        ["formatSizeSmall"] = Localizer["Editor_FormatSizeSmall"].Value,
+        ["formatSizeNormal"] = Localizer["Editor_FormatSizeNormal"].Value,
+        ["formatSizeLarge"] = Localizer["Editor_FormatSizeLarge"].Value,
+        ["formatSizeExtraLarge"] = Localizer["Editor_FormatSizeExtraLarge"].Value,
+        ["quoteContent"] = Localizer["Editor_QuoteContent"].Value,
+        ["dividerDeleteHint"] = Localizer["Editor_DividerDeleteHint"].Value,
+        ["systemEmoji"] = Localizer["Editor_SystemEmoji"].Value,
+        ["systemEmojiHint"] = Localizer["Editor_SystemEmojiHint"].Value
     };
     var editorStringsJson = JsonSerializer.Serialize(editorStrings);
 }
@@ -68,20 +80,21 @@
     <div class="editor-topbar">
         <a class="button button-ghost button-small" href="/">@Localizer["Edit_BackToList"]</a>
         <div class="save-cluster">
-            @if (Model.Id.HasValue)
-            {
-                <form method="post"
-                      action="/notes/@Model.Id/delete"
-                      class="editor-delete-form"
-                      data-confirm-form
-                      data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
-                      data-confirm-message="@Localizer["Index_DeleteDialogMessage", Model.Title]"
-                      data-confirm-label="@Localizer["Index_Delete"]"
-                      data-confirm-danger="true">
-                    @Html.AntiForgeryToken()
-                    <button class="button button-danger button-small" type="submit">@Localizer["Edit_DeleteNote"]</button>
-                </form>
-            }
+            <form id="deleteNoteForm"
+                  method="post"
+                  action="@(Model.Id.HasValue ? $"/notes/{Model.Id}/delete" : "#")"
+                  class="editor-delete-form @(Model.Id.HasValue ? "" : "is-hidden")"
+                  data-confirm-form
+                  data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
+                  data-confirm-message="@(Model.Id.HasValue ? Localizer["Index_DeleteDialogMessage", Model.Title].Value : "")"
+                  data-confirm-label="@Localizer["Index_Delete"]"
+                  data-confirm-danger="true">
+                @Html.AntiForgeryToken()
+                <button class="button button-danger button-small" type="submit">@Localizer["Edit_DeleteNote"]</button>
+            </form>
+            <a id="exportNoteLink"
+               class="button button-secondary button-small @(Model.Id.HasValue ? "" : "is-hidden")"
+               href="@(Model.Id.HasValue ? $"/notes/{Model.Id}/export" : "#")">@Localizer["Edit_ExportNote"]</a>
             <span id="saveStatus" class="save-status">
                 @if (Model.UpdatedAtUtc.HasValue)
                 {

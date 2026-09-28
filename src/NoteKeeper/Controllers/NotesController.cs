@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
@@ -5,6 +7,9 @@ using NoteKeeper.Data;
 using NoteKeeper.Models;
 using NoteKeeper.Services;
 using NoteKeeper.ViewModels;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace NoteKeeper.Controllers;
 
@@ -141,6 +146,176 @@ public sealed class NotesController(
         });
     }
 
+    [HttpGet("/notes/{id:int}/export")]
+    public async Task<IActionResult> Export(int id, CancellationToken cancellationToken)
+    {
+        var note = await db.Notes
+            .AsNoTracking()
+            .Include(x => x.Blocks)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (note is null)
+        {
+            return NotFound();
+        }
+
+        var document = new NoteTransferDocument
+        {
+            Title = note.Title,
+            Blocks = []
+        };
+
+        foreach (var block in note.Blocks.OrderBy(x => x.SortOrder))
+        {
+            var transferBlock = new NoteTransferBlock
+            {
+                Type = block.Type,
+                TextContent = block.TextContent,
+                Url = block.Url,
+                LinkTitle = block.LinkTitle,
+                Caption = block.Caption
+            };
+
+            if (block.Type == BlockType.Image && !string.IsNullOrWhiteSpace(block.ImagePath))
+            {
+                var fileName = Path.GetFileName(block.ImagePath);
+                var physicalPath = Path.Combine(environment.WebRootPath, "uploads", fileName);
+
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    transferBlock.ImageMimeType = GetImageMimeType(block.ImagePath);
+                    transferBlock.ImageBase64 = Convert.ToBase64String(
+                        await System.IO.File.ReadAllBytesAsync(physicalPath, cancellationToken));
+                }
+            }
+
+            document.Blocks.Add(transferBlock);
+        }
+
+        var json = JsonSerializer.SerializeToUtf8Bytes(document, CreateTransferJsonOptions());
+        var downloadName = $"{SanitizeFileName(note.Title)}.notekeeper.json";
+        return File(json, "application/json; charset=utf-8", downloadName);
+    }
+
+    [HttpPost("/notes/import")]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(80_000_000)]
+    public async Task<IActionResult> Import(IFormFile? noteFile, CancellationToken cancellationToken)
+    {
+        if (noteFile is null || noteFile.Length == 0 || noteFile.Length > 70_000_000)
+        {
+            return BadRequest(localizer["Server_ImportTooLarge"].Value);
+        }
+
+        var storedImagePaths = new List<string>();
+
+        try
+        {
+            await using var input = noteFile.OpenReadStream();
+            var document = await JsonSerializer.DeserializeAsync<NoteTransferDocument>(
+                input,
+                CreateTransferJsonOptions(),
+                cancellationToken);
+
+            if (document is null ||
+                document.Blocks is null ||
+                !string.Equals(document.Format, NoteTransferDocument.ExpectedFormat, StringComparison.Ordinal) ||
+                document.Version != NoteTransferDocument.CurrentVersion ||
+                document.Blocks.Count > 500)
+            {
+                return BadRequest(localizer["Server_ImportInvalid"].Value);
+            }
+
+            var note = new Note
+            {
+                Title = NormalizeTitle(document.Title),
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+                Blocks = []
+            };
+
+            for (var index = 0; index < document.Blocks.Count; index++)
+            {
+                var block = document.Blocks[index];
+
+                switch (block.Type)
+                {
+                    case BlockType.Text:
+                        note.Blocks.Add(new NoteBlock
+                        {
+                            Type = BlockType.Text,
+                            SortOrder = index,
+                            TextContent = block.TextContent?.TrimEnd()
+                        });
+                        break;
+
+                    case BlockType.Link:
+                        note.Blocks.Add(new NoteBlock
+                        {
+                            Type = BlockType.Link,
+                            SortOrder = index,
+                            Url = NormalizeUrl(block.Url),
+                            LinkTitle = Limit(block.LinkTitle?.Trim(), 300),
+                            TextContent = block.TextContent?.TrimEnd()
+                        });
+                        break;
+
+                    case BlockType.Image when
+                        !string.IsNullOrWhiteSpace(block.ImageMimeType) &&
+                        !string.IsNullOrWhiteSpace(block.ImageBase64):
+                    {
+                        var bytes = Convert.FromBase64String(block.ImageBase64);
+                        var imagePath = await StoreImageBytesAsync(
+                            bytes,
+                            block.ImageMimeType,
+                            cancellationToken);
+                        storedImagePaths.Add(imagePath);
+
+                        note.Blocks.Add(new NoteBlock
+                        {
+                            Type = BlockType.Image,
+                            SortOrder = index,
+                            ImagePath = imagePath,
+                            Caption = Limit(block.Caption?.Trim(), 500)
+                        });
+                        break;
+                    }
+                }
+            }
+
+            var tags = TagExtractor.Extract(note.Blocks
+                .Where(x => x.Type is BlockType.Text or BlockType.Link)
+                .Select(x => RichTextContent.ToPlainText(x.TextContent)));
+
+            note.Tags = tags
+                .Select(x => new NoteTag { Name = x })
+                .ToList();
+
+            db.Notes.Add(note);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return RedirectToAction(nameof(Edit), new { id = note.Id });
+        }
+        catch (Exception ex) when (ex is JsonException or FormatException or InvalidDataException)
+        {
+            foreach (var imagePath in storedImagePaths)
+            {
+                DeleteStoredImageFile(imagePath);
+            }
+
+            return BadRequest(localizer["Server_ImportInvalid"].Value);
+        }
+        catch
+        {
+            foreach (var imagePath in storedImagePaths)
+            {
+                DeleteStoredImageFile(imagePath);
+            }
+
+            throw;
+        }
+    }
+
     [HttpPost("/notes/save")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save([FromBody] SaveNoteRequest request, CancellationToken cancellationToken)
@@ -275,7 +450,103 @@ public sealed class NotesController(
             return BadRequest(new { message = localizer["Server_ImageTooLarge"].Value });
         }
 
-        var extension = image.ContentType.ToLowerInvariant() switch
+        try
+        {
+            await using var source = image.OpenReadStream();
+            var path = await StoreImageAsync(source, image.ContentType, cancellationToken);
+            return Ok(new { path });
+        }
+        catch (InvalidDataException)
+        {
+            return BadRequest(new { message = localizer["Server_ImageTypeUnsupported"].Value });
+        }
+    }
+
+    private async Task<string> StoreImageAsync(
+        Stream source,
+        string contentType,
+        CancellationToken cancellationToken)
+    {
+        await using var buffer = new MemoryStream();
+        await source.CopyToAsync(buffer, cancellationToken);
+        return await StoreImageBytesAsync(buffer.ToArray(), contentType, cancellationToken);
+    }
+
+    private async Task<string> StoreImageBytesAsync(
+        byte[] bytes,
+        string contentType,
+        CancellationToken cancellationToken)
+    {
+        if (bytes.Length == 0 || bytes.Length > 12_000_000)
+        {
+            throw new InvalidDataException("Invalid image size.");
+        }
+
+        var originalExtension = GetExtensionForContentType(contentType);
+        if (originalExtension is null)
+        {
+            throw new InvalidDataException("Unsupported image type.");
+        }
+
+        Image<Rgba32> image;
+        try
+        {
+            using var input = new MemoryStream(bytes, writable: false);
+            image = Image.Load<Rgba32>(input);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidDataException("Invalid image data.", ex);
+        }
+
+        using (image)
+        {
+            var preserveOriginal = image.Frames.Count > 1 || HasTransparency(image);
+            var extension = preserveOriginal ? originalExtension : ".jpg";
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var uploadsDirectory = Path.Combine(environment.WebRootPath, "uploads");
+            Directory.CreateDirectory(uploadsDirectory);
+            var physicalPath = Path.Combine(uploadsDirectory, fileName);
+
+            if (preserveOriginal)
+            {
+                await System.IO.File.WriteAllBytesAsync(physicalPath, bytes, cancellationToken);
+            }
+            else
+            {
+                image.SaveAsJpeg(physicalPath, new JpegEncoder { Quality = 90 });
+            }
+
+            return $"/uploads/{fileName}";
+        }
+    }
+
+    private static bool HasTransparency(Image<Rgba32> image)
+    {
+        var hasTransparency = false;
+
+        image.ProcessPixelRows(accessor =>
+        {
+            for (var y = 0; y < accessor.Height && !hasTransparency; y++)
+            {
+                var row = accessor.GetRowSpan(y);
+                for (var x = 0; x < row.Length; x++)
+                {
+                    if (row[x].A < byte.MaxValue)
+                    {
+                        hasTransparency = true;
+                        break;
+                    }
+                }
+            }
+        });
+
+        return hasTransparency;
+    }
+
+    private static string? GetExtensionForContentType(string? contentType)
+    {
+        return contentType?.ToLowerInvariant() switch
         {
             "image/png" => ".png",
             "image/jpeg" => ".jpg",
@@ -283,22 +554,55 @@ public sealed class NotesController(
             "image/gif" => ".gif",
             _ => null
         };
+    }
 
-        if (extension is null)
+    private static string GetImageMimeType(string imagePath)
+    {
+        return Path.GetExtension(imagePath).ToLowerInvariant() switch
         {
-            return BadRequest(new { message = localizer["Server_ImageTypeUnsupported"].Value });
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            ".gif" => "image/gif",
+            _ => "image/jpeg"
+        };
+    }
+
+    private static JsonSerializerOptions CreateTransferJsonOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var safe = new string(value
+            .Select(character => invalidCharacters.Contains(character) ? '_' : character)
+            .ToArray())
+            .Trim();
+
+        return string.IsNullOrWhiteSpace(safe) ? "note" : safe;
+    }
+
+    private void DeleteStoredImageFile(string imagePath)
+    {
+        var fileName = Path.GetFileName(imagePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return;
         }
 
-        var uploadsDirectory = Path.Combine(environment.WebRootPath, "uploads");
-        Directory.CreateDirectory(uploadsDirectory);
-
-        var fileName = $"{Guid.NewGuid():N}{extension}";
-        var physicalPath = Path.Combine(uploadsDirectory, fileName);
-
-        await using var stream = new FileStream(physicalPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        await image.CopyToAsync(stream, cancellationToken);
-
-        return Ok(new { path = $"/uploads/{fileName}" });
+        var physicalPath = Path.Combine(environment.WebRootPath, "uploads", fileName);
+        if (System.IO.File.Exists(physicalPath))
+        {
+            System.IO.File.Delete(physicalPath);
+        }
     }
 
     private string NormalizeTitle(string? value)
