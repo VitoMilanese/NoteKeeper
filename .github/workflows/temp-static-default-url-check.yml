@@ -1,0 +1,83 @@
+name: Temporary static assets and default URL verification
+on:
+  push:
+    branches:
+      - ci/pr2-static-default-url-check
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build solution
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+      - name: Verify direct executable serves static assets
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\src\NoteKeeper\bin\Release\net8.0\NoteKeeper.exe"
+          $process = Start-Process -FilePath $exe -ArgumentList "--urls","http://127.0.0.1:52417" -PassThru
+
+          try {
+              Start-Sleep -Seconds 3
+              if ($process.HasExited) {
+                  throw "Direct executable exited with code $($process.ExitCode)."
+              }
+
+              $css = Invoke-WebRequest -Uri "http://127.0.0.1:52417/css/site.css" -UseBasicParsing
+              $js = Invoke-WebRequest -Uri "http://127.0.0.1:52417/js/site.js" -UseBasicParsing
+              $favicon = Invoke-WebRequest -Uri "http://127.0.0.1:52417/favicon.svg" -UseBasicParsing
+
+              if ($css.StatusCode -ne 200 -or $css.Content -notmatch "\.site-header") {
+                  throw "site.css was not served correctly."
+              }
+              if ($js.StatusCode -ne 200 -or $js.Content.Length -lt 100) {
+                  throw "site.js was not served correctly."
+              }
+              if ($favicon.StatusCode -ne 200 -or $favicon.Content -notmatch "<svg") {
+                  throw "favicon.svg was not served correctly."
+              }
+          }
+          finally {
+              if (-not $process.HasExited) {
+                  Stop-Process -Id $process.Id -Force
+              }
+              Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          }
+      - name: Verify direct executable default URLs
+        shell: pwsh
+        run: |
+          dotnet dev-certs https | Out-Host
+          $exe = "$env:GITHUB_WORKSPACE\src\NoteKeeper\bin\Release\net8.0\NoteKeeper.exe"
+          $stdout = Join-Path $env:RUNNER_TEMP "notekeeper-default.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "notekeeper-default.stderr.log"
+          $process = Start-Process -FilePath $exe -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+
+          try {
+              Start-Sleep -Seconds 4
+              if ($process.HasExited) {
+                  Write-Host "--- stdout ---"
+                  if (Test-Path $stdout) { Get-Content $stdout }
+                  Write-Host "--- stderr ---"
+                  if (Test-Path $stderr) { Get-Content $stderr }
+                  throw "Direct executable with default URLs exited with code $($process.ExitCode)."
+              }
+
+              $http = Invoke-WebRequest -Uri "http://localhost:5147/" -MaximumRedirection 0 -SkipHttpErrorCheck
+              if ($http.StatusCode -notin 200,307,308) {
+                  throw "Unexpected HTTP status on default port 5147: $($http.StatusCode)"
+              }
+
+              $https = Invoke-WebRequest -Uri "https://localhost:7147/css/site.css" -SkipCertificateCheck -UseBasicParsing
+              if ($https.StatusCode -ne 200 -or $https.Content -notmatch "\.site-header") {
+                  throw "HTTPS default URL did not serve site.css correctly."
+              }
+          }
+          finally {
+              if (-not $process.HasExited) {
+                  Stop-Process -Id $process.Id -Force
+              }
+              Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          }
