@@ -1,0 +1,431 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NoteKeeper.Data;
+using NoteKeeper.Models;
+using NoteKeeper.Services;
+using NoteKeeper.ViewModels;
+
+namespace NoteKeeper.Controllers;
+
+public sealed class NotesController(AppDbContext db, IWebHostEnvironment environment) : Controller
+{
+    [HttpGet("/")]
+    public async Task<IActionResult> Index(
+        string? q,
+        string? tag,
+        string sort = "updated",
+        string dir = "desc",
+        CancellationToken cancellationToken = default)
+    {
+        q = q?.Trim();
+        tag = NormalizeTag(tag);
+        sort = sort is "title" or "created" or "updated" ? sort : "updated";
+        dir = dir == "asc" ? "asc" : "desc";
+
+        IQueryable<Note> query = db.Notes
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(x => x.Blocks)
+            .Include(x => x.Tags);
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var pattern = $"%{q}%";
+            query = query.Where(note =>
+                EF.Functions.Like(note.Title, pattern) ||
+                note.Blocks.Any(block =>
+                    (block.TextContent != null && EF.Functions.Like(block.TextContent, pattern)) ||
+                    (block.LinkTitle != null && EF.Functions.Like(block.LinkTitle, pattern)) ||
+                    (block.Url != null && EF.Functions.Like(block.Url, pattern)) ||
+                    (block.Caption != null && EF.Functions.Like(block.Caption, pattern))));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            query = query.Where(note => note.Tags.Any(x => x.Name == tag));
+        }
+
+        query = (sort, dir) switch
+        {
+            ("title", "asc") => query.OrderBy(x => x.Title),
+            ("title", _) => query.OrderByDescending(x => x.Title),
+            ("created", "asc") => query.OrderBy(x => x.CreatedAtUtc),
+            ("created", _) => query.OrderByDescending(x => x.CreatedAtUtc),
+            ("updated", "asc") => query.OrderBy(x => x.UpdatedAtUtc),
+            _ => query.OrderByDescending(x => x.UpdatedAtUtc)
+        };
+
+        var notes = await query.ToListAsync(cancellationToken);
+        var tagCounts = await db.NoteTags
+            .AsNoTracking()
+            .GroupBy(x => x.Name)
+            .Select(group => new TagCountViewModel
+            {
+                Name = group.Key,
+                Count = group.Count()
+            })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.Name)
+            .Take(40)
+            .ToListAsync(cancellationToken);
+
+        var model = new NoteListViewModel
+        {
+            Query = q ?? string.Empty,
+            Tag = tag ?? string.Empty,
+            Sort = sort,
+            Direction = dir,
+            Tags = tagCounts,
+            Notes = notes.Select(note => new NoteListItemViewModel
+            {
+                Id = note.Id,
+                Title = note.Title,
+                Preview = BuildPreview(note.Blocks),
+                CreatedAtUtc = note.CreatedAtUtc,
+                UpdatedAtUtc = note.UpdatedAtUtc,
+                BlockCount = note.Blocks.Count,
+                Tags = note.Tags.Select(x => x.Name).OrderBy(x => x).ToList()
+            }).ToList()
+        };
+
+        return View(model);
+    }
+
+    [HttpGet("/notes/new")]
+    public IActionResult New()
+    {
+        return View("Edit", new NoteEditorViewModel
+        {
+            Title = string.Empty,
+            Blocks =
+            [
+                new NoteBlockViewModel { Type = BlockType.Text }
+            ]
+        });
+    }
+
+    [HttpGet("/notes/{id:int}")]
+    public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+    {
+        var note = await db.Notes
+            .AsNoTracking()
+            .Include(x => x.Blocks)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (note is null)
+        {
+            return NotFound();
+        }
+
+        return View(new NoteEditorViewModel
+        {
+            Id = note.Id,
+            Title = note.Title,
+            UpdatedAtUtc = note.UpdatedAtUtc,
+            Blocks = note.Blocks
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new NoteBlockViewModel
+                {
+                    Type = x.Type,
+                    TextContent = x.TextContent,
+                    Url = x.Url,
+                    LinkTitle = x.LinkTitle,
+                    ImagePath = x.ImagePath,
+                    Caption = x.Caption
+                })
+                .ToList()
+        });
+    }
+
+    [HttpPost("/notes/save")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Save([FromBody] SaveNoteRequest request, CancellationToken cancellationToken)
+    {
+        if (request.Blocks.Count > 500)
+        {
+            return BadRequest(new { message = "У нотатці забагато блоків." });
+        }
+
+        Note note;
+        if (request.Id is > 0)
+        {
+            var existing = await db.Notes
+                .Include(x => x.Blocks)
+                .Include(x => x.Tags)
+                .FirstOrDefaultAsync(x => x.Id == request.Id.Value, cancellationToken);
+
+            if (existing is null)
+            {
+                return NotFound(new { message = "Нотатку не знайдено." });
+            }
+
+            note = existing;
+        }
+        else
+        {
+            note = new Note
+            {
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.Notes.Add(note);
+        }
+
+        var oldImagePaths = note.Blocks
+            .Where(x => x.Type == BlockType.Image && !string.IsNullOrWhiteSpace(x.ImagePath))
+            .Select(x => x.ImagePath!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        note.Title = NormalizeTitle(request.Title);
+        note.UpdatedAtUtc = DateTime.UtcNow;
+
+        if (note.Blocks.Count > 0)
+        {
+            db.NoteBlocks.RemoveRange(note.Blocks);
+        }
+
+        note.Blocks = request.Blocks
+            .Select((block, index) => ToEntity(block, index))
+            .Where(x => x is not null)
+            .Cast<NoteBlock>()
+            .ToList();
+
+        var tags = TagExtractor.Extract(note.Blocks
+            .Where(x => x.Type == BlockType.Text)
+            .Select(x => x.TextContent));
+        var desiredTags = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var tagsToRemove = note.Tags
+            .Where(x => !desiredTags.Contains(x.Name))
+            .ToList();
+        if (tagsToRemove.Count > 0)
+        {
+            db.NoteTags.RemoveRange(tagsToRemove);
+        }
+
+        var existingTagNames = note.Tags
+            .Select(x => x.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var tagName in desiredTags.Except(existingTagNames, StringComparer.OrdinalIgnoreCase))
+        {
+            note.Tags.Add(new NoteTag { Name = tagName });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        var currentImagePaths = note.Blocks
+            .Where(x => x.Type == BlockType.Image && !string.IsNullOrWhiteSpace(x.ImagePath))
+            .Select(x => x.ImagePath!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var removedPath in oldImagePaths.Except(currentImagePaths, StringComparer.OrdinalIgnoreCase))
+        {
+            await DeleteImageIfUnusedAsync(removedPath, note.Id, cancellationToken);
+        }
+
+        return Ok(new
+        {
+            id = note.Id,
+            updatedAtUtc = note.UpdatedAtUtc,
+            title = note.Title,
+            tags
+        });
+    }
+
+    [HttpPost("/notes/{id:int}/delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var note = await db.Notes
+            .Include(x => x.Blocks)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (note is null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var imagePaths = note.Blocks
+            .Where(x => x.Type == BlockType.Image && !string.IsNullOrWhiteSpace(x.ImagePath))
+            .Select(x => x.ImagePath!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        db.Notes.Remove(note);
+        await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var imagePath in imagePaths)
+        {
+            await DeleteImageIfUnusedAsync(imagePath, id, cancellationToken);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("/notes/upload-image")]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(15_000_000)]
+    public async Task<IActionResult> UploadImage(IFormFile? image, CancellationToken cancellationToken)
+    {
+        if (image is null || image.Length == 0 || image.Length > 12_000_000)
+        {
+            return BadRequest(new { message = "Зображення має бути не більше 12 МБ." });
+        }
+
+        var extension = image.ContentType.ToLowerInvariant() switch
+        {
+            "image/png" => ".png",
+            "image/jpeg" => ".jpg",
+            "image/webp" => ".webp",
+            "image/gif" => ".gif",
+            _ => null
+        };
+
+        if (extension is null)
+        {
+            return BadRequest(new { message = "Підтримуються PNG, JPEG, WEBP та GIF." });
+        }
+
+        var uploadsDirectory = Path.Combine(environment.WebRootPath, "uploads");
+        Directory.CreateDirectory(uploadsDirectory);
+
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var physicalPath = Path.Combine(uploadsDirectory, fileName);
+
+        await using var stream = new FileStream(physicalPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        await image.CopyToAsync(stream, cancellationToken);
+
+        return Ok(new { path = $"/uploads/{fileName}" });
+    }
+
+    private static string NormalizeTitle(string? value)
+    {
+        var title = (value ?? string.Empty).Trim();
+        if (title.Length == 0)
+        {
+            return "Без назви";
+        }
+
+        return title.Length <= 240 ? title : title[..240];
+    }
+
+    private static string? NormalizeTag(string? value)
+    {
+        var tag = value?.Trim().TrimStart('#').ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(tag) ? null : tag;
+    }
+
+    private static string? NormalizeUrl(string? value)
+    {
+        var url = value?.Trim();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return null;
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed))
+        {
+            return null;
+        }
+
+        return parsed.Scheme is "http" or "https" ? parsed.ToString() : null;
+    }
+
+    private static string? NormalizeImagePath(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var path = value.Trim();
+        if (!path.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var fileName = Path.GetFileName(path);
+        return string.IsNullOrWhiteSpace(fileName) ? null : $"/uploads/{fileName}";
+    }
+
+    private static NoteBlock? ToEntity(SaveBlockRequest block, int sortOrder)
+    {
+        return block.Type switch
+        {
+            BlockType.Text => new NoteBlock
+            {
+                Type = BlockType.Text,
+                SortOrder = sortOrder,
+                TextContent = block.TextContent?.TrimEnd()
+            },
+            BlockType.Link => new NoteBlock
+            {
+                Type = BlockType.Link,
+                SortOrder = sortOrder,
+                Url = NormalizeUrl(block.Url),
+                LinkTitle = Limit(block.LinkTitle?.Trim(), 300),
+                TextContent = block.TextContent?.TrimEnd()
+            },
+            BlockType.Image when NormalizeImagePath(block.ImagePath) is { } imagePath => new NoteBlock
+            {
+                Type = BlockType.Image,
+                SortOrder = sortOrder,
+                ImagePath = imagePath,
+                Caption = Limit(block.Caption?.Trim(), 500)
+            },
+            _ => null
+        };
+    }
+
+    private static string? Limit(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Length <= maxLength ? value : value[..maxLength];
+    }
+
+    private static string BuildPreview(IEnumerable<NoteBlock> blocks)
+    {
+        var preview = blocks
+            .OrderBy(x => x.SortOrder)
+            .Select(x => x.Type switch
+            {
+                BlockType.Text => x.TextContent,
+                BlockType.Link => x.LinkTitle ?? x.Url,
+                BlockType.Image => x.Caption,
+                _ => null
+            })
+            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?.Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Trim() ?? "Порожня нотатка";
+
+        return preview.Length <= 180 ? preview : preview[..177] + "…";
+    }
+
+    private async Task DeleteImageIfUnusedAsync(string imagePath, int excludedNoteId, CancellationToken cancellationToken)
+    {
+        var isUsedElsewhere = await db.NoteBlocks
+            .AsNoTracking()
+            .AnyAsync(x => x.NoteId != excludedNoteId && x.ImagePath == imagePath, cancellationToken);
+
+        if (isUsedElsewhere)
+        {
+            return;
+        }
+
+        var fileName = Path.GetFileName(imagePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return;
+        }
+
+        var physicalPath = Path.Combine(environment.WebRootPath, "uploads", fileName);
+        if (System.IO.File.Exists(physicalPath))
+        {
+            System.IO.File.Delete(physicalPath);
+        }
+    }
+}

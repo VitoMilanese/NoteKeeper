@@ -1,0 +1,58 @@
+@using System.Text.Json
+@model NoteEditorViewModel
+@{
+    ViewData["Title"] = Model.Id.HasValue ? $"{Model.Title} — NoteKeeper" : "Нова нотатка — NoteKeeper";
+    var initialJson = JsonSerializer.Serialize(Model.Blocks, new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
+}
+
+<section id="noteEditor" class="editor-page" data-note-id="@(Model.Id?.ToString() ?? "")">
+    @Html.AntiForgeryToken()
+
+    <div class="editor-topbar">
+        <a class="button button-ghost button-small" href="/">← До списку</a>
+        <div class="save-cluster">
+            <span id="saveStatus" class="save-status">
+                @if (Model.UpdatedAtUtc.HasValue)
+                {
+                    <span>Збережено <time class="js-local-time" datetime="@Model.UpdatedAtUtc.Value.ToString("O")">@Model.UpdatedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</time></span>
+                }
+                else
+                {
+                    <span>Нова нотатка</span>
+                }
+            </span>
+            <button id="saveButton" class="button button-primary button-small" type="button">Зберегти <kbd>Ctrl+S</kbd></button>
+        </div>
+    </div>
+
+    <div class="editor-heading">
+        <input id="titleInput" class="title-input" maxlength="240" value="@Model.Title" placeholder="Назва нотатки" autocomplete="off" />
+        <p>Додай блоки нижче. <code>#теги</code> в тексті автоматично стануть доступними для пошуку.</p>
+    </div>
+
+    <div class="add-block-bar panel">
+        <div class="add-actions">
+            <button class="button button-secondary" type="button" data-add-block="text">＋ Текст</button>
+            <button class="button button-secondary" type="button" data-add-block="link">↗ Посилання</button>
+            <button class="button button-secondary" type="button" id="addImageButton">▧ Зображення</button>
+            <input id="imageFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
+        </div>
+        <div class="paste-hint"><kbd>Ctrl+V</kbd> вставляє картинку з буфера як новий блок</div>
+    </div>
+
+    <div id="blocksContainer" class="blocks-list" aria-live="polite"></div>
+
+    <div class="editor-footer-actions">
+        <button class="button button-secondary" type="button" data-add-block="text">＋ Додати текстовий блок</button>
+        <button id="saveButtonBottom" class="button button-primary" type="button">Зберегти зміни</button>
+    </div>
+</section>
+
+<script id="initialBlocks" type="application/json">@Html.Raw(initialJson)</script>
+
+@section Scripts {
+    <script src="~/js/editor.js" asp-append-version="true"></script>
+}

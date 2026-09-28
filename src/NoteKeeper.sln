@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoteKeeper", "NoteKeeper\NoteKeeper.csproj", "{DD1B43A9-1471-3437-3B3D-841B935A447E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DD1B43A9-1471-3437-3B3D-841B935A447E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD1B43A9-1471-3437-3B3D-841B935A447E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD1B43A9-1471-3437-3B3D-841B935A447E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD1B43A9-1471-3437-3B3D-841B935A447E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7F5A2524-46F1-47CE-8CDA-06F5E7B96582}
+	EndGlobalSection
+EndGlobal

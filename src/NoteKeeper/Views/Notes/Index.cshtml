@@ -1,0 +1,113 @@
+@model NoteListViewModel
+@{
+    ViewData["Title"] = "Нотатки — NoteKeeper";
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
+}
+
+<section class="hero-row">
+    <div>
+        <p class="eyebrow">Твоя база нотаток</p>
+        <h1>Усе важливе — в одному місці.</h1>
+        <p class="hero-copy">Текст, посилання, зображення, теги та швидкий пошук без зайвого шуму.</p>
+    </div>
+    <a class="button button-primary hero-action" href="/notes/new">+ Створити нотатку</a>
+</section>
+
+<section class="panel filter-panel">
+    <form method="get" action="/" class="filter-grid">
+        <label class="field search-field">
+            <span>Пошук</span>
+            <input name="q" value="@Model.Query" placeholder="Назва, текст, посилання…" autocomplete="off" />
+        </label>
+
+        <label class="field">
+            <span>Тег</span>
+            <input name="tag" value="@Model.Tag" placeholder="#ідея" autocomplete="off" />
+        </label>
+
+        <label class="field">
+            <span>Сортувати</span>
+            <select name="sort">
+                <option value="updated" selected="@(Model.Sort == "updated" ? "selected" : null)">За зміною</option>
+                <option value="created" selected="@(Model.Sort == "created" ? "selected" : null)">За створенням</option>
+                <option value="title" selected="@(Model.Sort == "title" ? "selected" : null)">За назвою</option>
+            </select>
+        </label>
+
+        <label class="field">
+            <span>Напрямок</span>
+            <select name="dir">
+                <option value="desc" selected="@(Model.Direction == "desc" ? "selected" : null)">Спочатку нові / Я→А</option>
+                <option value="asc" selected="@(Model.Direction == "asc" ? "selected" : null)">Спочатку старі / А→Я</option>
+            </select>
+        </label>
+
+        <button class="button button-secondary filter-submit" type="submit">Застосувати</button>
+        @if (hasFilters)
+        {
+            <a class="button button-ghost filter-reset" href="/">Скинути</a>
+        }
+    </form>
+
+    @if (Model.Tags.Count > 0)
+    {
+        <div class="tag-cloud" aria-label="Популярні теги">
+            @foreach (var item in Model.Tags)
+            {
+                <a class="tag-chip @(Model.Tag == item.Name ? "is-active" : "")"
+                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction">
+                    #@item.Name <span>@item.Count</span>
+                </a>
+            }
+        </div>
+    }
+</section>
+
+<div class="list-heading">
+    <h2>@(hasFilters ? "Результати" : "Нотатки")</h2>
+    <span>@Model.Notes.Count</span>
+</div>
+
+@if (Model.Notes.Count == 0)
+{
+    <section class="empty-state panel">
+        <div class="empty-icon">✦</div>
+        <h2>@(hasFilters ? "Нічого не знайдено" : "Тут поки порожньо")</h2>
+        <p>@(hasFilters ? "Спробуй змінити пошуковий запит або тег." : "Створи першу нотатку і додай до неї текст, посилання або картинку.")</p>
+        <a class="button button-primary" href="/notes/new">+ Нова нотатка</a>
+    </section>
+}
+else
+{
+    <section class="notes-grid">
+        @foreach (var note in Model.Notes)
+        {
+            <article class="note-card">
+                <a class="note-card-main" href="/notes/@note.Id">
+                    <div class="note-card-topline">
+                        <span>@note.BlockCount блок@(note.BlockCount == 1 ? "" : "ів")</span>
+                        <time class="js-local-time" datetime="@note.UpdatedAtUtc.ToString("O")">@note.UpdatedAtUtc.ToString("dd.MM.yyyy HH:mm")</time>
+                    </div>
+                    <h3>@note.Title</h3>
+                    <p>@note.Preview</p>
+                    @if (note.Tags.Count > 0)
+                    {
+                        <div class="note-tags">
+                            @foreach (var noteTag in note.Tags.Take(6))
+                            {
+                                <span>#@noteTag</span>
+                            }
+                        </div>
+                    }
+                </a>
+                <div class="note-card-actions">
+                    <a class="icon-button" href="/notes/@note.Id" title="Редагувати" aria-label="Редагувати">✎</a>
+                    <form method="post" action="/notes/@note.Id/delete" onsubmit="return confirm('Видалити цю нотатку?');">
+                        @Html.AntiForgeryToken()
+                        <button class="icon-button danger" type="submit" title="Видалити" aria-label="Видалити">×</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </section>
+}
