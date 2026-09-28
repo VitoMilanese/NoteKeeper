@@ -1283,16 +1283,17 @@
     }
 
     document.addEventListener('pointerdown', (event) => {
-        if (!activeEmojiPicker) return;
-
-        if (
-            activeEmojiPicker.element.contains(event.target) ||
-            activeEmojiPicker.anchor.contains(event.target)
-        ) {
-            return;
+        if (activeEmojiPicker &&
+            !activeEmojiPicker.element.contains(event.target) &&
+            !activeEmojiPicker.anchor.contains(event.target)) {
+            closeEmojiPicker(false);
         }
 
-        closeEmojiPicker(false);
+        document.querySelectorAll('.symbol-picker[open]').forEach((picker) => {
+            if (!picker.contains(event.target)) {
+                picker.open = false;
+            }
+        });
     }, true);
 
     window.addEventListener('resize', positionEmojiPicker);
