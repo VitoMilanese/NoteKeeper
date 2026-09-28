@@ -7,6 +7,8 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - home page with a note list;
 - search by title, text, comments, links, and image captions;
 - filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
+- highlight `#active` and `#done` tags with stronger emphasis, with higher-contrast tag chips in the light theme;
+- clear the search and tag filter fields from a dedicated button while preserving the selected sort and direction;
 - sorting by title, creation date, or last update;
 - rich text blocks with bold, italic, underline, strikethrough, inline code, quotes, expandable containers, dividers, text sizing, numbered lists, bullet lists, dash lists, and a quick symbol palette;
 - rich-text keyboard shortcuts for `Ctrl+B`, `Ctrl+I`, and `Ctrl+U`;

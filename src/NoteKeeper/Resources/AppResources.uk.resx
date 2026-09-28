@@ -25,6 +25,7 @@
   <data name="Index_DirectionAsc" xml:space="preserve"><value>Спочатку старі / А→Я</value></data>
   <data name="Index_Apply" xml:space="preserve"><value>Застосувати</value></data>
   <data name="Index_Reset" xml:space="preserve"><value>Скинути</value></data>
+  <data name="Index_Clear" xml:space="preserve"><value>Очистити</value></data>
   <data name="Index_PopularTagsAria" xml:space="preserve"><value>Популярні теги</value></data>
   <data name="Index_Results" xml:space="preserve"><value>Результати</value></data>
   <data name="Index_Notes" xml:space="preserve"><value>Нотатки</value></data>

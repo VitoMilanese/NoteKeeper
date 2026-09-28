@@ -25,6 +25,7 @@
   <data name="Index_DirectionAsc" xml:space="preserve"><value>Oldest first / A→Z</value></data>
   <data name="Index_Apply" xml:space="preserve"><value>Apply</value></data>
   <data name="Index_Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Index_Clear" xml:space="preserve"><value>Clear</value></data>
   <data name="Index_PopularTagsAria" xml:space="preserve"><value>Popular tags</value></data>
   <data name="Index_Results" xml:space="preserve"><value>Results</value></data>
   <data name="Index_Notes" xml:space="preserve"><value>Notes</value></data>

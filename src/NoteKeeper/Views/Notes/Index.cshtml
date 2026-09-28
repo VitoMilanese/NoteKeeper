@@ -62,10 +62,8 @@
         </label>
 
         <button class="button button-secondary filter-submit" type="submit">@Localizer["Index_Apply"]</button>
-        @if (hasFilters)
-        {
-            <a class="button button-ghost filter-reset" href="/">@Localizer["Index_Reset"]</a>
-        }
+        <a class="button button-ghost filter-reset"
+           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)">@Localizer["Index_Clear"]</a>
     </form>
 
     @if (Model.Tags.Count > 0)
@@ -73,7 +71,10 @@
         <div class="tag-cloud" aria-label="@Localizer["Index_PopularTagsAria"]">
             @foreach (var item in Model.Tags)
             {
-                <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "")"
+                var isStatusTag =
+                    item.Name.Equals("active", StringComparison.OrdinalIgnoreCase) ||
+                    item.Name.Equals("done", StringComparison.OrdinalIgnoreCase);
+                <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "") @(isStatusTag ? "is-status-tag" : "")"
                    href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction">
                     #@item.Name <span>@item.Count</span>
                 </a>
@@ -114,7 +115,10 @@ else
                         <div class="note-tags">
                             @foreach (var noteTag in note.Tags.Take(6))
                             {
-                                <span>#@noteTag</span>
+                                var isStatusTag =
+                                    noteTag.Equals("active", StringComparison.OrdinalIgnoreCase) ||
+                                    noteTag.Equals("done", StringComparison.OrdinalIgnoreCase);
+                                <span class="@(isStatusTag ? "is-status-tag" : "")">#@noteTag</span>
                             }
                         </div>
                     }

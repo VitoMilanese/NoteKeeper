@@ -432,10 +432,33 @@ html[data-theme="light"] .image-caption {
     color: #7785a3;
 }
 
+.tag-chip.is-status-tag,
+.note-tags span.is-status-tag {
+    font-weight: 800;
+}
+
 .tag-chip:hover,
 .tag-chip.is-active {
     border-color: rgba(124, 140, 255, 0.5);
     background: rgba(124, 140, 255, 0.17);
+}
+
+html[data-theme="light"] .tag-chip,
+html[data-theme="light"] .note-tags span {
+    border-color: rgba(70, 86, 210, 0.28);
+    background: rgba(86, 102, 225, 0.11);
+    color: #4352bd;
+}
+
+html[data-theme="light"] .tag-chip span {
+    color: #5d6785;
+}
+
+html[data-theme="light"] .tag-chip:hover,
+html[data-theme="light"] .tag-chip.is-active {
+    border-color: rgba(63, 77, 194, 0.48);
+    background: rgba(86, 102, 225, 0.19);
+    color: #3342aa;
 }
 
 .list-heading {
