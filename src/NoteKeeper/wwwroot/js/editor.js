@@ -991,8 +991,9 @@
         selection.addRange(range);
         richEditor._savedRange = range.cloneRange();
 
-        // Native delete keeps removing an expander in the browser undo history.
-        document.execCommand('delete', false, null);
+        // Replacing the selected <details> with empty HTML removes it as
+        // one native editing transaction, so Ctrl+Z can restore the container.
+        document.execCommand('insertHTML', false, '');
         notifyRichInput(richEditor);
     }
 
