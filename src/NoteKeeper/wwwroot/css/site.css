@@ -1348,6 +1348,20 @@ html[data-theme="light"] .emoji-item:hover {
     color: var(--accent);
 }
 
+.rich-text-editor .expander-boundary {
+    height: 7px;
+    min-height: 7px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    line-height: 7px;
+    cursor: text;
+}
+
+.rich-text-editor .expander-boundary br {
+    line-height: 7px;
+}
+
 .rich-text-editor details {
     position: relative;
     margin: 8px 0;

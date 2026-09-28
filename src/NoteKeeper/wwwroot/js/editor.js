@@ -128,6 +128,11 @@
 
                 if (child.nodeType !== Node.ELEMENT_NODE) continue;
 
+                if (child.hasAttribute('data-expander-boundary')) {
+                    child.remove();
+                    continue;
+                }
+
                 if (!allowedRichTags.has(child.tagName)) {
                     child.replaceWith(...Array.from(child.childNodes));
                     continue;
@@ -1011,6 +1016,57 @@
         notifyRichInput(richEditor);
     }
 
+    function createExpanderBoundary() {
+        const boundary = document.createElement('div');
+        boundary.className = 'expander-boundary';
+        boundary.dataset.expanderBoundary = 'true';
+        boundary.appendChild(document.createElement('br'));
+        return boundary;
+    }
+
+    function expanderBoundaryHasContent(boundary) {
+        if ((boundary.textContent || '').length > 0) return true;
+
+        return Array.from(boundary.children).some((child) => child.tagName !== 'BR');
+    }
+
+    function ensureExpandableBoundaries(richEditor) {
+        // Once the user types into a caret anchor it becomes ordinary note
+        // content and must be saved normally.
+        richEditor.querySelectorAll('[data-expander-boundary]').forEach((boundary) => {
+            if (!expanderBoundaryHasContent(boundary)) return;
+
+            boundary.removeAttribute('data-expander-boundary');
+            boundary.classList.remove('expander-boundary');
+        });
+
+        // Remove anchors that are no longer adjacent to an expandable
+        // container (for example after Ctrl+Z removes the expander).
+        richEditor.querySelectorAll('[data-expander-boundary]').forEach((boundary) => {
+            const beforeExpander = boundary.nextElementSibling?.tagName === 'DETAILS';
+            const afterExpander = boundary.previousElementSibling?.tagName === 'DETAILS';
+
+            if (!beforeExpander && !afterExpander) {
+                boundary.remove();
+            }
+        });
+
+        richEditor.querySelectorAll('details').forEach((details) => {
+            const previous = details.previousElementSibling;
+            const next = details.nextElementSibling;
+
+            if (!previous || previous.tagName === 'DETAILS') {
+                const boundary = createExpanderBoundary();
+                details.before(boundary);
+            }
+
+            if (!next || next.tagName === 'DETAILS') {
+                const boundary = createExpanderBoundary();
+                details.after(boundary);
+            }
+        });
+    }
+
     function decorateExpanders(richEditor) {
         richEditor.querySelectorAll('details > summary').forEach((summary) => {
             if (summary.querySelector(':scope > .expander-delete')) return;
@@ -1035,6 +1091,8 @@
 
             summary.appendChild(remove);
         });
+
+        ensureExpandableBoundaries(richEditor);
     }
 
     function insertExpandableContainer(richEditor) {
@@ -1216,8 +1274,10 @@
             }
 
             // Undo/redo can restore a saved semantic <details> without the
-            // editor-only delete control, so decorate it again when needed.
+            // editor-only controls. Rebuild the delete control and compact
+            // caret anchors when needed.
             decorateExpanders(richEditor);
+            ensureExpandableBoundaries(richEditor);
         });
         richEditor.addEventListener('click', (event) => {
             const summary = event.target.closest?.('summary');
