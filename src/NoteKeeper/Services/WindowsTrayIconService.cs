@@ -56,7 +56,7 @@ public sealed class WindowsTrayIconService(
             return Task.CompletedTask;
         }
 
-        applicationLifetime.ApplicationStarted.Register(StartTrayThread);
+        applicationLifetime.ApplicationStarted.Register(TryStartTrayThread);
         return Task.CompletedTask;
     }
 
@@ -78,24 +78,40 @@ public sealed class WindowsTrayIconService(
     }
 
     [SupportedOSPlatform("windows")]
+    private void TryStartTrayThread()
+    {
+        try
+        {
+            StartTrayThread();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not start the NoteKeeper system tray service.");
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
     private void StartTrayThread()
     {
         lock (_sync)
         {
-            if (_trayThread?.IsAlive == true)
+            if (_disposed || _trayThread?.IsAlive == true)
             {
                 return;
             }
 
             _homeUrl = ResolveHomeUrl();
             _windowProcedure ??= WindowProcedure;
-            _trayThread = new Thread(TrayThreadMain)
+
+            var trayThread = new Thread(TrayThreadMain)
             {
                 IsBackground = true,
                 Name = "NoteKeeper system tray"
             };
-            _trayThread.SetApartmentState(ApartmentState.STA);
-            _trayThread.Start();
+
+            trayThread.SetApartmentState(ApartmentState.STA);
+            _trayThread = trayThread;
+            trayThread.Start();
         }
     }
 
@@ -128,28 +144,36 @@ public sealed class WindowsTrayIconService(
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private void TrayThreadMain()
     {
-        _trayThreadId = GetCurrentThreadId();
-        _windowClassName = $"NoteKeeper.Tray.{Environment.ProcessId}";
-        _taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
-
-        var moduleHandle = GetModuleHandle(null);
-        var windowClass = new WindowClass
-        {
-            lpfnWndProc = _windowProcedure!,
-            hInstance = moduleHandle,
-            lpszClassName = _windowClassName
-        };
-
-        if (RegisterClass(ref windowClass) == 0)
-        {
-            logger.LogWarning("Could not register the NoteKeeper system tray window class. Win32 error: {Error}", Marshal.GetLastWin32Error());
-            return;
-        }
+        nint moduleHandle = nint.Zero;
+        var classRegistered = false;
 
         try
         {
+            _trayThreadId = GetCurrentThreadId();
+            _windowClassName = $"NoteKeeper.Tray.{Environment.ProcessId}";
+            _taskbarCreatedMessage = RegisterWindowMessage("TaskbarCreated");
+            moduleHandle = GetModuleHandle(null);
+
+            var windowClass = new WindowClass
+            {
+                lpfnWndProc = _windowProcedure!,
+                hInstance = moduleHandle,
+                lpszClassName = _windowClassName
+            };
+
+            if (RegisterClass(ref windowClass) == 0)
+            {
+                logger.LogWarning(
+                    "Could not register the NoteKeeper system tray window class. Win32 error: {Error}",
+                    Marshal.GetLastWin32Error());
+                return;
+            }
+
+            classRegistered = true;
+
             _windowHandle = CreateWindowEx(
                 0,
                 _windowClassName,
@@ -166,7 +190,9 @@ public sealed class WindowsTrayIconService(
 
             if (_windowHandle == nint.Zero)
             {
-                logger.LogWarning("Could not create the NoteKeeper system tray window. Win32 error: {Error}", Marshal.GetLastWin32Error());
+                logger.LogWarning(
+                    "Could not create the NoteKeeper system tray window. Win32 error: {Error}",
+                    Marshal.GetLastWin32Error());
                 return;
             }
 
@@ -185,64 +211,90 @@ public sealed class WindowsTrayIconService(
         }
         finally
         {
-            RemoveTrayIcon();
-
-            if (_windowHandle != nint.Zero)
+            try
             {
-                DestroyWindow(_windowHandle);
-                _windowHandle = nint.Zero;
-            }
+                RemoveTrayIcon();
 
-            if (_iconHandle != nint.Zero)
+                if (_windowHandle != nint.Zero)
+                {
+                    DestroyWindow(_windowHandle);
+                    _windowHandle = nint.Zero;
+                }
+
+                if (_iconHandle != nint.Zero)
+                {
+                    DestroyIcon(_iconHandle);
+                    _iconHandle = nint.Zero;
+                }
+
+                if (classRegistered && moduleHandle != nint.Zero && !string.IsNullOrWhiteSpace(_windowClassName))
+                {
+                    UnregisterClass(_windowClassName, moduleHandle);
+                }
+            }
+            catch (Exception exception)
             {
-                DestroyIcon(_iconHandle);
-                _iconHandle = nint.Zero;
+                logger.LogWarning(exception, "Could not clean up the NoteKeeper system tray service.");
             }
-
-            UnregisterClass(_windowClassName, moduleHandle);
-            _trayThreadId = 0;
+            finally
+            {
+                lock (_sync)
+                {
+                    _trayThreadId = 0;
+                    _trayThread = null;
+                }
+            }
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private nint WindowProcedure(nint windowHandle, uint message, nint wParam, nint lParam)
     {
-        if (message == WmTrayIcon)
+        try
         {
-            var mouseMessage = unchecked((uint)lParam.ToInt64());
-
-            if (mouseMessage == WmLButtonDoubleClick)
+            if (message == WmTrayIcon)
             {
-                OpenHomePage();
+                var mouseMessage = unchecked((uint)lParam.ToInt64());
+
+                if (mouseMessage == WmLButtonDoubleClick)
+                {
+                    OpenHomePage();
+                    return nint.Zero;
+                }
+
+                if (mouseMessage is WmRButtonUp or WmContextMenu)
+                {
+                    ShowContextMenu(windowHandle);
+                    return nint.Zero;
+                }
+            }
+
+            if (_taskbarCreatedMessage != 0 && message == _taskbarCreatedMessage)
+            {
+                AddTrayIcon();
                 return nint.Zero;
             }
 
-            if (mouseMessage is WmRButtonUp or WmContextMenu)
+            if (message == WmClose)
             {
-                ShowContextMenu(windowHandle);
+                DestroyWindow(windowHandle);
                 return nint.Zero;
             }
-        }
 
-        if (_taskbarCreatedMessage != 0 && message == _taskbarCreatedMessage)
+            if (message == WmDestroy)
+            {
+                RemoveTrayIcon();
+                PostQuitMessage(0);
+                return nint.Zero;
+            }
+
+            return DefWindowProc(windowHandle, message, wParam, lParam);
+        }
+        catch (Exception exception)
         {
-            AddTrayIcon();
-            return nint.Zero;
+            logger.LogError(exception, "An error occurred while processing a NoteKeeper tray window message.");
+            return DefWindowProc(windowHandle, message, wParam, lParam);
         }
-
-        if (message == WmClose)
-        {
-            DestroyWindow(windowHandle);
-            return nint.Zero;
-        }
-
-        if (message == WmDestroy)
-        {
-            RemoveTrayIcon();
-            PostQuitMessage(0);
-            return nint.Zero;
-        }
-
-        return DefWindowProc(windowHandle, message, wParam, lParam);
     }
 
     private void ShowContextMenu(nint windowHandle)
@@ -477,19 +529,20 @@ public sealed class WindowsTrayIconService(
         public nint hBalloonIcon;
     }
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern nint GetModuleHandle(string? moduleName);
 
     [DllImport("kernel32.dll")]
     private static extern uint GetCurrentThreadId();
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport("user32.dll", EntryPoint = "RegisterClassW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     private static extern ushort RegisterClass(ref WindowClass windowClass);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("user32.dll", EntryPoint = "UnregisterClassW", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool UnregisterClass(string className, nint instance);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport("user32.dll", EntryPoint = "CreateWindowExW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     private static extern nint CreateWindowEx(
         uint extendedStyle,
         string className,
@@ -507,7 +560,7 @@ public sealed class WindowsTrayIconService(
     [DllImport("user32.dll")]
     private static extern bool DestroyWindow(nint windowHandle);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("user32.dll", EntryPoint = "DefWindowProcW", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern nint DefWindowProc(nint windowHandle, uint message, nint wParam, nint lParam);
 
     [DllImport("user32.dll")]
@@ -528,10 +581,10 @@ public sealed class WindowsTrayIconService(
     [DllImport("user32.dll")]
     private static extern bool PostThreadMessage(uint threadId, uint message, nint wParam, nint lParam);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("user32.dll", EntryPoint = "RegisterWindowMessageW", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern uint RegisterWindowMessage(string message);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport("user32.dll", EntryPoint = "LoadImageW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     private static extern nint LoadImage(nint instance, string name, uint type, int width, int height, uint loadFlags);
 
     [DllImport("user32.dll")]
@@ -549,7 +602,8 @@ public sealed class WindowsTrayIconService(
     [DllImport("user32.dll")]
     private static extern nint CreatePopupMenu();
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("user32.dll", EntryPoint = "AppendMenuW", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool AppendMenu(nint menu, uint flags, uint itemId, string text);
 
     [DllImport("user32.dll")]
