@@ -742,6 +742,15 @@
         notifyRichInput(richEditor);
     }
 
+    function hyperlinkHtml(href, innerHtml) {
+        const link = document.createElement('a');
+        link.setAttribute('href', href);
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+        link.innerHTML = innerHtml;
+        return link.outerHTML;
+    }
+
     function closestHyperlink(node, richEditor) {
         const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
         const link = element?.closest?.('a[href]');
@@ -814,26 +823,14 @@
             const link = context?.existingLink;
             if (!context || !link?.isConnected) return;
 
-            const parent = link.parentNode;
-            const firstChild = link.firstChild;
-            const lastChild = link.lastChild;
+            const linkRange = document.createRange();
+            linkRange.selectNode(link);
+            context.range = linkRange;
+            restoreHyperlinkRange(context);
 
-            while (link.firstChild) {
-                parent.insertBefore(link.firstChild, link);
-            }
-            link.remove();
-
-            if (firstChild && lastChild) {
-                const range = document.createRange();
-                range.setStartBefore(firstChild);
-                range.setEndAfter(lastChild);
-                context.range = range;
-                context.richEditor._savedRange = range.cloneRange();
-            }
-
+            document.execCommand('insertHTML', false, link.innerHTML || '');
             notifyRichInput(context.richEditor);
             dialog.close();
-            restoreHyperlinkRange(context);
         });
 
         const applyHyperlink = () => {
@@ -850,35 +847,28 @@
 
             error.hidden = true;
 
-            let link = context.existingLink;
-            if (link?.isConnected) {
-                link.setAttribute('href', href);
-                link.setAttribute('target', '_blank');
-                link.setAttribute('rel', 'noopener noreferrer');
+            let replacementHtml;
+            if (context.existingLink?.isConnected) {
+                const linkRange = document.createRange();
+                linkRange.selectNode(context.existingLink);
+                context.range = linkRange;
+                replacementHtml = hyperlinkHtml(href, context.existingLink.innerHTML);
             } else {
-                const range = context.range.cloneRange();
-                if (range.collapsed || !context.richEditor.contains(range.commonAncestorContainer)) {
+                if (context.range.collapsed ||
+                    !context.richEditor.contains(context.range.commonAncestorContainer)) {
                     return;
                 }
 
-                const fragment = range.extractContents();
-                link = document.createElement('a');
-                link.setAttribute('href', href);
-                link.setAttribute('target', '_blank');
-                link.setAttribute('rel', 'noopener noreferrer');
-                link.appendChild(fragment);
-                range.insertNode(link);
+                replacementHtml = hyperlinkHtml(href, rangeHtml(context.range));
             }
 
-            const linkedRange = document.createRange();
-            linkedRange.selectNodeContents(link);
-            context.range = linkedRange;
-            context.existingLink = link;
-            context.richEditor._savedRange = linkedRange.cloneRange();
+            restoreHyperlinkRange(context);
 
+            // Use insertHTML instead of direct DOM mutation so the browser records
+            // hyperlink creation/editing as a native undoable editing transaction.
+            document.execCommand('insertHTML', false, replacementHtml);
             notifyRichInput(context.richEditor);
             dialog.close();
-            restoreHyperlinkRange(context);
         };
 
         applyButton.addEventListener('click', applyHyperlink);
