@@ -4,11 +4,24 @@ using Microsoft.EntityFrameworkCore;
 using NoteKeeper.Data;
 using NoteKeeper.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+var environmentName =
+    Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
+    Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = string.Equals(
+        environmentName,
+        Environments.Development,
+        StringComparison.OrdinalIgnoreCase)
+        ? Directory.GetCurrentDirectory()
+        : AppContext.BaseDirectory
+});
 
 // Build output can be launched directly outside the Development environment.
-// Explicitly enable the static web assets manifest so CSS, JavaScript, icons,
-// and other wwwroot assets are still served without requiring dotnet run.
+// Keep the static web assets manifest enabled in addition to copying wwwroot
+// into the build output so direct executable launches work reliably.
 builder.WebHost.UseStaticWebAssets();
 
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
