@@ -1,0 +1,22 @@
+name: Temporary quote toggle verification
+on:
+  push:
+    branches:
+      - ci/pr2-quote-toggle-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Check editor JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
