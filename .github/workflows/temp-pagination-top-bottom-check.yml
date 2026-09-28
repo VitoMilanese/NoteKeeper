@@ -1,0 +1,119 @@
+name: Temporary pagination top bottom verification
+on:
+  push:
+    branches:
+      - ci/pr2-pagination-top-bottom-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          rm -f src/NoteKeeper/App_Data/notekeeper.db*
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53119 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53119/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Seed notes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from datetime import datetime, timezone, timedelta
+
+          db = sqlite3.connect("src/NoteKeeper/App_Data/notekeeper.db")
+          now = datetime.now(timezone.utc)
+          for i in range(1, 66):
+              prefix = "small" if i <= 29 else "large"
+              stamp = (now + timedelta(seconds=i)).isoformat()
+              db.execute(
+                  "INSERT INTO Notes (Title, CreatedAtUtc, UpdatedAtUtc) VALUES (?, ?, ?)",
+                  (f"{prefix} note {i:02d}", stamp, stamp)
+              )
+          db.commit()
+          db.close()
+          PY
+
+      - name: Verify pagination above and below
+        shell: bash
+        run: |
+          cat > pagination-top-bottom-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+
+          try {
+            await page.goto('http://127.0.0.1:53119/');
+            await page.waitForURL(url => url.searchParams.get('pageSize') === '32');
+
+            if (await page.locator('.pagination').count() !== 2) {
+              throw new Error('Expected pagination above and below the notes grid.');
+            }
+
+            const firstPagerBox = await page.locator('.pagination').first().boundingBox();
+            const gridBox = await page.locator('.notes-grid').boundingBox();
+            const lastPagerBox = await page.locator('.pagination').last().boundingBox();
+
+            if (!firstPagerBox || !gridBox || !lastPagerBox) {
+              throw new Error('Could not measure pagination/grid positions.');
+            }
+
+            if (!(firstPagerBox.y < gridBox.y && lastPagerBox.y > gridBox.y + gridBox.height)) {
+              throw new Error('Pagination is not positioned both above and below the notes grid.');
+            }
+
+            await page.goto('http://127.0.0.1:53119/?q=small');
+            await page.waitForLoadState('networkidle');
+
+            if (await page.locator('.pagination').count() !== 0) {
+              throw new Error('Pagination must remain hidden for a single-page result.');
+            }
+
+            console.log('Top/bottom pagination verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node pagination-top-bottom-check.mjs
+
+      - name: Show app log on failure
+        if: failure()
+        run: cat /tmp/notekeeper.log || true
+
+      - name: Stop NoteKeeper
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then
+            kill "$(cat /tmp/notekeeper.pid)" || true
+          fi
