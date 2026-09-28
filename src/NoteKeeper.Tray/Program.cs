@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace NoteKeeper.Tray;
@@ -67,7 +68,9 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly ContextMenuStrip _menu;
     private System.Windows.Forms.Timer? _parentTimer;
     private readonly Icon _icon;
+    private ToolStripMenuItem? _consoleVisibilityItem;
     private Process? _parentProcess;
+    private nint _consoleWindowHandle;
     private bool _disposed;
 
     public TrayApplicationContext(TrayOptions options)
@@ -88,6 +91,8 @@ internal sealed class TrayApplicationContext : ApplicationContext
         try
         {
             _parentProcess = Process.GetProcessById(options.ParentProcessId);
+            _consoleWindowHandle = ParentConsoleWindow.TryGetHandle(options.ParentProcessId);
+            UpdateConsoleVisibilityItem();
         }
         catch
         {
@@ -120,15 +125,66 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         var menu = new ContextMenuStrip();
         var openItem = new ToolStripMenuItem("Open NoteKeeper");
+        _consoleVisibilityItem = new ToolStripMenuItem("Hide");
         var exitItem = new ToolStripMenuItem("Exit");
 
         openItem.Click += (_, _) => OpenHomePage();
+        _consoleVisibilityItem.Click += (_, _) => ToggleConsoleVisibility();
         exitItem.Click += (_, _) => RequestApplicationExit();
+        menu.Opening += (_, _) => UpdateConsoleVisibilityItem();
 
         menu.Items.Add(openItem);
+        menu.Items.Add(_consoleVisibilityItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(exitItem);
         return menu;
+    }
+
+    private void ToggleConsoleVisibility()
+    {
+        if (_consoleWindowHandle == nint.Zero ||
+            !ParentConsoleWindow.IsValid(_consoleWindowHandle))
+        {
+            _consoleWindowHandle = ParentConsoleWindow.TryGetHandle(_options.ParentProcessId);
+        }
+
+        if (_consoleWindowHandle == nint.Zero)
+        {
+            UpdateConsoleVisibilityItem();
+            return;
+        }
+
+        if (ParentConsoleWindow.IsVisible(_consoleWindowHandle))
+        {
+            ParentConsoleWindow.Hide(_consoleWindowHandle);
+        }
+        else
+        {
+            ParentConsoleWindow.Show(_consoleWindowHandle);
+        }
+
+        UpdateConsoleVisibilityItem();
+    }
+
+    private void UpdateConsoleVisibilityItem()
+    {
+        if (_consoleVisibilityItem is null)
+        {
+            return;
+        }
+
+        if (_consoleWindowHandle == nint.Zero ||
+            !ParentConsoleWindow.IsValid(_consoleWindowHandle))
+        {
+            _consoleWindowHandle = ParentConsoleWindow.TryGetHandle(_options.ParentProcessId);
+        }
+
+        var hasConsoleWindow = _consoleWindowHandle != nint.Zero;
+        _consoleVisibilityItem.Enabled = hasConsoleWindow;
+        _consoleVisibilityItem.Text =
+            hasConsoleWindow && ParentConsoleWindow.IsVisible(_consoleWindowHandle)
+                ? "Hide"
+                : "Show";
     }
 
     private void OpenHomePage()
@@ -221,4 +277,82 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
         return (Icon)SystemIcons.Application.Clone();
     }
+}
+
+internal static class ParentConsoleWindow
+{
+    private const int SwHide = 0;
+    private const int SwShow = 5;
+
+    public static nint TryGetHandle(int parentProcessId)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return nint.Zero;
+        }
+
+        if (!AttachConsole((uint)parentProcessId))
+        {
+            return nint.Zero;
+        }
+
+        try
+        {
+            return GetConsoleWindow();
+        }
+        finally
+        {
+            FreeConsole();
+        }
+    }
+
+    public static bool IsValid(nint windowHandle) =>
+        windowHandle != nint.Zero && IsWindow(windowHandle);
+
+    public static bool IsVisible(nint windowHandle) =>
+        IsValid(windowHandle) && IsWindowVisible(windowHandle);
+
+    public static void Hide(nint windowHandle)
+    {
+        if (IsValid(windowHandle))
+        {
+            ShowWindow(windowHandle, SwHide);
+        }
+    }
+
+    public static void Show(nint windowHandle)
+    {
+        if (IsValid(windowHandle))
+        {
+            ShowWindow(windowHandle, SwShow);
+            SetForegroundWindow(windowHandle);
+        }
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool AttachConsole(uint processId);
+
+    [DllImport("kernel32.dll")]
+    private static extern nint GetConsoleWindow();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool FreeConsole();
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindow(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindow(nint windowHandle, int command);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(nint windowHandle);
 }
