@@ -26,6 +26,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - export individual notes to readable portable `.notekeeper.json` files and import them again, including embedded images;
 - permanently delete notes from SQLite, including related blocks and tags, with unused uploaded images cleaned up;
 - automatically create the SQLite database at `App_Data/notekeeper.db`;
+- the relative SQLite database path is resolved from the application content root, so launching the executable from another working directory does not break database startup;
 - English, Italian, and Ukrainian UI localization;
 - English as the default language;
 - persist the selected language in a cookie;
