@@ -509,12 +509,22 @@
         await addImageFiles(files, activeBlock, null);
     });
 
-    document.addEventListener('keydown', (event) => {
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+    window.addEventListener('keydown', (event) => {
+        const isSaveShortcut =
+            (event.ctrlKey || event.metaKey) &&
+            (event.code === 'KeyS' || event.key.toLowerCase() === 's');
+
+        if (isSaveShortcut) {
             event.preventDefault();
             saveNote();
+            return;
         }
-    });
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            window.location.assign('/');
+        }
+    }, true);
 
     saveButton.addEventListener('click', saveNote);
     saveButtonBottom.addEventListener('click', saveNote);

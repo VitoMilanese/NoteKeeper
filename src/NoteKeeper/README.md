@@ -1,49 +1,55 @@
 # NoteKeeper
 
-Невеликий веб-зберігач нотаток на **ASP.NET Core 8 + EF Core + SQLite**.
+A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite**.
 
-## Можливості
+## Features
 
-- головна сторінка зі списком нотаток;
-- пошук за назвою, текстом, коментарями, посиланнями та підписами картинок;
-- фільтр за `#тегами`, які автоматично витягуються з текстових блоків;
-- сортування за назвою, датою створення та датою останньої зміни;
-- текстові блоки;
-- блоки посилань із назвою, URL та коментарем;
-- блоки зображень із підписом;
-- вставлення зображення з буфера через `Ctrl+V`;
-- завантаження PNG, JPEG, WEBP і GIF до 12 МБ;
-- зміна порядку блоків drag & drop, а також кнопками ↑ / ↓;
-- збереження через `Ctrl+S`;
-- браузерне попередження при закритті або переході зі сторінки з незбереженими змінами;
-- SQLite база створюється автоматично в `App_Data/notekeeper.db`;
-- локалізація інтерфейсу англійською, італійською та українською; англійська використовується за замовчуванням, вибір мови зберігається в cookie;
-- адаптивний темний інтерфейс на всю доступну ширину без зовнішніх JS/CSS залежностей.
+- home page with a note list;
+- search by title, text, comments, links, and image captions;
+- filtering by `#tags` extracted automatically from text blocks;
+- sorting by title, creation date, or last update;
+- text blocks;
+- link blocks with a title, URL, and optional comment;
+- image blocks with captions;
+- paste images from the clipboard with `Ctrl+V`;
+- upload PNG, JPEG, WEBP, and GIF images up to 12 MB;
+- reorder blocks with drag and drop or the ↑ / ↓ buttons;
+- save notes with `Ctrl+S`;
+- return to the note list with `Esc`;
+- warn before leaving the editor when there are unsaved changes;
+- preserve line breaks in text previews on note cards;
+- show both the title and URL when a link block is used as the note preview;
+- automatically create the SQLite database at `App_Data/notekeeper.db`;
+- English, Italian, and Ukrainian UI localization;
+- English as the default language;
+- persist the selected language in a cookie;
+- responsive dark interface that uses the available viewport width;
+- no external JavaScript or CSS dependencies.
 
-## Запуск
+## Running the application
 
-Потрібен .NET 8 SDK.
+.NET 8 SDK is required.
 
 ```bash
 dotnet restore
 dotnet run
 ```
 
-Після запуску відкрий адресу, яку покаже ASP.NET Core, наприклад `https://localhost:5001`.
+After startup, open the address printed by ASP.NET Core, for example `https://localhost:5001`.
 
-## Зберігання даних
+## Data storage
 
-- База: `App_Data/notekeeper.db`
-- Картинки: `wwwroot/uploads/`
+- Database: `App_Data/notekeeper.db`
+- Images: `wwwroot/uploads/`
 
-Для резервної копії достатньо зберігати базу та папку `wwwroot/uploads`.
+To create a backup, save the database file and the `wwwroot/uploads` directory.
 
-## Теги
+## Tags
 
-У текстовому блоці можна написати, наприклад:
+Add tags directly to a text block, for example:
 
 ```text
-Перевірити цю ідею пізніше. #робота #ідея
+Review this idea later. #work #idea
 ```
 
-Після збереження `робота` та `ідея` з'являться серед тегів на головній сторінці.
+After saving the note, `work` and `idea` become available as filters on the home page.

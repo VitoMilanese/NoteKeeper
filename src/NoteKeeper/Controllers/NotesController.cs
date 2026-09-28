@@ -396,17 +396,37 @@ public sealed class NotesController(
             .OrderBy(x => x.SortOrder)
             .Select(x => x.Type switch
             {
-                BlockType.Text => x.TextContent,
-                BlockType.Link => x.LinkTitle ?? x.Url,
+                BlockType.Text => NormalizePreviewText(x.TextContent),
+                BlockType.Link => BuildLinkPreview(x),
                 BlockType.Image => x.Caption,
                 _ => null
             })
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
-            ?.Replace('\r', ' ')
-            .Replace('\n', ' ')
-            .Trim() ?? localizer["Server_EmptyNote"].Value;
+            ?.Trim() ?? localizer["Server_EmptyNote"].Value;
 
         return preview.Length <= 180 ? preview : preview[..177] + "…";
+    }
+
+    private static string? NormalizePreviewText(string? value)
+    {
+        return value?
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n');
+    }
+
+    private static string? BuildLinkPreview(NoteBlock block)
+    {
+        var title = block.LinkTitle?.Trim();
+        var url = block.Url?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(title) &&
+            !string.IsNullOrWhiteSpace(url) &&
+            !string.Equals(title, url, StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{title}\n{url}";
+        }
+
+        return title ?? url;
     }
 
     private async Task DeleteImageIfUnusedAsync(string imagePath, int excludedNoteId, CancellationToken cancellationToken)
