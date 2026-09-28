@@ -1052,9 +1052,11 @@
         const selectedHtml = range.collapsed ? '' : rangeHtml(range);
         const contentHtml = selectedHtml || '<br>';
         const html =
-            `<details><summary>${escapeHtml(strings.expanderSummary)}</summary><div>${contentHtml}</div></details><div><br></div>`;
+            `<details><summary>${escapeHtml(strings.expanderSummary)}</summary><div>${contentHtml}</div></details>`;
 
-        // insertHTML records the entire expander insertion as one undoable edit.
+        // Do not append an extra continuation block: <details> is already a
+        // block element, so the browser can place the caret immediately after it
+        // without creating visible empty rows.
         document.execCommand('insertHTML', false, html);
         decorateExpanders(richEditor);
         notifyRichInput(richEditor);
