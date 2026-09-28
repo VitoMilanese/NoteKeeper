@@ -100,6 +100,8 @@
 }
 else
 {
+    <partial name="_Pagination" model="Model" />
+
     <section class="notes-grid"
              data-notes-grid
              data-page="@Model.Page"
@@ -145,57 +147,7 @@ else
         }
     </section>
 
-    @if (Model.TotalPages > 1)
-    {
-        var visiblePages = Enumerable.Range(1, Model.TotalPages)
-            .Where(pageNumber =>
-                pageNumber == 1 ||
-                pageNumber == Model.TotalPages ||
-                Math.Abs(pageNumber - Model.Page) <= 2)
-            .ToList();
-        int? previousRenderedPage = null;
-
-        <nav class="pagination" aria-label="@Localizer["Index_PaginationAria"]">
-            @if (Model.Page > 1)
-            {
-                <a class="pagination-link pagination-arrow"
-                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&page=@(Model.Page - 1)&pageSize=@Model.PageSize"
-                   aria-label="@Localizer["Index_PreviousPage"]"
-                   title="@Localizer["Index_PreviousPage"]">←</a>
-            }
-
-            @foreach (var pageNumber in visiblePages)
-            {
-                if (previousRenderedPage.HasValue && pageNumber - previousRenderedPage.Value > 1)
-                {
-                    <span class="pagination-ellipsis" aria-hidden="true">…</span>
-                }
-
-                if (pageNumber == Model.Page)
-                {
-                    <span class="pagination-link is-current"
-                          aria-current="page"
-                          aria-label="@Localizer["Index_PageNumber", pageNumber]">@pageNumber</span>
-                }
-                else
-                {
-                    <a class="pagination-link"
-                       href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&page=@pageNumber&pageSize=@Model.PageSize"
-                       aria-label="@Localizer["Index_PageNumber", pageNumber]">@pageNumber</a>
-                }
-
-                previousRenderedPage = pageNumber;
-            }
-
-            @if (Model.Page < Model.TotalPages)
-            {
-                <a class="pagination-link pagination-arrow"
-                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&page=@(Model.Page + 1)&pageSize=@Model.PageSize"
-                   aria-label="@Localizer["Index_NextPage"]"
-                   title="@Localizer["Index_NextPage"]">→</a>
-            }
-        </nav>
-    }
+    <partial name="_Pagination" model="Model" />
 }
 
 @section Scripts {

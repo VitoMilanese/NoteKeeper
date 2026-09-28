@@ -493,6 +493,13 @@ html[data-theme="light"] .tag-chip.is-active {
     justify-content: center;
     flex-wrap: wrap;
     gap: 7px;
+}
+
+.pagination + .notes-grid {
+    margin-top: 14px;
+}
+
+.notes-grid + .pagination {
     margin-top: 24px;
 }
 
