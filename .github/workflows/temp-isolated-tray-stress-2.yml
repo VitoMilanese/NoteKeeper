@@ -1,0 +1,65 @@
+name: Temporary isolated tray stress verification 2
+on:
+  push:
+    branches:
+      - ci/pr2-isolated-tray-stress-2
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore src/NoteKeeper.sln
+      - run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+      - run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build
+        run: dotnet build src/NoteKeeper/NoteKeeper.csproj --configuration Release
+      - name: Verify helper copied on build
+        shell: pwsh
+        run: |
+          $helper = "src/NoteKeeper/bin/Release/net8.0/Tray/NoteKeeper.Tray.exe"
+          if (-not (Test-Path $helper)) { throw "Tray helper was not copied to the build output." }
+      - name: Publish
+        run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false --output publish
+      - name: Verify published helper
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "publish/NoteKeeper.exe")) { throw "Main executable missing." }
+          if (-not (Test-Path "publish/Tray/NoteKeeper.Tray.exe")) { throw "Tray helper executable missing." }
+      - name: Stress startup 30 times
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\publish\NoteKeeper.exe"
+
+          for ($i = 1; $i -le 30; $i++) {
+              $port = 52100 + $i
+              $stdout = Join-Path $env:RUNNER_TEMP "notekeeper-$i.stdout.log"
+              $stderr = Join-Path $env:RUNNER_TEMP "notekeeper-$i.stderr.log"
+              $process = Start-Process -FilePath $exe -ArgumentList "--urls","http://127.0.0.1:$port" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+
+              Start-Sleep -Milliseconds 1500
+
+              if ($process.HasExited) {
+                  Write-Host "Run $i exited with code $($process.ExitCode)"
+                  if (Test-Path $stdout) { Get-Content $stdout }
+                  if (Test-Path $stderr) { Get-Content $stderr }
+                  throw "Main process exited during startup on run $i."
+              }
+
+              Stop-Process -Id $process.Id -Force
+              $process.WaitForExit()
+              Start-Sleep -Milliseconds 400
+              Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+              Write-Host "Run $i OK"
+          }
