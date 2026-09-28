@@ -14,13 +14,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)" />
     <title>@(ViewData["Title"] ?? "NoteKeeper")</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="manifest" href="~/site.webmanifest" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
     <header class="site-header">
         <a class="brand" href="/" aria-label="@Localizer["Header_HomeAria"]">
-            <span class="brand-mark">N</span>
+            <img class="brand-icon" src="~/icons/notekeeper.svg" alt="" width="36" height="36" />
             <span>NoteKeeper</span>
         </a>
         <nav class="top-nav">

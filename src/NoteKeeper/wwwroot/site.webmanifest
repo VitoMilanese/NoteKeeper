@@ -1,0 +1,16 @@
+{
+  "name": "NoteKeeper",
+  "short_name": "NoteKeeper",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#5869e9",
+  "icons": [
+    {
+      "src": "/icons/notekeeper.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
