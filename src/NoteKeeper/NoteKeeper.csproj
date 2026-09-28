@@ -26,6 +26,9 @@
           AfterTargets="Build"
           Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(DesignTimeBuild)' != 'true' and Exists('$(TrayProject)')">
     <MSBuild Projects="$(TrayProject)"
+             Targets="Restore"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false" />
+    <MSBuild Projects="$(TrayProject)"
              Targets="Build"
              Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false" />
     <ItemGroup>
@@ -45,6 +48,9 @@
     <PropertyGroup>
       <TrayPublishDir>$(PublishDir)Tray\</TrayPublishDir>
     </PropertyGroup>
+    <MSBuild Projects="$(TrayProject)"
+             Targets="Restore"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained)" />
     <MSBuild Projects="$(TrayProject)"
              Targets="Publish"
              Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishDir=$(TrayPublishDir)" />
