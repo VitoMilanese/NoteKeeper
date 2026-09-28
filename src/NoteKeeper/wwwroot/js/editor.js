@@ -788,7 +788,7 @@
                 <div class="app-dialog-actions hyperlink-dialog-actions">
                     <button type="button" class="button button-ghost hyperlink-remove">${escapeHtml(strings.hyperlinkRemove)}</button>
                     <button type="button" class="button button-secondary hyperlink-cancel">${escapeHtml(strings.hyperlinkCancel)}</button>
-                    <button type="submit" class="button button-primary hyperlink-apply">${escapeHtml(strings.hyperlinkApply)}</button>
+                    <button type="button" class="button button-primary hyperlink-apply">${escapeHtml(strings.hyperlinkApply)}</button>
                 </div>
             </form>`;
 
@@ -796,6 +796,7 @@
         const input = dialog.querySelector('.hyperlink-url-input');
         const error = dialog.querySelector('.hyperlink-dialog-error');
         const removeButton = dialog.querySelector('.hyperlink-remove');
+        const applyButton = dialog.querySelector('.hyperlink-apply');
 
         const closeAndRestore = () => {
             const context = dialog._hyperlinkContext;
@@ -803,6 +804,7 @@
             if (context) restoreHyperlinkRange(context);
         };
 
+        form.addEventListener('submit', (event) => event.preventDefault());
         dialog.querySelector('.hyperlink-cancel').addEventListener('click', closeAndRestore);
         dialog.addEventListener('cancel', (event) => {
             event.preventDefault();
@@ -822,9 +824,7 @@
             dialog.close();
         });
 
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
-
+        const applyHyperlink = () => {
             const context = dialog._hyperlinkContext;
             if (!context) return;
 
@@ -859,6 +859,15 @@
 
             notifyRichInput(context.richEditor);
             dialog.close();
+        };
+
+        applyButton.addEventListener('click', applyHyperlink);
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' || event.isComposing) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            applyHyperlink();
         });
 
         document.body.appendChild(dialog);
