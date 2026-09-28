@@ -1,0 +1,48 @@
+name: Temporary Windows tray startup smoke test
+on:
+  push:
+    branches:
+      - ci/pr2-tray-startup-smoke
+
+jobs:
+  windows-startup:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish Windows executable
+        run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false --output publish
+      - name: Verify process survives tray initialization
+        shell: pwsh
+        run: |
+          $stdout = Join-Path $env:RUNNER_TEMP "notekeeper.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "notekeeper.stderr.log"
+          $process = Start-Process -FilePath "$env:GITHUB_WORKSPACE\publish\NoteKeeper.exe" -ArgumentList "--urls","http://127.0.0.1:51779" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+
+          try {
+              Start-Sleep -Seconds 7
+
+              if ($process.HasExited) {
+                  Write-Host "--- stdout ---"
+                  if (Test-Path $stdout) { Get-Content $stdout }
+                  Write-Host "--- stderr ---"
+                  if (Test-Path $stderr) { Get-Content $stderr }
+                  throw "NoteKeeper exited during startup with code $($process.ExitCode)."
+              }
+
+              $combined = ""
+              if (Test-Path $stdout) { $combined += (Get-Content $stdout -Raw) }
+              if (Test-Path $stderr) { $combined += (Get-Content $stderr -Raw) }
+
+              if ($combined -match "EntryPointNotFoundException|ShellNotifyIcon") {
+                  Write-Host $combined
+                  throw "Tray initialization still produced a native entry-point error."
+              }
+          }
+          finally {
+              if (-not $process.HasExited) {
+                  Stop-Process -Id $process.Id -Force
+              }
+          }
