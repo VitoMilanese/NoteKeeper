@@ -1,0 +1,42 @@
+name: Temporary tray startup stress test
+on:
+  push:
+    branches:
+      - ci/pr2-tray-startup-stress
+
+jobs:
+  stress:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish
+        run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false --output publish
+      - name: Start NoteKeeper repeatedly
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\publish\NoteKeeper.exe"
+
+          for ($i = 1; $i -le 30; $i++) {
+              $port = 51900 + $i
+              $stdout = Join-Path $env:RUNNER_TEMP "notekeeper-$i.stdout.log"
+              $stderr = Join-Path $env:RUNNER_TEMP "notekeeper-$i.stderr.log"
+              $process = Start-Process -FilePath $exe -ArgumentList "--urls","http://127.0.0.1:$port" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+
+              Start-Sleep -Seconds 2
+
+              if ($process.HasExited) {
+                  Write-Host "Run $i exited with code $($process.ExitCode)"
+                  Write-Host "--- stdout ---"
+                  if (Test-Path $stdout) { Get-Content $stdout }
+                  Write-Host "--- stderr ---"
+                  if (Test-Path $stderr) { Get-Content $stderr }
+                  throw "NoteKeeper startup stress test failed on run $i."
+              }
+
+              Stop-Process -Id $process.Id -Force
+              $process.WaitForExit()
+              Write-Host "Run $i OK"
+          }
