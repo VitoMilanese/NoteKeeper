@@ -23,7 +23,8 @@
         'DIV', 'P', 'BR', 'SPAN'
     ]);
     const quickSymbols = ['—', '•', '◉', '◎', '★', '☑', '☒', '☐', '✓', '➢', 'ℹ️', '🔥', '❤️', '❓', '❗', '💡', '🟥', '🟩', '🟨'];
-    let emojiCharacters = null;
+    let emojiEntries = null;
+    let activeEmojiPicker = null;
 
     let dirty = false;
     let saving = false;
@@ -239,18 +240,148 @@
         notifyRichInput(richEditor);
     }
 
-    function getEmojiCharacters() {
-        if (emojiCharacters) return emojiCharacters;
+    function getEmojiCategory(codePoint) {
+        if (
+            (codePoint >= 0x1F600 && codePoint <= 0x1F64F) ||
+            (codePoint >= 0x1F910 && codePoint <= 0x1F92F) ||
+            (codePoint >= 0x1F970 && codePoint <= 0x1F97F) ||
+            (codePoint >= 0x1FAE0 && codePoint <= 0x1FAE9)
+        ) {
+            return 'smileys';
+        }
+
+        if (
+            (codePoint >= 0x1F440 && codePoint <= 0x1F487) ||
+            (codePoint >= 0x1F590 && codePoint <= 0x1F596) ||
+            (codePoint >= 0x1F918 && codePoint <= 0x1F91F) ||
+            (codePoint >= 0x1F9D0 && codePoint <= 0x1F9FF)
+        ) {
+            return 'people';
+        }
+
+        if (
+            (codePoint >= 0x1F400 && codePoint <= 0x1F43F) ||
+            (codePoint >= 0x1F980 && codePoint <= 0x1F9AE) ||
+            (codePoint >= 0x1F330 && codePoint <= 0x1F343) ||
+            (codePoint >= 0x1FAB0 && codePoint <= 0x1FABF)
+        ) {
+            return 'animals';
+        }
+
+        if (
+            (codePoint >= 0x1F32D && codePoint <= 0x1F37F) ||
+            (codePoint >= 0x1F950 && codePoint <= 0x1F96F) ||
+            codePoint === 0x1F9C0 ||
+            codePoint === 0x1F9C1 ||
+            (codePoint >= 0x1FAD0 && codePoint <= 0x1FADF)
+        ) {
+            return 'food';
+        }
+
+        if (
+            (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) ||
+            (codePoint >= 0x1F3E0 && codePoint <= 0x1F3F0)
+        ) {
+            return 'travel';
+        }
+
+        if (
+            (codePoint >= 0x1F3A0 && codePoint <= 0x1F3DF) ||
+            (codePoint >= 0x1F3C0 && codePoint <= 0x1F3C4) ||
+            (codePoint >= 0x1F93A && codePoint <= 0x1F94F)
+        ) {
+            return 'activities';
+        }
+
+        if (
+            (codePoint >= 0x1F4A0 && codePoint <= 0x1F5FF) ||
+            (codePoint >= 0x1F9E0 && codePoint <= 0x1F9FF) ||
+            (codePoint >= 0x1FA70 && codePoint <= 0x1FAFF)
+        ) {
+            return 'objects';
+        }
+
+        return 'symbols';
+    }
+
+    function getEmojiEntries() {
+        if (emojiEntries) return emojiEntries;
 
         const extendedPictographic = /\p{Extended_Pictographic}/u;
         const emojiPresentation = /\p{Emoji_Presentation}/u;
         const result = [];
         const seen = new Set();
+        const keywords = {
+            '😀': 'grin smile happy face',
+            '😁': 'grin smile happy teeth',
+            '😂': 'joy laugh tears funny',
+            '🤣': 'rofl laugh funny',
+            '😊': 'smile happy blush',
+            '😍': 'love heart eyes',
+            '🥰': 'love hearts affection',
+            '😎': 'cool sunglasses',
+            '😭': 'cry sad tears',
+            '😡': 'angry mad',
+            '🤔': 'think thinking',
+            '👍': 'thumb up yes like good',
+            '👎': 'thumb down no dislike bad',
+            '👏': 'clap applause',
+            '🙏': 'pray thanks please',
+            '❤️': 'heart love red',
+            '🔥': 'fire hot',
+            '💡': 'idea light bulb',
+            '✅': 'check done yes complete',
+            '❌': 'cross no wrong',
+            '⚠️': 'warning alert',
+            '❓': 'question help',
+            '❗': 'exclamation important',
+            '🎉': 'party celebration',
+            '🚀': 'rocket space',
+            '💻': 'computer laptop',
+            '📌': 'pin',
+            '📎': 'paperclip attachment',
+            '📝': 'note memo write',
+            '🔍': 'search magnify',
+            '🔗': 'link chain',
+            '📅': 'calendar date',
+            '⏰': 'alarm clock time',
+            '⭐': 'star favorite',
+            '☕': 'coffee drink',
+            '🍕': 'pizza food',
+            '🍔': 'burger food',
+            '🐶': 'dog puppy animal',
+            '🐱': 'cat animal',
+            '🐺': 'wolf animal',
+            '🦊': 'fox animal'
+        };
 
-        const add = (value) => {
+        const categoryLabels = {
+            smileys: strings.emojiCategorySmileys,
+            people: strings.emojiCategoryPeople,
+            animals: strings.emojiCategoryAnimals,
+            food: strings.emojiCategoryFood,
+            travel: strings.emojiCategoryTravel,
+            activities: strings.emojiCategoryActivities,
+            objects: strings.emojiCategoryObjects,
+            symbols: strings.emojiCategorySymbols,
+            flags: strings.emojiCategoryFlags
+        };
+
+        const add = (value, category, codePoint = value.codePointAt(0)) => {
             if (!value || seen.has(value)) return;
             seen.add(value);
-            result.push(value);
+
+            const resolvedCategory = category || getEmojiCategory(codePoint);
+            result.push({
+                emoji: value,
+                category: resolvedCategory,
+                searchText: [
+                    value,
+                    resolvedCategory,
+                    categoryLabels[resolvedCategory],
+                    keywords[value] || ''
+                ].filter(Boolean).join(' ').toLowerCase()
+            });
         };
 
         const ranges = [
@@ -262,51 +393,230 @@
             for (let codePoint = start; codePoint <= end; codePoint++) {
                 const character = String.fromCodePoint(codePoint);
                 if (!extendedPictographic.test(character)) continue;
-                add(emojiPresentation.test(character) ? character : `${character}\uFE0F`);
+                add(
+                    emojiPresentation.test(character) ? character : `${character}\uFE0F`,
+                    null,
+                    codePoint
+                );
             }
         }
 
         [
             '❤️', '❣️', '♥️', '☑️', '☒️', '☀️', '☁️', '☂️', '☃️', '☄️',
-            '✈️', '⌚', '⌛', '⚡', '⚽', '⚾', '⛳', '⛵', '⛺',
-            '🇺🇦', '🇮🇹', '🇺🇸', '🇬🇧', '🇩🇪', '🇫🇷', '🇪🇸', '🇵🇱', '🇪🇺'
-        ].forEach(add);
+            '✈️', '⌚', '⌛', '⚡', '⚽', '⚾', '⛳', '⛵', '⛺'
+        ].forEach((emoji) => add(emoji));
 
-        emojiCharacters = result;
-        return emojiCharacters;
+        [
+            '🇺🇦', '🇮🇹', '🇺🇸', '🇬🇧', '🇩🇪', '🇫🇷', '🇪🇸', '🇵🇱', '🇪🇺',
+            '🇨🇦', '🇯🇵', '🇨🇳', '🇰🇷', '🇧🇷', '🇦🇺', '🇮🇳'
+        ].forEach((emoji) => add(emoji, 'flags'));
+
+        emojiEntries = result;
+        return emojiEntries;
     }
 
-    function normalizeFontSizeMarkup(richEditor) {
-        const sizeMap = {
-            '1': 'small',
-            '3': 'normal',
-            '5': 'large',
-            '7': 'xlarge'
+    function closeEmojiPicker(restoreEditorFocus = false) {
+        if (!activeEmojiPicker) return false;
+
+        const { element, richEditor } = activeEmojiPicker;
+        activeEmojiPicker = null;
+        element.remove();
+
+        if (restoreEditorFocus) {
+            restoreRichSelection(richEditor);
+        }
+
+        return true;
+    }
+
+    function positionEmojiPicker() {
+        if (!activeEmojiPicker) return;
+
+        const { element, anchor } = activeEmojiPicker;
+        const anchorRect = anchor.getBoundingClientRect();
+        const margin = 8;
+        const width = Math.min(420, window.innerWidth - margin * 2);
+        const height = Math.min(element.offsetHeight || 460, window.innerHeight - margin * 2);
+
+        let left = anchorRect.right - width;
+        left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+
+        let top = anchorRect.bottom + 8;
+        if (top + height > window.innerHeight - margin) {
+            top = Math.max(margin, anchorRect.top - height - 8);
+        }
+
+        element.style.left = `${left}px`;
+        element.style.top = `${top}px`;
+        element.style.width = `${width}px`;
+    }
+
+    function openEmojiPicker(anchor, richEditor) {
+        closeEmojiPicker(false);
+        saveRichSelection(richEditor);
+
+        const categoryDefinitions = [
+            ['all', '◉', strings.emojiCategoryAll],
+            ['smileys', '😀', strings.emojiCategorySmileys],
+            ['people', '🧑', strings.emojiCategoryPeople],
+            ['animals', '🐻', strings.emojiCategoryAnimals],
+            ['food', '🍔', strings.emojiCategoryFood],
+            ['travel', '🚗', strings.emojiCategoryTravel],
+            ['activities', '⚽', strings.emojiCategoryActivities],
+            ['objects', '💡', strings.emojiCategoryObjects],
+            ['symbols', '❤️', strings.emojiCategorySymbols],
+            ['flags', '🏳️', strings.emojiCategoryFlags]
+        ];
+
+        const picker = document.createElement('div');
+        picker.className = 'emoji-picker-popover';
+        picker.setAttribute('role', 'dialog');
+        picker.setAttribute('aria-label', strings.systemEmoji);
+
+        const search = document.createElement('input');
+        search.type = 'search';
+        search.className = 'emoji-search';
+        search.placeholder = strings.emojiSearchPlaceholder;
+        search.setAttribute('aria-label', strings.emojiSearchPlaceholder);
+
+        const categories = document.createElement('div');
+        categories.className = 'emoji-categories';
+
+        const grid = document.createElement('div');
+        grid.className = 'emoji-grid';
+
+        const empty = document.createElement('div');
+        empty.className = 'emoji-empty is-hidden';
+        empty.textContent = strings.emojiNoResults;
+
+        let activeCategory = 'all';
+
+        const render = () => {
+            const query = search.value.trim().toLowerCase();
+            const matches = getEmojiEntries().filter((entry) =>
+                (activeCategory === 'all' || entry.category === activeCategory) &&
+                (!query || entry.searchText.includes(query))
+            );
+
+            grid.replaceChildren();
+
+            const fragment = document.createDocumentFragment();
+            matches.forEach((entry) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'emoji-item';
+                button.textContent = entry.emoji;
+                button.title = entry.emoji;
+                button.addEventListener('mousedown', (event) => event.preventDefault());
+                button.addEventListener('click', () => {
+                    insertRichText(richEditor, entry.emoji);
+                    closeEmojiPicker(false);
+                });
+                fragment.appendChild(button);
+            });
+
+            grid.appendChild(fragment);
+            empty.classList.toggle('is-hidden', matches.length > 0);
         };
 
-        richEditor.querySelectorAll('font[size]').forEach((font) => {
-            const size = sizeMap[font.getAttribute('size')] || 'normal';
-            const span = document.createElement('span');
-            span.dataset.size = size;
-            span.append(...Array.from(font.childNodes));
-            font.replaceWith(span);
+        categoryDefinitions.forEach(([key, icon, label]) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `emoji-category${key === 'all' ? ' is-active' : ''}`;
+            button.textContent = icon;
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            button.addEventListener('click', () => {
+                activeCategory = key;
+                categories.querySelectorAll('.emoji-category').forEach((item) => {
+                    item.classList.toggle('is-active', item === button);
+                });
+                render();
+            });
+            categories.appendChild(button);
+        });
+
+        search.addEventListener('input', render);
+        picker.append(search, categories, grid, empty);
+        document.body.appendChild(picker);
+
+        activeEmojiPicker = {
+            element: picker,
+            anchor,
+            richEditor
+        };
+
+        render();
+        requestAnimationFrame(() => {
+            positionEmojiPicker();
+            search.focus({ preventScroll: true });
         });
     }
 
     function applyTextSize(richEditor, size) {
-        const commandSize = {
-            small: '1',
-            normal: '3',
-            large: '5',
-            xlarge: '7'
-        }[size];
-
-        if (!commandSize) return;
+        if (!['small', 'normal', 'large', 'xlarge'].includes(size)) return;
 
         restoreRichSelection(richEditor);
-        document.execCommand('fontSize', false, commandSize);
-        normalizeFontSizeMarkup(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        if (range.collapsed || !richEditor.contains(range.commonAncestorContainer)) return;
+
+        const content = range.extractContents();
+        content.querySelectorAll?.('span[data-size]').forEach((span) => {
+            span.replaceWith(...Array.from(span.childNodes));
+        });
+
+        const wrapper = document.createElement('span');
+        wrapper.dataset.size = size;
+        wrapper.appendChild(content);
+        range.insertNode(wrapper);
+
+        const selectedRange = document.createRange();
+        selectedRange.selectNodeContents(wrapper);
+        selection.removeAllRanges();
+        selection.addRange(selectedRange);
+        richEditor._savedRange = selectedRange.cloneRange();
+
         notifyRichInput(richEditor);
+    }
+
+    function convertBacktickCodeAtCaret(richEditor) {
+        const selection = window.getSelection();
+        if (!selection || !selection.isCollapsed || selection.rangeCount === 0) return false;
+
+        const textNode = selection.anchorNode;
+        const caretOffset = selection.anchorOffset;
+
+        if (textNode?.nodeType !== Node.TEXT_NODE || caretOffset < 3) return false;
+        if (textNode.parentElement?.closest('code')) return false;
+
+        const value = textNode.nodeValue || '';
+        const closingIndex = caretOffset - 1;
+        if (value[closingIndex] !== '`') return false;
+
+        const openingIndex = value.lastIndexOf('`', closingIndex - 1);
+        if (openingIndex < 0 || openingIndex === closingIndex - 1) return false;
+
+        const codeText = value.slice(openingIndex + 1, closingIndex);
+        if (codeText.includes('\n')) return false;
+
+        const before = document.createTextNode(value.slice(0, openingIndex));
+        const code = document.createElement('code');
+        code.textContent = codeText;
+        const after = document.createTextNode(value.slice(caretOffset));
+
+        textNode.replaceWith(before, code, after);
+
+        const caret = document.createRange();
+        caret.setStart(after, 0);
+        caret.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(caret);
+        richEditor._savedRange = caret.cloneRange();
+        return true;
     }
 
     function applyListMarker(richEditor, marker) {
@@ -446,33 +756,6 @@
             symbolPanel.appendChild(button);
         });
 
-        const emojiPanel = document.createElement('div');
-        emojiPanel.className = 'emoji-panel';
-
-        const populateEmojiPanel = () => {
-            if (emojiPanel.dataset.loaded === 'true') return;
-
-            const fragment = document.createDocumentFragment();
-            getEmojiCharacters().forEach((emoji) => {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.textContent = emoji;
-                button.title = emoji;
-                button.addEventListener('mousedown', (event) => {
-                    event.preventDefault();
-                });
-                button.addEventListener('click', () => {
-                    insertRichText(richEditor, emoji);
-                    emojiPanel.classList.remove('is-open');
-                    symbols.open = false;
-                });
-                fragment.appendChild(button);
-            });
-
-            emojiPanel.appendChild(fragment);
-            emojiPanel.dataset.loaded = 'true';
-        };
-
         const systemEmojiButton = document.createElement('button');
         systemEmojiButton.type = 'button';
         systemEmojiButton.className = 'system-emoji-button';
@@ -481,18 +764,15 @@
         systemEmojiButton.setAttribute('aria-label', strings.systemEmoji);
         systemEmojiButton.addEventListener('mousedown', (event) => {
             event.preventDefault();
+            saveRichSelection(richEditor);
         });
         systemEmojiButton.addEventListener('click', () => {
-            populateEmojiPanel();
-            emojiPanel.classList.toggle('is-open');
+            symbols.open = false;
+            openEmojiPicker(systemEmojiButton, richEditor);
         });
         symbolPanel.appendChild(systemEmojiButton);
 
-        symbols.addEventListener('toggle', () => {
-            if (!symbols.open) emojiPanel.classList.remove('is-open');
-        });
-
-        symbols.append(summary, symbolPanel, emojiPanel);
+        symbols.append(summary, symbolPanel);
         toolbar.appendChild(symbols);
         return toolbar;
     }
@@ -513,6 +793,11 @@
         richEditor.addEventListener('mouseup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('keyup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('focus', () => saveRichSelection(richEditor));
+        richEditor.addEventListener('input', (event) => {
+            if (event.inputType === 'insertText' && event.data === '`') {
+                convertBacktickCodeAtCaret(richEditor);
+            }
+        });
         richEditor.addEventListener('click', (event) => {
             const divider = event.target.closest?.('hr');
             richEditor.querySelectorAll('hr.is-selected-divider').forEach((item) => {
@@ -997,6 +1282,22 @@
         window.location.assign(url);
     }
 
+    document.addEventListener('pointerdown', (event) => {
+        if (!activeEmojiPicker) return;
+
+        if (
+            activeEmojiPicker.element.contains(event.target) ||
+            activeEmojiPicker.anchor.contains(event.target)
+        ) {
+            return;
+        }
+
+        closeEmojiPicker(false);
+    }, true);
+
+    window.addEventListener('resize', positionEmojiPicker);
+    document.addEventListener('scroll', positionEmojiPicker, true);
+
     document.addEventListener('click', (event) => {
         if (!dirty || event.defaultPrevented || event.button !== 0) return;
         if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -1040,6 +1341,20 @@
         }
 
         if (event.key === 'Escape') {
+            if (closeEmojiPicker(true)) {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+
+            const openSymbolPicker = document.querySelector('.symbol-picker[open]');
+            if (openSymbolPicker) {
+                openSymbolPicker.open = false;
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+
             if (document.querySelector('dialog[open]')) return;
             event.preventDefault();
             navigateAway('/');

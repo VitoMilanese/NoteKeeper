@@ -63,6 +63,6 @@ After saving the note, `work` and `idea` become available as filters on the home
 
 ## Rich text notes
 
-Text blocks support formatting from the toolbar as well as `Ctrl+B`, `Ctrl+I`, and `Ctrl+U`. Click a divider and press `Delete` or `Backspace` to remove it. Inline code and quote insertion leave the caret in normal text after the inserted content so typing can continue normally.
+Text blocks support formatting from the toolbar as well as `Ctrl+B`, `Ctrl+I`, and `Ctrl+U`. Surround inline text with backticks, for example `` `code` ``, to convert it to inline code automatically. Text-size changes keep the formatted selection active. Click a divider and press `Delete` or `Backspace` to remove it. Inline code and quote insertion leave the caret in normal text after the inserted content so typing can continue normally.
 
-The symbol palette includes an in-app emoji picker rendered with the system emoji font. Native operating-system emoji panels cannot be opened programmatically by a normal web page.
+The symbol palette includes an in-app emoji picker rendered above the editor with category tabs and search. It closes on outside click or `Esc` without leaving the note editor.

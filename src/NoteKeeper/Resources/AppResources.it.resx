@@ -123,4 +123,16 @@
   <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Il browser non può aprire direttamente il pannello emoji di Windows. Premi Win + . mentre l&apos;editor è attivo.</value></data>
   <data name="Server_ImportInvalid" xml:space="preserve"><value>Il file non è un&apos;esportazione valida di una nota NoteKeeper.</value></data>
   <data name="Server_ImportTooLarge" xml:space="preserve"><value>L&apos;esportazione della nota è vuota o troppo grande per essere importata.</value></data>
+  <data name="Editor_EmojiSearchPlaceholder" xml:space="preserve"><value>Cerca emoji…</value></data>
+  <data name="Editor_EmojiNoResults" xml:space="preserve"><value>Nessuna emoji trovata.</value></data>
+  <data name="Editor_EmojiCategoryAll" xml:space="preserve"><value>Tutte</value></data>
+  <data name="Editor_EmojiCategorySmileys" xml:space="preserve"><value>Faccine</value></data>
+  <data name="Editor_EmojiCategoryPeople" xml:space="preserve"><value>Persone</value></data>
+  <data name="Editor_EmojiCategoryAnimals" xml:space="preserve"><value>Animali e natura</value></data>
+  <data name="Editor_EmojiCategoryFood" xml:space="preserve"><value>Cibo e bevande</value></data>
+  <data name="Editor_EmojiCategoryTravel" xml:space="preserve"><value>Viaggi e luoghi</value></data>
+  <data name="Editor_EmojiCategoryActivities" xml:space="preserve"><value>Attività</value></data>
+  <data name="Editor_EmojiCategoryObjects" xml:space="preserve"><value>Oggetti</value></data>
+  <data name="Editor_EmojiCategorySymbols" xml:space="preserve"><value>Simboli</value></data>
+  <data name="Editor_EmojiCategoryFlags" xml:space="preserve"><value>Bandiere</value></data>
 </root>

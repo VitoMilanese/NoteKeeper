@@ -123,4 +123,16 @@
   <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Браузер не може напряму відкрити системну панель emoji Windows. Натисни Win + . коли редактор у фокусі.</value></data>
   <data name="Server_ImportInvalid" xml:space="preserve"><value>Це невалідний файл експорту нотатки NoteKeeper.</value></data>
   <data name="Server_ImportTooLarge" xml:space="preserve"><value>Файл експорту нотатки порожній або завеликий для імпорту.</value></data>
+  <data name="Editor_EmojiSearchPlaceholder" xml:space="preserve"><value>Пошук emoji…</value></data>
+  <data name="Editor_EmojiNoResults" xml:space="preserve"><value>Emoji не знайдено.</value></data>
+  <data name="Editor_EmojiCategoryAll" xml:space="preserve"><value>Усі</value></data>
+  <data name="Editor_EmojiCategorySmileys" xml:space="preserve"><value>Смайли</value></data>
+  <data name="Editor_EmojiCategoryPeople" xml:space="preserve"><value>Люди</value></data>
+  <data name="Editor_EmojiCategoryAnimals" xml:space="preserve"><value>Тварини й природа</value></data>
+  <data name="Editor_EmojiCategoryFood" xml:space="preserve"><value>Їжа та напої</value></data>
+  <data name="Editor_EmojiCategoryTravel" xml:space="preserve"><value>Подорожі й місця</value></data>
+  <data name="Editor_EmojiCategoryActivities" xml:space="preserve"><value>Активності</value></data>
+  <data name="Editor_EmojiCategoryObjects" xml:space="preserve"><value>Об’єкти</value></data>
+  <data name="Editor_EmojiCategorySymbols" xml:space="preserve"><value>Символи</value></data>
+  <data name="Editor_EmojiCategoryFlags" xml:space="preserve"><value>Прапори</value></data>
 </root>
