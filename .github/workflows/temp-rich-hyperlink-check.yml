@@ -1,0 +1,36 @@
+name: Temporary rich hyperlink verification
+on:
+  push:
+    branches:
+      - ci/pr2-rich-hyperlink-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check editor JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify hyperlink hooks
+        shell: bash
+        run: |
+          grep -F "'A'," src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "normalizeHyperlinkUrl" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "document.execCommand('createLink'" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "document.execCommand('unlink'" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "Editor_FormatHyperlink" src/NoteKeeper/Views/Notes/Edit.cshtml
+          grep -F ".rich-text-editor a" src/NoteKeeper/wwwroot/css/site.css
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
