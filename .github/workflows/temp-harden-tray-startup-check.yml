@@ -1,0 +1,50 @@
+name: Temporary hardened tray startup verification
+on:
+  push:
+    branches:
+      - ci/pr2-harden-tray-startup-check
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+      - name: Publish Windows executable
+        run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false --output publish
+      - name: Verify tray startup does not terminate the app
+        shell: pwsh
+        run: |
+          $stdout = Join-Path $env:RUNNER_TEMP "notekeeper.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "notekeeper.stderr.log"
+          $process = Start-Process -FilePath "$env:GITHUB_WORKSPACE\publish\NoteKeeper.exe" -ArgumentList "--urls","http://127.0.0.1:51817" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+
+          try {
+              Start-Sleep -Seconds 8
+
+              if ($process.HasExited) {
+                  Write-Host "--- stdout ---"
+                  if (Test-Path $stdout) { Get-Content $stdout }
+                  Write-Host "--- stderr ---"
+                  if (Test-Path $stderr) { Get-Content $stderr }
+                  throw "NoteKeeper exited during tray startup with code $($process.ExitCode)."
+              }
+
+              $combined = ""
+              if (Test-Path $stdout) { $combined += (Get-Content $stdout -Raw) }
+              if (Test-Path $stderr) { $combined += (Get-Content $stderr -Raw) }
+
+              if ($combined -match "EntryPointNotFoundException") {
+                  Write-Host $combined
+                  throw "A native entry point is still missing."
+              }
+          }
+          finally {
+              if (-not $process.HasExited) {
+                  Stop-Process -Id $process.Id -Force
+              }
+          }
