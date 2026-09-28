@@ -1,0 +1,102 @@
+name: Temporary expander spacing verification
+on:
+  push:
+    branches:
+      - ci/pr2-expander-spacing-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: JavaScript syntax and build
+        run: |
+          node --check src/NoteKeeper/wwwroot/js/editor.js
+          dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          rm -f src/NoteKeeper/App_Data/notekeeper.db*
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53125 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53125/notes/new >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Verify no extra blank rows after expander
+        shell: bash
+        run: |
+          cat > expander-spacing-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage();
+
+          try {
+            await page.goto('http://127.0.0.1:53125/notes/new');
+
+            const editor = page.locator('.rich-text-editor');
+            await page.locator('.format-button[title="Expandable container"]').click();
+
+            if (await editor.locator('details').count() !== 1) {
+              throw new Error('Expandable container was not inserted.');
+            }
+
+            const structure = await editor.evaluate((node) =>
+              Array.from(node.childNodes).map((child) => ({
+                type: child.nodeType,
+                name: child.nodeName,
+                text: child.textContent
+              }))
+            );
+
+            const detailsIndex = structure.findIndex((item) => item.name === 'DETAILS');
+            if (detailsIndex < 0) {
+              throw new Error('DETAILS node missing.');
+            }
+
+            const after = structure.slice(detailsIndex + 1);
+            const visibleEmptyBlocks = after.filter((item) =>
+              ['DIV', 'P', 'BR'].includes(item.name) && !(item.text || '').trim()
+            );
+
+            if (visibleEmptyBlocks.length !== 0) {
+              throw new Error(`Found extra empty nodes after expander: ${JSON.stringify(visibleEmptyBlocks)}`);
+            }
+
+            await editor.focus();
+            await page.keyboard.press('Control+Z');
+            await page.waitForTimeout(100);
+
+            if (await editor.locator('details').count() !== 0) {
+              throw new Error('Ctrl+Z no longer undoes expander insertion.');
+            }
+
+            console.log('Expander spacing verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node expander-spacing-check.mjs
+
+      - name: Stop NoteKeeper
+        if: always()
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then kill "$(cat /tmp/notekeeper.pid)" || true; fi
