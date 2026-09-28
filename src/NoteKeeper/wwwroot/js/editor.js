@@ -11,6 +11,9 @@
     const imageFileInput = document.getElementById('imageFileInput');
     const antiForgeryToken = editor.querySelector('input[name="__RequestVerificationToken"]').value;
     const initialBlocks = JSON.parse(document.getElementById('initialBlocks').textContent || '[]');
+    const strings = JSON.parse(document.getElementById('editorStrings')?.textContent || '{}');
+    const locale = strings.locale || document.documentElement.lang || 'en';
+    const format = (template, value) => String(template || '').replace('{0}', value);
 
     let dirty = false;
     let saving = false;
@@ -19,9 +22,9 @@
     let imageReplaceTarget = null;
 
     const typeNames = {
-        text: 'Текст',
-        link: 'Посилання',
-        image: 'Зображення'
+        text: strings.typeText,
+        link: strings.typeLink,
+        image: strings.typeImage
     };
 
     const typeIcons = {
@@ -33,7 +36,7 @@
     function setDirty(value = true) {
         dirty = value;
         if (dirty && !saving) {
-            saveStatus.textContent = 'Є незбережені зміни';
+            saveStatus.textContent = strings.unsaved;
             saveStatus.className = 'save-status is-dirty';
         }
     }
@@ -64,13 +67,13 @@
         actions.className = 'block-toolbar-actions';
 
         if (type === 'link') {
-            actions.appendChild(makeControl('↗', 'Відкрити посилання', 'open-link'));
+            actions.appendChild(makeControl('↗', strings.openLink, 'open-link'));
         }
 
-        const drag = makeControl('⋮⋮', 'Перетягнути блок', 'drag-handle');
-        const up = makeControl('↑', 'Перемістити вище', 'move-up');
-        const down = makeControl('↓', 'Перемістити нижче', 'move-down');
-        const remove = makeControl('×', 'Видалити блок', 'remove');
+        const drag = makeControl('⋮⋮', strings.dragBlock, 'drag-handle');
+        const up = makeControl('↑', strings.moveUp, 'move-up');
+        const down = makeControl('↓', strings.moveDown, 'move-down');
+        const remove = makeControl('×', strings.removeBlock, 'remove');
 
         actions.append(drag, up, down, remove);
         toolbar.append(label, actions);
@@ -93,7 +96,7 @@
 
         const textarea = document.createElement('textarea');
         textarea.className = 'block-textarea';
-        textarea.placeholder = 'Текст, коментар, ідея… Використовуй #теги для швидкого пошуку.';
+        textarea.placeholder = strings.textPlaceholder;
         textarea.value = data.textContent || '';
         body.appendChild(textarea);
         return body;
@@ -108,7 +111,7 @@
 
         const title = document.createElement('input');
         title.className = 'block-input link-title';
-        title.placeholder = 'Назва посилання';
+        title.placeholder = strings.linkTitlePlaceholder;
         title.maxLength = 300;
         title.value = data.linkTitle || '';
 
@@ -120,7 +123,7 @@
 
         const comment = document.createElement('textarea');
         comment.className = 'block-textarea link-comment';
-        comment.placeholder = 'Коментар до посилання (необов’язково)';
+        comment.placeholder = strings.linkCommentPlaceholder;
         comment.value = data.textContent || '';
 
         row.append(title, url);
@@ -135,7 +138,7 @@
         const frame = document.createElement('div');
         frame.className = 'image-preview-frame';
         const img = document.createElement('img');
-        img.alt = data.caption || 'Зображення в нотатці';
+        img.alt = data.caption || strings.imageAlt;
         img.loading = 'lazy';
         img.src = data.imagePath;
         frame.appendChild(img);
@@ -146,13 +149,13 @@
         const caption = document.createElement('input');
         caption.className = 'image-caption';
         caption.maxLength = 500;
-        caption.placeholder = 'Підпис до зображення (необов’язково)';
+        caption.placeholder = strings.imageCaptionPlaceholder;
         caption.value = data.caption || '';
 
         const replace = document.createElement('button');
         replace.type = 'button';
         replace.className = 'button button-secondary button-small replace-image';
-        replace.textContent = 'Замінити';
+        replace.textContent = strings.replaceImage;
 
         meta.append(caption, replace);
         body.append(frame, meta);
@@ -218,7 +221,7 @@
         });
 
         if (!response.ok) {
-            let message = 'Не вдалося завантажити зображення.';
+            let message = strings.uploadFailed;
             try {
                 const payload = await response.json();
                 message = payload.message || message;
@@ -234,7 +237,7 @@
         if (images.length === 0) return;
 
         addImageButton.disabled = true;
-        setStatus('Завантаження зображення…', 'is-saving');
+        setStatus(strings.uploading, 'is-saving');
 
         try {
             let anchor = insertAfter;
@@ -252,10 +255,10 @@
                     anchor = createBlock('image', { imagePath: result.path, caption: '' }, anchor, true);
                 }
             }
-            showToast(images.length === 1 ? 'Зображення додано.' : `Додано зображень: ${images.length}.`);
+            showToast(images.length === 1 ? strings.imageAdded : format(strings.imagesAdded, images.length));
         } catch (error) {
-            showToast(error.message || 'Помилка завантаження.', true);
-            setStatus('Помилка завантаження', 'is-error');
+            showToast(error.message || strings.uploadError, true);
+            setStatus(strings.uploadErrorStatus, 'is-error');
         } finally {
             addImageButton.disabled = false;
             if (dirty) setDirty(true);
@@ -301,7 +304,7 @@
             } catch {
                 setActiveBlock(block);
                 input.focus();
-                showToast('Посилання має починатися з http:// або https://', true);
+                showToast(strings.linkMustHttp, true);
                 return false;
             }
         }
@@ -315,7 +318,7 @@
         saving = true;
         saveButton.disabled = true;
         saveButtonBottom.disabled = true;
-        setStatus('Збереження…', 'is-saving');
+        setStatus(strings.saving, 'is-saving');
 
         const idText = editor.dataset.noteId;
         const payload = {
@@ -335,7 +338,7 @@
             });
 
             if (!response.ok) {
-                let message = `Помилка збереження (${response.status}).`;
+                let message = format(strings.saveErrorStatus, response.status);
                 try {
                     const data = await response.json();
                     message = data.message || message;
@@ -355,14 +358,14 @@
 
             document.title = `${result.title} — NoteKeeper`;
             const savedAt = new Date(result.updatedAtUtc);
-            const formatted = new Intl.DateTimeFormat('uk-UA', {
+            const formatted = new Intl.DateTimeFormat(locale, {
                 dateStyle: 'medium',
                 timeStyle: 'short'
             }).format(savedAt);
-            setStatus(`Збережено ${formatted}`, 'is-success');
+            setStatus(format(strings.savedAt, formatted), 'is-success');
         } catch (error) {
-            setStatus(error.message || 'Не вдалося зберегти нотатку', 'is-error');
-            showToast(error.message || 'Не вдалося зберегти нотатку.', true);
+            setStatus(error.message || strings.saveFailed, 'is-error');
+            showToast(error.message || strings.saveFailedToast, true);
         } finally {
             saving = false;
             saveButton.disabled = false;
@@ -414,7 +417,7 @@
                 if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error();
                 window.open(parsed.toString(), '_blank', 'noopener,noreferrer');
             } catch {
-                showToast('Вкажи коректне HTTP/HTTPS посилання.', true);
+                showToast(strings.openLinkInvalid, true);
             }
             return;
         }

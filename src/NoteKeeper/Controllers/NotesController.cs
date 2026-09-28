@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using NoteKeeper.Data;
 using NoteKeeper.Models;
 using NoteKeeper.Services;
@@ -7,7 +8,10 @@ using NoteKeeper.ViewModels;
 
 namespace NoteKeeper.Controllers;
 
-public sealed class NotesController(AppDbContext db, IWebHostEnvironment environment) : Controller
+public sealed class NotesController(
+    AppDbContext db,
+    IWebHostEnvironment environment,
+    IStringLocalizer<AppResources> localizer) : Controller
 {
     [HttpGet("/")]
     public async Task<IActionResult> Index(
@@ -143,7 +147,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
     {
         if (request.Blocks.Count > 500)
         {
-            return BadRequest(new { message = "У нотатці забагато блоків." });
+            return BadRequest(new { message = localizer["Server_TooManyBlocks"].Value });
         }
 
         Note note;
@@ -156,7 +160,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
 
             if (existing is null)
             {
-                return NotFound(new { message = "Нотатку не знайдено." });
+                return NotFound(new { message = localizer["Server_NoteNotFound"].Value });
             }
 
             note = existing;
@@ -268,7 +272,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
     {
         if (image is null || image.Length == 0 || image.Length > 12_000_000)
         {
-            return BadRequest(new { message = "Зображення має бути не більше 12 МБ." });
+            return BadRequest(new { message = localizer["Server_ImageTooLarge"].Value });
         }
 
         var extension = image.ContentType.ToLowerInvariant() switch
@@ -282,7 +286,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
 
         if (extension is null)
         {
-            return BadRequest(new { message = "Підтримуються PNG, JPEG, WEBP та GIF." });
+            return BadRequest(new { message = localizer["Server_ImageTypeUnsupported"].Value });
         }
 
         var uploadsDirectory = Path.Combine(environment.WebRootPath, "uploads");
@@ -297,12 +301,12 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         return Ok(new { path = $"/uploads/{fileName}" });
     }
 
-    private static string NormalizeTitle(string? value)
+    private string NormalizeTitle(string? value)
     {
         var title = (value ?? string.Empty).Trim();
         if (title.Length == 0)
         {
-            return "Без назви";
+            return localizer["Server_UntitledNote"].Value;
         }
 
         return title.Length <= 240 ? title : title[..240];
@@ -386,7 +390,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         return value.Length <= maxLength ? value : value[..maxLength];
     }
 
-    private static string BuildPreview(IEnumerable<NoteBlock> blocks)
+    private string BuildPreview(IEnumerable<NoteBlock> blocks)
     {
         var preview = blocks
             .OrderBy(x => x.SortOrder)
@@ -400,7 +404,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
             ?.Replace('\r', ' ')
             .Replace('\n', ' ')
-            .Trim() ?? "Порожня нотатка";
+            .Trim() ?? localizer["Server_EmptyNote"].Value;
 
         return preview.Length <= 180 ? preview : preview[..177] + "…";
     }

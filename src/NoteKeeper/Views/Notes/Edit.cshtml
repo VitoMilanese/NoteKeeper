@@ -1,57 +1,94 @@
+@using System.Globalization
 @using System.Text.Json
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
 @model NoteEditorViewModel
 @{
-    ViewData["Title"] = Model.Id.HasValue ? $"{Model.Title} — NoteKeeper" : "Нова нотатка — NoteKeeper";
+    ViewData["Title"] = Model.Id.HasValue ? $"{Model.Title} — NoteKeeper" : Localizer["Edit_PageTitleNew"].Value;
     var initialJson = JsonSerializer.Serialize(Model.Blocks, new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     });
+    var editorStrings = new Dictionary<string, string>
+    {
+        ["locale"] = CultureInfo.CurrentUICulture.Name,
+        ["typeText"] = Localizer["Editor_TypeText"].Value,
+        ["typeLink"] = Localizer["Editor_TypeLink"].Value,
+        ["typeImage"] = Localizer["Editor_TypeImage"].Value,
+        ["unsaved"] = Localizer["Editor_Unsaved"].Value,
+        ["openLink"] = Localizer["Editor_OpenLink"].Value,
+        ["dragBlock"] = Localizer["Editor_DragBlock"].Value,
+        ["moveUp"] = Localizer["Editor_MoveUp"].Value,
+        ["moveDown"] = Localizer["Editor_MoveDown"].Value,
+        ["removeBlock"] = Localizer["Editor_RemoveBlock"].Value,
+        ["textPlaceholder"] = Localizer["Editor_TextPlaceholder"].Value,
+        ["linkTitlePlaceholder"] = Localizer["Editor_LinkTitlePlaceholder"].Value,
+        ["linkCommentPlaceholder"] = Localizer["Editor_LinkCommentPlaceholder"].Value,
+        ["imageAlt"] = Localizer["Editor_ImageAlt"].Value,
+        ["imageCaptionPlaceholder"] = Localizer["Editor_ImageCaptionPlaceholder"].Value,
+        ["replaceImage"] = Localizer["Editor_ReplaceImage"].Value,
+        ["uploadFailed"] = Localizer["Editor_UploadFailed"].Value,
+        ["uploading"] = Localizer["Editor_Uploading"].Value,
+        ["imageAdded"] = Localizer["Editor_ImageAdded"].Value,
+        ["imagesAdded"] = Localizer["Editor_ImagesAdded"].Value,
+        ["uploadError"] = Localizer["Editor_UploadError"].Value,
+        ["uploadErrorStatus"] = Localizer["Editor_UploadErrorStatus"].Value,
+        ["linkMustHttp"] = Localizer["Editor_LinkMustHttp"].Value,
+        ["saving"] = Localizer["Editor_Saving"].Value,
+        ["saveErrorStatus"] = Localizer["Editor_SaveErrorStatus"].Value,
+        ["savedAt"] = Localizer["Editor_SavedAt"].Value,
+        ["saveFailed"] = Localizer["Editor_SaveFailed"].Value,
+        ["saveFailedToast"] = Localizer["Editor_SaveFailedToast"].Value,
+        ["openLinkInvalid"] = Localizer["Editor_OpenLinkInvalid"].Value
+    };
+    var editorStringsJson = JsonSerializer.Serialize(editorStrings);
 }
 
 <section id="noteEditor" class="editor-page" data-note-id="@(Model.Id?.ToString() ?? "")">
     @Html.AntiForgeryToken()
 
     <div class="editor-topbar">
-        <a class="button button-ghost button-small" href="/">← До списку</a>
+        <a class="button button-ghost button-small" href="/">@Localizer["Edit_BackToList"]</a>
         <div class="save-cluster">
             <span id="saveStatus" class="save-status">
                 @if (Model.UpdatedAtUtc.HasValue)
                 {
-                    <span>Збережено <time class="js-local-time" datetime="@Model.UpdatedAtUtc.Value.ToString("O")">@Model.UpdatedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</time></span>
+                    <span>@Localizer["Edit_Saved"] <time class="js-local-time" datetime="@Model.UpdatedAtUtc.Value.ToString("O")">@Model.UpdatedAtUtc.Value.ToString("yyyy-MM-dd HH:mm")</time></span>
                 }
                 else
                 {
-                    <span>Нова нотатка</span>
+                    <span>@Localizer["Edit_NewNoteStatus"]</span>
                 }
             </span>
-            <button id="saveButton" class="button button-primary button-small" type="button">Зберегти <kbd>Ctrl+S</kbd></button>
+            <button id="saveButton" class="button button-primary button-small" type="button">@Localizer["Edit_Save"] <kbd>Ctrl+S</kbd></button>
         </div>
     </div>
 
     <div class="editor-heading">
-        <input id="titleInput" class="title-input" maxlength="240" value="@Model.Title" placeholder="Назва нотатки" autocomplete="off" />
-        <p>Додай блоки нижче. <code>#теги</code> в тексті автоматично стануть доступними для пошуку.</p>
+        <input id="titleInput" class="title-input" maxlength="240" value="@Model.Title" placeholder="@Localizer["Edit_TitlePlaceholder"]" autocomplete="off" />
+        <p>@Localizer["Edit_HelpBefore"]<code>#tags</code>@Localizer["Edit_HelpAfter"]</p>
     </div>
 
     <div class="add-block-bar panel">
         <div class="add-actions">
-            <button class="button button-secondary" type="button" data-add-block="text">＋ Текст</button>
-            <button class="button button-secondary" type="button" data-add-block="link">↗ Посилання</button>
-            <button class="button button-secondary" type="button" id="addImageButton">▧ Зображення</button>
+            <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddText"]</button>
+            <button class="button button-secondary" type="button" data-add-block="link">@Localizer["Edit_AddLink"]</button>
+            <button class="button button-secondary" type="button" id="addImageButton">@Localizer["Edit_AddImage"]</button>
             <input id="imageFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
         </div>
-        <div class="paste-hint"><kbd>Ctrl+V</kbd> вставляє картинку з буфера як новий блок</div>
+        <div class="paste-hint"><kbd>Ctrl+V</kbd> @Localizer["Edit_PasteHint"]</div>
     </div>
 
     <div id="blocksContainer" class="blocks-list" aria-live="polite"></div>
 
     <div class="editor-footer-actions">
-        <button class="button button-secondary" type="button" data-add-block="text">＋ Додати текстовий блок</button>
-        <button id="saveButtonBottom" class="button button-primary" type="button">Зберегти зміни</button>
+        <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddTextBlock"]</button>
+        <button id="saveButtonBottom" class="button button-primary" type="button">@Localizer["Edit_SaveChanges"]</button>
     </div>
 </section>
 
 <script id="initialBlocks" type="application/json">@Html.Raw(initialJson)</script>
+<script id="editorStrings" type="application/json">@Html.Raw(editorStringsJson)</script>
 
 @section Scripts {
     <script src="~/js/editor.js" asp-append-version="true"></script>

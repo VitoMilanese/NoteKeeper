@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Header_HomeAria" xml:space="preserve"><value>NoteKeeper — home</value></data>
+  <data name="Common_NewNote" xml:space="preserve"><value>+ New note</value></data>
+  <data name="Language_Label" xml:space="preserve"><value>Language</value></data>
+  <data name="Index_PageTitle" xml:space="preserve"><value>Notes — NoteKeeper</value></data>
+  <data name="Index_Eyebrow" xml:space="preserve"><value>Your notes</value></data>
+  <data name="Index_HeroTitle" xml:space="preserve"><value>Everything important — in one place.</value></data>
+  <data name="Index_HeroCopy" xml:space="preserve"><value>Text, links, images, tags, and fast search without the noise.</value></data>
+  <data name="Index_CreateNote" xml:space="preserve"><value>+ Create note</value></data>
+  <data name="Index_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Title, text, link…</value></data>
+  <data name="Index_Tag" xml:space="preserve"><value>Tag</value></data>
+  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#idea</value></data>
+  <data name="Index_Sort" xml:space="preserve"><value>Sort by</value></data>
+  <data name="Index_SortUpdated" xml:space="preserve"><value>Last updated</value></data>
+  <data name="Index_SortCreated" xml:space="preserve"><value>Created</value></data>
+  <data name="Index_SortTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="Index_Direction" xml:space="preserve"><value>Order</value></data>
+  <data name="Index_DirectionDesc" xml:space="preserve"><value>Newest first / Z→A</value></data>
+  <data name="Index_DirectionAsc" xml:space="preserve"><value>Oldest first / A→Z</value></data>
+  <data name="Index_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Index_Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Index_PopularTagsAria" xml:space="preserve"><value>Popular tags</value></data>
+  <data name="Index_Results" xml:space="preserve"><value>Results</value></data>
+  <data name="Index_Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="Index_NoResults" xml:space="preserve"><value>Nothing found</value></data>
+  <data name="Index_NoNotes" xml:space="preserve"><value>Nothing here yet</value></data>
+  <data name="Index_NoResultsCopy" xml:space="preserve"><value>Try changing the search query or tag.</value></data>
+  <data name="Index_NoNotesCopy" xml:space="preserve"><value>Create your first note and add text, a link, or an image.</value></data>
+  <data name="Index_BlockCount" xml:space="preserve"><value>Blocks: {0}</value></data>
+  <data name="Index_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Index_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Index_DeleteConfirm" xml:space="preserve"><value>Delete this note?</value></data>
+  <data name="Edit_PageTitleNew" xml:space="preserve"><value>New note — NoteKeeper</value></data>
+  <data name="Edit_BackToList" xml:space="preserve"><value>← Back to list</value></data>
+  <data name="Edit_Saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="Edit_NewNoteStatus" xml:space="preserve"><value>New note</value></data>
+  <data name="Edit_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Note title</value></data>
+  <data name="Edit_HelpBefore" xml:space="preserve"><value>Add blocks below. </value></data>
+  <data name="Edit_HelpAfter" xml:space="preserve"><value> in text automatically become searchable.</value></data>
+  <data name="Edit_AddText" xml:space="preserve"><value>＋ Text</value></data>
+  <data name="Edit_AddLink" xml:space="preserve"><value>↗ Link</value></data>
+  <data name="Edit_AddImage" xml:space="preserve"><value>▧ Image</value></data>
+  <data name="Edit_PasteHint" xml:space="preserve"><value>pastes an image from the clipboard as a new block</value></data>
+  <data name="Edit_AddTextBlock" xml:space="preserve"><value>＋ Add text block</value></data>
+  <data name="Edit_SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="Editor_TypeText" xml:space="preserve"><value>Text</value></data>
+  <data name="Editor_TypeLink" xml:space="preserve"><value>Link</value></data>
+  <data name="Editor_TypeImage" xml:space="preserve"><value>Image</value></data>
+  <data name="Editor_Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="Editor_OpenLink" xml:space="preserve"><value>Open link</value></data>
+  <data name="Editor_DragBlock" xml:space="preserve"><value>Drag block</value></data>
+  <data name="Editor_MoveUp" xml:space="preserve"><value>Move up</value></data>
+  <data name="Editor_MoveDown" xml:space="preserve"><value>Move down</value></data>
+  <data name="Editor_RemoveBlock" xml:space="preserve"><value>Delete block</value></data>
+  <data name="Editor_TextPlaceholder" xml:space="preserve"><value>Text, comment, idea… Use #tags for quick search.</value></data>
+  <data name="Editor_LinkTitlePlaceholder" xml:space="preserve"><value>Link title</value></data>
+  <data name="Editor_LinkCommentPlaceholder" xml:space="preserve"><value>Link comment (optional)</value></data>
+  <data name="Editor_ImageAlt" xml:space="preserve"><value>Image in note</value></data>
+  <data name="Editor_ImageCaptionPlaceholder" xml:space="preserve"><value>Image caption (optional)</value></data>
+  <data name="Editor_ReplaceImage" xml:space="preserve"><value>Replace</value></data>
+  <data name="Editor_UploadFailed" xml:space="preserve"><value>Could not upload the image.</value></data>
+  <data name="Editor_Uploading" xml:space="preserve"><value>Uploading image…</value></data>
+  <data name="Editor_ImageAdded" xml:space="preserve"><value>Image added.</value></data>
+  <data name="Editor_ImagesAdded" xml:space="preserve"><value>Images added: {0}.</value></data>
+  <data name="Editor_UploadError" xml:space="preserve"><value>Upload error.</value></data>
+  <data name="Editor_UploadErrorStatus" xml:space="preserve"><value>Upload error</value></data>
+  <data name="Editor_LinkMustHttp" xml:space="preserve"><value>The link must start with http:// or https://</value></data>
+  <data name="Editor_Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="Editor_SaveErrorStatus" xml:space="preserve"><value>Save error ({0}).</value></data>
+  <data name="Editor_SavedAt" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="Editor_SaveFailed" xml:space="preserve"><value>Could not save the note</value></data>
+  <data name="Editor_SaveFailedToast" xml:space="preserve"><value>Could not save the note.</value></data>
+  <data name="Editor_OpenLinkInvalid" xml:space="preserve"><value>Enter a valid HTTP/HTTPS link.</value></data>
+  <data name="Server_TooManyBlocks" xml:space="preserve"><value>This note has too many blocks.</value></data>
+  <data name="Server_NoteNotFound" xml:space="preserve"><value>Note not found.</value></data>
+  <data name="Server_ImageTooLarge" xml:space="preserve"><value>The image must be no larger than 12 MB.</value></data>
+  <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>PNG, JPEG, WEBP, and GIF are supported.</value></data>
+  <data name="Server_UntitledNote" xml:space="preserve"><value>Untitled</value></data>
+  <data name="Server_EmptyNote" xml:space="preserve"><value>Empty note</value></data>
+</root>
