@@ -979,21 +979,35 @@
     function deleteExpandableContainer(richEditor, details) {
         if (!details?.isConnected || !richEditor.contains(details)) return;
 
-        richEditor.focus({ preventScroll: true });
+        const next = details.nextSibling;
+        const previous = details.previousSibling;
+        details.remove();
 
-        const range = document.createRange();
-        range.selectNode(details);
+        if (!richEditor.hasChildNodes()) {
+            richEditor.appendChild(document.createElement('br'));
+        }
 
         const selection = window.getSelection();
-        if (!selection) return;
+        if (selection) {
+            const range = document.createRange();
+            const target = next?.isConnected ? next : previous?.isConnected ? previous : richEditor;
 
-        selection.removeAllRanges();
-        selection.addRange(range);
-        richEditor._savedRange = range.cloneRange();
+            if (target === richEditor) {
+                range.selectNodeContents(richEditor);
+                range.collapse(false);
+            } else if (target.nodeType === Node.TEXT_NODE) {
+                range.setStart(target, target.nodeValue?.length || 0);
+                range.collapse(true);
+            } else {
+                range.selectNodeContents(target);
+                range.collapse(false);
+            }
 
-        // Replacing the selected <details> with empty HTML removes it as
-        // one native editing transaction, so Ctrl+Z can restore the container.
-        document.execCommand('insertHTML', false, '');
+            selection.removeAllRanges();
+            selection.addRange(range);
+            richEditor._savedRange = range.cloneRange();
+        }
+
         notifyRichInput(richEditor);
     }
 
