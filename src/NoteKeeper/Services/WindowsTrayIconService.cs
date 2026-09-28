@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 
@@ -37,7 +38,7 @@ public sealed class WindowsTrayIconService(
     private const uint ExitCommandId = 1002;
 
     private readonly object _sync = new();
-    private readonly WndProc _windowProcedure = WindowProcedure;
+    private WndProc? _windowProcedure;
 
     private Thread? _trayThread;
     private nint _windowHandle;
@@ -76,6 +77,7 @@ public sealed class WindowsTrayIconService(
         StopTrayThread();
     }
 
+    [SupportedOSPlatform("windows")]
     private void StartTrayThread()
     {
         lock (_sync)
@@ -86,6 +88,7 @@ public sealed class WindowsTrayIconService(
             }
 
             _homeUrl = ResolveHomeUrl();
+            _windowProcedure ??= WindowProcedure;
             _trayThread = new Thread(TrayThreadMain)
             {
                 IsBackground = true,
@@ -134,7 +137,7 @@ public sealed class WindowsTrayIconService(
         var moduleHandle = GetModuleHandle(null);
         var windowClass = new WindowClass
         {
-            lpfnWndProc = _windowProcedure,
+            lpfnWndProc = _windowProcedure!,
             hInstance = moduleHandle,
             lpszClassName = _windowClassName
         };
