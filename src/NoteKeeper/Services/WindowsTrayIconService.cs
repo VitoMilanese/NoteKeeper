@@ -364,12 +364,19 @@ public sealed class WindowsTrayIconService(
             return;
         }
 
-        var data = CreateNotifyIconData();
-        ShellNotifyIcon(NimDelete, ref data);
-
-        if (!ShellNotifyIcon(NimAdd, ref data))
+        try
         {
-            logger.LogWarning("Could not add the NoteKeeper icon to the system tray. Win32 error: {Error}", Marshal.GetLastWin32Error());
+            var data = CreateNotifyIconData();
+            ShellNotifyIcon(NimDelete, ref data);
+
+            if (!ShellNotifyIcon(NimAdd, ref data))
+            {
+                logger.LogWarning("Could not add the NoteKeeper icon to the system tray. Win32 error: {Error}", Marshal.GetLastWin32Error());
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not initialize the NoteKeeper system tray icon.");
         }
     }
 
@@ -380,8 +387,15 @@ public sealed class WindowsTrayIconService(
             return;
         }
 
-        var data = CreateNotifyIconData();
-        ShellNotifyIcon(NimDelete, ref data);
+        try
+        {
+            var data = CreateNotifyIconData();
+            ShellNotifyIcon(NimDelete, ref data);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the NoteKeeper system tray icon.");
+        }
     }
 
     private NotifyIconData CreateNotifyIconData()
@@ -493,7 +507,7 @@ public sealed class WindowsTrayIconService(
     [DllImport("user32.dll")]
     private static extern bool DestroyWindow(nint windowHandle);
 
-    [DllImport("user32.dll")]
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern nint DefWindowProc(nint windowHandle, uint message, nint wParam, nint lParam);
 
     [DllImport("user32.dll")]
@@ -523,7 +537,13 @@ public sealed class WindowsTrayIconService(
     [DllImport("user32.dll")]
     private static extern bool DestroyIcon(nint icon);
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport(
+        "shell32.dll",
+        EntryPoint = "Shell_NotifyIconW",
+        CharSet = CharSet.Unicode,
+        ExactSpelling = true,
+        SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ShellNotifyIcon(uint message, ref NotifyIconData data);
 
     [DllImport("user32.dll")]

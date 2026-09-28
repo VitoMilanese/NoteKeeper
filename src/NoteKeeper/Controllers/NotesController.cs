@@ -286,7 +286,7 @@ public sealed class NotesController(
 
             var tags = TagExtractor.Extract(note.Blocks
                 .Where(x => x.Type is BlockType.Text or BlockType.Link)
-                .Select(x => RichTextContent.ToPlainText(x.TextContent)));
+                .Select(x => RichTextContent.ToTagSearchText(x.TextContent)));
 
             note.Tags = tags
                 .Select(x => new NoteTag { Name = x })
@@ -371,7 +371,7 @@ public sealed class NotesController(
 
         var tags = TagExtractor.Extract(note.Blocks
             .Where(x => x.Type is BlockType.Text or BlockType.Link)
-            .Select(x => RichTextContent.ToPlainText(x.TextContent)));
+            .Select(x => RichTextContent.ToTagSearchText(x.TextContent)));
         var desiredTags = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var tagsToRemove = note.Tags
