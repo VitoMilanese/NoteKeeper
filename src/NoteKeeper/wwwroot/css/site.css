@@ -487,6 +487,65 @@ html[data-theme="light"] .tag-chip.is-active {
     gap: 15px;
 }
 
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 24px;
+}
+
+.pagination-link {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(20, 31, 53, 0.72);
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 750;
+    line-height: 1;
+}
+
+.pagination-link:hover {
+    border-color: var(--border-strong);
+    background: rgba(124, 140, 255, 0.1);
+}
+
+.pagination-link.is-current {
+    border-color: rgba(124, 140, 255, 0.5);
+    background: rgba(124, 140, 255, 0.18);
+    color: var(--accent-strong);
+    cursor: default;
+}
+
+.pagination-arrow {
+    font-size: 1rem;
+}
+
+.pagination-ellipsis {
+    min-width: 24px;
+    color: var(--muted);
+    text-align: center;
+}
+
+html[data-theme="light"] .pagination-link {
+    background: #ffffff;
+}
+
+html[data-theme="light"] .pagination-link:hover {
+    background: rgba(96, 108, 192, 0.08);
+}
+
+html[data-theme="light"] .pagination-link.is-current {
+    background: rgba(96, 108, 192, 0.13);
+}
+
 html[data-theme="light"] .panel {
     background: rgba(255, 255, 255, 0.88);
 }

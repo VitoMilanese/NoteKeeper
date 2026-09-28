@@ -26,6 +26,10 @@
   <data name="Index_Apply" xml:space="preserve"><value>Apply</value></data>
   <data name="Index_Reset" xml:space="preserve"><value>Reset</value></data>
   <data name="Index_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Index_PaginationAria" xml:space="preserve"><value>Notes pages</value></data>
+  <data name="Index_PreviousPage" xml:space="preserve"><value>Previous page</value></data>
+  <data name="Index_NextPage" xml:space="preserve"><value>Next page</value></data>
+  <data name="Index_PageNumber" xml:space="preserve"><value>Page {0}</value></data>
   <data name="Index_PopularTagsAria" xml:space="preserve"><value>Popular tags</value></data>
   <data name="Index_Results" xml:space="preserve"><value>Results</value></data>
   <data name="Index_Notes" xml:space="preserve"><value>Notes</value></data>

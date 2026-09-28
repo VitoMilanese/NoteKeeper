@@ -26,6 +26,10 @@
   <data name="Index_Apply" xml:space="preserve"><value>Застосувати</value></data>
   <data name="Index_Reset" xml:space="preserve"><value>Скинути</value></data>
   <data name="Index_Clear" xml:space="preserve"><value>Очистити</value></data>
+  <data name="Index_PaginationAria" xml:space="preserve"><value>Сторінки нотаток</value></data>
+  <data name="Index_PreviousPage" xml:space="preserve"><value>Попередня сторінка</value></data>
+  <data name="Index_NextPage" xml:space="preserve"><value>Наступна сторінка</value></data>
+  <data name="Index_PageNumber" xml:space="preserve"><value>Сторінка {0}</value></data>
   <data name="Index_PopularTagsAria" xml:space="preserve"><value>Популярні теги</value></data>
   <data name="Index_Results" xml:space="preserve"><value>Результати</value></data>
   <data name="Index_Notes" xml:space="preserve"><value>Нотатки</value></data>

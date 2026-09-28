@@ -25,18 +25,17 @@ public sealed class NotesController(
         string? tag,
         string sort = "updated",
         string dir = "desc",
+        int page = 1,
+        int pageSize = 30,
         CancellationToken cancellationToken = default)
     {
         q = q?.Trim();
         var selectedTags = NormalizeTags(tag);
         sort = sort is "title" or "created" or "updated" ? sort : "updated";
         dir = dir == "asc" ? "asc" : "desc";
+        pageSize = Math.Clamp(pageSize, 30, 60);
 
-        IQueryable<Note> query = db.Notes
-            .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.Blocks)
-            .Include(x => x.Tags);
+        IQueryable<Note> query = db.Notes.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -55,17 +54,31 @@ public sealed class NotesController(
             query = query.Where(note => note.Tags.Any(x => x.Name == selectedTag));
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = totalCount == 0
+            ? 0
+            : (int)Math.Ceiling(totalCount / (double)pageSize);
+        page = totalPages == 0
+            ? 1
+            : Math.Clamp(page, 1, totalPages);
+
         query = (sort, dir) switch
         {
-            ("title", "asc") => query.OrderBy(x => x.Title),
-            ("title", _) => query.OrderByDescending(x => x.Title),
-            ("created", "asc") => query.OrderBy(x => x.CreatedAtUtc),
-            ("created", _) => query.OrderByDescending(x => x.CreatedAtUtc),
-            ("updated", "asc") => query.OrderBy(x => x.UpdatedAtUtc),
-            _ => query.OrderByDescending(x => x.UpdatedAtUtc)
+            ("title", "asc") => query.OrderBy(x => x.Title).ThenBy(x => x.Id),
+            ("title", _) => query.OrderByDescending(x => x.Title).ThenByDescending(x => x.Id),
+            ("created", "asc") => query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id),
+            ("created", _) => query.OrderByDescending(x => x.CreatedAtUtc).ThenByDescending(x => x.Id),
+            ("updated", "asc") => query.OrderBy(x => x.UpdatedAtUtc).ThenBy(x => x.Id),
+            _ => query.OrderByDescending(x => x.UpdatedAtUtc).ThenByDescending(x => x.Id)
         };
 
-        var notes = await query.ToListAsync(cancellationToken);
+        var notes = await query
+            .AsSplitQuery()
+            .Include(x => x.Blocks)
+            .Include(x => x.Tags)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
         var tagCounts = await db.NoteTags
             .AsNoTracking()
             .GroupBy(x => x.Name)
@@ -85,6 +98,10 @@ public sealed class NotesController(
             Tag = string.Join(", ", selectedTags),
             Sort = sort,
             Direction = dir,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages,
             Tags = tagCounts,
             Notes = notes.Select(note => new NoteListItemViewModel
             {

@@ -6,6 +6,10 @@ public sealed class NoteListViewModel
     public string Tag { get; set; } = string.Empty;
     public string Sort { get; set; } = "updated";
     public string Direction { get; set; } = "desc";
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 30;
+    public int TotalCount { get; set; }
+    public int TotalPages { get; set; }
     public List<NoteListItemViewModel> Notes { get; set; } = [];
     public List<TagCountViewModel> Tags { get; set; } = [];
 }

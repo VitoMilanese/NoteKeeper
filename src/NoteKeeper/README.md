@@ -4,7 +4,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 
 ## Features
 
-- home page with a note list;
+- home page with a note list and server-side pagination that appears only when more than one page is needed;
 - search by title, text, comments, links, and image captions;
 - filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
 - highlight `#active` and `#done` tags with stronger emphasis, with higher-contrast tag chips in the light theme;
@@ -42,6 +42,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - direct executable launches use the same default URLs as the Visual Studio profile: `https://localhost:7147` and `http://localhost:5147`;
 - the tray home-page URL is resolved from the actual server addresses, with the configured URL list as a fallback, instead of falling back to port 5000;
 - responsive interface that uses the available viewport width;
+- show at least 30 notes per page and automatically round the page size up to a complete final grid row for the current card-column count;
 - no external JavaScript or CSS dependencies.
 
 ## Running the application
