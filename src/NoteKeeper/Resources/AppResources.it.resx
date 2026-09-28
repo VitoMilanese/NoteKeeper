@@ -84,4 +84,30 @@
   <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>Sono supportati PNG, JPEG, WEBP e GIF.</value></data>
   <data name="Server_UntitledNote" xml:space="preserve"><value>Senza titolo</value></data>
   <data name="Server_EmptyNote" xml:space="preserve"><value>Nota vuota</value></data>
+  <data name="Theme_SwitchToLight" xml:space="preserve"><value>Passa al tema chiaro</value></data>
+  <data name="Theme_SwitchToDark" xml:space="preserve"><value>Passa al tema scuro</value></data>
+  <data name="Dialog_ConfirmTitle" xml:space="preserve"><value>Conferma azione</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>Annulla</value></data>
+  <data name="Dialog_Confirm" xml:space="preserve"><value>Conferma</value></data>
+  <data name="Index_DeleteDialogTitle" xml:space="preserve"><value>Eliminare la nota?</value></data>
+  <data name="Index_DeleteDialogMessage" xml:space="preserve"><value>“{0}” verrà eliminata definitivamente dal database. Questa azione non può essere annullata.</value></data>
+  <data name="Edit_DeleteNote" xml:space="preserve"><value>Elimina</value></data>
+  <data name="Editor_FormatBold" xml:space="preserve"><value>Grassetto</value></data>
+  <data name="Editor_FormatItalic" xml:space="preserve"><value>Corsivo</value></data>
+  <data name="Editor_FormatUnderline" xml:space="preserve"><value>Sottolineato</value></data>
+  <data name="Editor_FormatStrike" xml:space="preserve"><value>Barrato</value></data>
+  <data name="Editor_FormatCode" xml:space="preserve"><value>Codice inline</value></data>
+  <data name="Editor_FormatQuote" xml:space="preserve"><value>Citazione</value></data>
+  <data name="Editor_FormatExpander" xml:space="preserve"><value>Contenitore espandibile</value></data>
+  <data name="Editor_FormatDivider" xml:space="preserve"><value>Separatore</value></data>
+  <data name="Editor_FormatList" xml:space="preserve"><value>Elenco</value></data>
+  <data name="Editor_FormatOrderedList" xml:space="preserve"><value>Elenco numerato</value></data>
+  <data name="Editor_FormatBulletList" xml:space="preserve"><value>Elenco puntato (•)</value></data>
+  <data name="Editor_FormatDashList" xml:space="preserve"><value>Elenco con trattino (—)</value></data>
+  <data name="Editor_FormatSymbols" xml:space="preserve"><value>Inserisci simbolo</value></data>
+  <data name="Editor_ExpanderSummary" xml:space="preserve"><value>Dettagli</value></data>
+  <data name="Editor_ExpanderContent" xml:space="preserve"><value>Contenuto espandibile</value></data>
+  <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Scartare le modifiche non salvate?</value></data>
+  <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>Questa nota contiene modifiche non ancora salvate.</value></data>
+  <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Esci senza salvare</value></data>
 </root>

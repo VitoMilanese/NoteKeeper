@@ -14,6 +14,13 @@
     const strings = JSON.parse(document.getElementById('editorStrings')?.textContent || '{}');
     const locale = strings.locale || document.documentElement.lang || 'en';
     const format = (template, value) => String(template || '').replace('{0}', value);
+    const richTextPrefix = '<!--NKHTML1-->';
+    const allowedRichTags = new Set([
+        'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE',
+        'BLOCKQUOTE', 'DETAILS', 'SUMMARY', 'HR', 'OL', 'UL', 'LI',
+        'DIV', 'P', 'BR', 'SPAN'
+    ]);
+    const quickSymbols = ['—', '•', '◉', '◎', '★', '☑', '☒', '☐', '✓', '➢', 'ℹ️', '🔥', '❤️', '❓', '❗', '💡', '🟥', '🟩', '🟨'];
 
     let dirty = false;
     let saving = false;
@@ -91,15 +98,242 @@
         return button;
     }
 
+    function sanitizeRichHtml(html) {
+        const template = document.createElement('template');
+        template.innerHTML = html || '';
+
+        const sanitizeNode = (node) => {
+            for (const child of Array.from(node.childNodes)) {
+                if (child.nodeType === Node.COMMENT_NODE) {
+                    child.remove();
+                    continue;
+                }
+
+                if (child.nodeType !== Node.ELEMENT_NODE) continue;
+
+                if (!allowedRichTags.has(child.tagName)) {
+                    child.replaceWith(...Array.from(child.childNodes));
+                    continue;
+                }
+
+                for (const attribute of Array.from(child.attributes)) {
+                    const keepMarker = child.tagName === 'UL' &&
+                        attribute.name === 'data-marker' &&
+                        ['bullet', 'dash'].includes(attribute.value);
+                    const keepOpen = child.tagName === 'DETAILS' && attribute.name === 'open';
+
+                    if (!keepMarker && !keepOpen) {
+                        child.removeAttribute(attribute.name);
+                    }
+                }
+
+                sanitizeNode(child);
+            }
+        };
+
+        sanitizeNode(template.content);
+        return template.innerHTML;
+    }
+
+    function setRichEditorContent(richEditor, value) {
+        const raw = value || '';
+        if (raw.startsWith(richTextPrefix)) {
+            richEditor.innerHTML = sanitizeRichHtml(raw.slice(richTextPrefix.length));
+        } else {
+            richEditor.textContent = raw;
+        }
+    }
+
+    function saveRichSelection(richEditor) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        if (richEditor.contains(container) || container === richEditor) {
+            richEditor._savedRange = range.cloneRange();
+        }
+    }
+
+    function restoreRichSelection(richEditor) {
+        richEditor.focus();
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        selection.removeAllRanges();
+
+        if (richEditor._savedRange) {
+            selection.addRange(richEditor._savedRange);
+            return;
+        }
+
+        const range = document.createRange();
+        range.selectNodeContents(richEditor);
+        range.collapse(false);
+        selection.addRange(range);
+    }
+
+    function notifyRichInput(richEditor) {
+        saveRichSelection(richEditor);
+        richEditor.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function runRichCommand(richEditor, command, value = null) {
+        restoreRichSelection(richEditor);
+        document.execCommand(command, false, value);
+        notifyRichInput(richEditor);
+    }
+
+    function escapeHtml(value) {
+        const span = document.createElement('span');
+        span.textContent = value;
+        return span.innerHTML;
+    }
+
+    function selectedRichText(richEditor) {
+        restoreRichSelection(richEditor);
+        return window.getSelection()?.toString() || '';
+    }
+
+    function insertRichHtml(richEditor, html) {
+        restoreRichSelection(richEditor);
+        document.execCommand('insertHTML', false, html);
+        notifyRichInput(richEditor);
+    }
+
+    function insertRichText(richEditor, text) {
+        restoreRichSelection(richEditor);
+        document.execCommand('insertText', false, text);
+        notifyRichInput(richEditor);
+    }
+
+    function applyListMarker(richEditor, marker) {
+        const command = marker === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList';
+        runRichCommand(richEditor, command);
+
+        if (marker === 'ordered') return;
+
+        const selection = window.getSelection();
+        const anchor = selection?.anchorNode;
+        const element = anchor?.nodeType === Node.ELEMENT_NODE ? anchor : anchor?.parentElement;
+        const list = element?.closest?.('ul');
+        if (!list) return;
+
+        list.dataset.marker = marker === 'dash' ? 'dash' : 'bullet';
+        notifyRichInput(richEditor);
+    }
+
+    function makeFormatButton(label, title, onClick, className = '') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `format-button ${className}`.trim();
+        button.textContent = label;
+        button.title = title;
+        button.setAttribute('aria-label', title);
+        button.addEventListener('mousedown', (event) => event.preventDefault());
+        button.addEventListener('click', onClick);
+        return button;
+    }
+
+    function createFormattingToolbar(richEditor) {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'format-toolbar';
+        toolbar.setAttribute('role', 'toolbar');
+        toolbar.addEventListener('mousedown', () => saveRichSelection(richEditor), true);
+
+        toolbar.append(
+            makeFormatButton('B', strings.formatBold, () => runRichCommand(richEditor, 'bold'), 'is-bold'),
+            makeFormatButton('I', strings.formatItalic, () => runRichCommand(richEditor, 'italic'), 'is-italic'),
+            makeFormatButton('U', strings.formatUnderline, () => runRichCommand(richEditor, 'underline'), 'is-underline'),
+            makeFormatButton('S', strings.formatStrike, () => runRichCommand(richEditor, 'strikeThrough'), 'is-strike'),
+            makeFormatButton('</>', strings.formatCode, () => {
+                const selected = selectedRichText(richEditor);
+                insertRichHtml(richEditor, `<code>${escapeHtml(selected || 'code')}</code>`);
+            }),
+            makeFormatButton('❝', strings.formatQuote, () => runRichCommand(richEditor, 'formatBlock', 'blockquote')),
+            makeFormatButton('▸', strings.formatExpander, () => {
+                const selected = selectedRichText(richEditor);
+                insertRichHtml(
+                    richEditor,
+                    `<details><summary>${escapeHtml(strings.expanderSummary)}</summary><div>${escapeHtml(selected || strings.expanderContent)}</div></details><div><br></div>`
+                );
+            }),
+            makeFormatButton('―', strings.formatDivider, () => insertRichHtml(richEditor, '<hr><div><br></div>'))
+        );
+
+        const listSelect = document.createElement('select');
+        listSelect.className = 'format-select';
+        listSelect.title = strings.formatList;
+        listSelect.setAttribute('aria-label', strings.formatList);
+        [
+            ['', strings.formatList],
+            ['ordered', strings.formatOrderedList],
+            ['bullet', strings.formatBulletList],
+            ['dash', strings.formatDashList]
+        ].forEach(([value, label]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            listSelect.appendChild(option);
+        });
+        listSelect.addEventListener('mousedown', () => saveRichSelection(richEditor));
+        listSelect.addEventListener('change', () => {
+            if (listSelect.value) applyListMarker(richEditor, listSelect.value);
+            listSelect.value = '';
+        });
+        toolbar.appendChild(listSelect);
+
+        const symbols = document.createElement('details');
+        symbols.className = 'symbol-picker';
+
+        const summary = document.createElement('summary');
+        summary.className = 'format-button';
+        summary.title = strings.formatSymbols;
+        summary.setAttribute('aria-label', strings.formatSymbols);
+        summary.textContent = 'Ω';
+
+        const symbolPanel = document.createElement('div');
+        symbolPanel.className = 'symbol-panel';
+
+        quickSymbols.forEach((symbol) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = symbol;
+            button.title = symbol;
+            button.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                saveRichSelection(richEditor);
+            });
+            button.addEventListener('click', () => {
+                insertRichText(richEditor, symbol);
+                symbols.open = false;
+            });
+            symbolPanel.appendChild(button);
+        });
+
+        symbols.append(summary, symbolPanel);
+        toolbar.appendChild(symbols);
+        return toolbar;
+    }
+
     function createTextBlock(data) {
         const body = document.createElement('div');
-        body.className = 'block-body';
+        body.className = 'block-body rich-text-wrap';
 
-        const textarea = document.createElement('textarea');
-        textarea.className = 'block-textarea';
-        textarea.placeholder = strings.textPlaceholder;
-        textarea.value = data.textContent || '';
-        body.appendChild(textarea);
+        const richEditor = document.createElement('div');
+        richEditor.className = 'block-textarea rich-text-editor';
+        richEditor.contentEditable = 'true';
+        richEditor.spellcheck = true;
+        richEditor.dataset.placeholder = strings.textPlaceholder;
+        richEditor.setAttribute('role', 'textbox');
+        richEditor.setAttribute('aria-multiline', 'true');
+
+        setRichEditorContent(richEditor, data.textContent || '');
+        richEditor.addEventListener('mouseup', () => saveRichSelection(richEditor));
+        richEditor.addEventListener('keyup', () => saveRichSelection(richEditor));
+        richEditor.addEventListener('focus', () => saveRichSelection(richEditor));
+
+        body.append(createFormattingToolbar(richEditor), richEditor);
         return body;
     }
 
@@ -268,11 +502,13 @@
     function collectBlocks() {
         return Array.from(blocksContainer.querySelectorAll('.note-block')).map((block) => {
             switch (block.dataset.type) {
-                case 'text':
+                case 'text': {
+                    const richEditor = block.querySelector('.rich-text-editor');
                     return {
                         type: 1,
-                        textContent: block.querySelector('.block-textarea').value
+                        textContent: richTextPrefix + sanitizeRichHtml(richEditor.innerHTML)
                     };
+                }
                 case 'link':
                     return {
                         type: 2,
@@ -380,7 +616,7 @@
     dirty = false;
 
     editor.addEventListener('input', (event) => {
-        if (event.target.matches('input, textarea')) {
+        if (event.target.matches('input, textarea, [contenteditable="true"]')) {
             setDirty(true);
         }
     });
@@ -476,7 +712,7 @@
         button.addEventListener('click', () => {
             const type = button.dataset.addBlock;
             const block = createBlock(type, {}, activeBlock, true);
-            const focusTarget = block.querySelector('textarea, input');
+            const focusTarget = block.querySelector('[contenteditable="true"], textarea, input');
             focusTarget?.focus();
         });
     });
@@ -500,14 +736,58 @@
     document.addEventListener('paste', async (event) => {
         const items = Array.from(event.clipboardData?.items || []);
         const imageItems = items.filter(item => item.kind === 'file' && item.type.startsWith('image/'));
-        if (imageItems.length === 0) return;
 
-        const files = imageItems.map(item => item.getAsFile()).filter(Boolean);
-        if (files.length === 0) return;
+        if (imageItems.length > 0) {
+            const files = imageItems.map(item => item.getAsFile()).filter(Boolean);
+            if (files.length === 0) return;
+
+            event.preventDefault();
+            await addImageFiles(files, activeBlock, null);
+            return;
+        }
+
+        const richEditor = event.target.closest?.('.rich-text-editor');
+        if (!richEditor) return;
+
+        const plainText = event.clipboardData?.getData('text/plain');
+        if (plainText == null) return;
 
         event.preventDefault();
-        await addImageFiles(files, activeBlock, null);
+        insertRichText(richEditor, plainText);
     });
+
+    async function navigateAway(url) {
+        if (!dirty) {
+            window.location.assign(url);
+            return;
+        }
+
+        const confirmed = await window.noteKeeperConfirm?.({
+            title: strings.unsavedDialogTitle,
+            message: strings.unsavedDialogMessage,
+            confirmLabel: strings.leaveWithoutSaving,
+            danger: true
+        });
+
+        if (!confirmed) return;
+
+        dirty = false;
+        window.location.assign(url);
+    }
+
+    document.addEventListener('click', (event) => {
+        if (!dirty || event.defaultPrevented || event.button !== 0) return;
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+
+        const anchor = event.target.closest('a[href]');
+        if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+        const targetUrl = new URL(anchor.href, window.location.href);
+        if (targetUrl.origin !== window.location.origin) return;
+
+        event.preventDefault();
+        navigateAway(targetUrl.href);
+    }, true);
 
     window.addEventListener('keydown', (event) => {
         const isSaveShortcut =
@@ -521,8 +801,9 @@
         }
 
         if (event.key === 'Escape') {
+            if (document.querySelector('dialog[open]')) return;
             event.preventDefault();
-            window.location.assign('/');
+            navigateAway('/');
         }
     }, true);
 

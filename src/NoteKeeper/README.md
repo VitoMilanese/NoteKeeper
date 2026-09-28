@@ -8,7 +8,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - search by title, text, comments, links, and image captions;
 - filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
 - sorting by title, creation date, or last update;
-- text blocks;
+- rich text blocks with bold, italic, underline, strikethrough, inline code, quotes, expandable containers, dividers, numbered lists, bullet lists, dash lists, and a quick symbol palette;
 - link blocks with a title, URL, and optional comment;
 - image blocks with captions;
 - paste images from the clipboard with `Ctrl+V`;
@@ -16,14 +16,17 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - reorder blocks with drag and drop or the ↑ / ↓ buttons;
 - save notes with `Ctrl+S`;
 - return to the note list with `Esc`;
-- warn before leaving the editor when there are unsaved changes;
+- styled in-app confirmation dialogs for destructive actions and unsaved internal navigation;
+- browser-level protection when closing a tab with unsaved changes;
 - preserve line breaks in text previews on note cards;
 - show both the title and URL when a link block is used as the note preview;
+- permanently delete notes from SQLite, including related blocks and tags, with unused uploaded images cleaned up;
 - automatically create the SQLite database at `App_Data/notekeeper.db`;
 - English, Italian, and Ukrainian UI localization;
 - English as the default language;
 - persist the selected language in a cookie;
-- responsive dark interface that uses the available viewport width;
+- switchable light and dark themes with the selected theme stored in a cookie;
+- responsive interface that uses the available viewport width;
 - no external JavaScript or CSS dependencies.
 
 ## Running the application

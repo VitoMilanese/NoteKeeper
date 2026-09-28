@@ -84,4 +84,30 @@
   <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>PNG, JPEG, WEBP, and GIF are supported.</value></data>
   <data name="Server_UntitledNote" xml:space="preserve"><value>Untitled</value></data>
   <data name="Server_EmptyNote" xml:space="preserve"><value>Empty note</value></data>
+  <data name="Theme_SwitchToLight" xml:space="preserve"><value>Switch to light theme</value></data>
+  <data name="Theme_SwitchToDark" xml:space="preserve"><value>Switch to dark theme</value></data>
+  <data name="Dialog_ConfirmTitle" xml:space="preserve"><value>Confirm action</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Dialog_Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Index_DeleteDialogTitle" xml:space="preserve"><value>Delete note?</value></data>
+  <data name="Index_DeleteDialogMessage" xml:space="preserve"><value>“{0}” will be permanently deleted from the database. This action cannot be undone.</value></data>
+  <data name="Edit_DeleteNote" xml:space="preserve"><value>Delete</value></data>
+  <data name="Editor_FormatBold" xml:space="preserve"><value>Bold</value></data>
+  <data name="Editor_FormatItalic" xml:space="preserve"><value>Italic</value></data>
+  <data name="Editor_FormatUnderline" xml:space="preserve"><value>Underline</value></data>
+  <data name="Editor_FormatStrike" xml:space="preserve"><value>Strikethrough</value></data>
+  <data name="Editor_FormatCode" xml:space="preserve"><value>Inline code</value></data>
+  <data name="Editor_FormatQuote" xml:space="preserve"><value>Quote</value></data>
+  <data name="Editor_FormatExpander" xml:space="preserve"><value>Expandable container</value></data>
+  <data name="Editor_FormatDivider" xml:space="preserve"><value>Divider</value></data>
+  <data name="Editor_FormatList" xml:space="preserve"><value>List</value></data>
+  <data name="Editor_FormatOrderedList" xml:space="preserve"><value>Numbered list</value></data>
+  <data name="Editor_FormatBulletList" xml:space="preserve"><value>Bullet list (•)</value></data>
+  <data name="Editor_FormatDashList" xml:space="preserve"><value>Dash list (—)</value></data>
+  <data name="Editor_FormatSymbols" xml:space="preserve"><value>Insert symbol</value></data>
+  <data name="Editor_ExpanderSummary" xml:space="preserve"><value>Details</value></data>
+  <data name="Editor_ExpanderContent" xml:space="preserve"><value>Expandable content</value></data>
+  <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Discard unsaved changes?</value></data>
+  <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>This note contains changes that have not been saved.</value></data>
+  <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Leave without saving</value></data>
 </root>

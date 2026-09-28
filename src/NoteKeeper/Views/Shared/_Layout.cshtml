@@ -4,13 +4,16 @@
 @{
     var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
     var returnUrl = $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}";
+    var theme = string.Equals(Context.Request.Cookies["notekeeper_theme"], "light", StringComparison.OrdinalIgnoreCase)
+        ? "light"
+        : "dark";
 }
 <!DOCTYPE html>
-<html lang="@culture">
+<html lang="@culture" data-theme="@theme">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <title>@(ViewData["Title"] ?? "NoteKeeper")</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -21,6 +24,15 @@
             <span>NoteKeeper</span>
         </a>
         <nav class="top-nav">
+            <button class="theme-toggle"
+                    type="button"
+                    data-theme-toggle
+                    data-light-label="@Localizer["Theme_SwitchToLight"]"
+                    data-dark-label="@Localizer["Theme_SwitchToDark"]"
+                    title="@(theme == "dark" ? Localizer["Theme_SwitchToLight"] : Localizer["Theme_SwitchToDark"])"
+                    aria-label="@(theme == "dark" ? Localizer["Theme_SwitchToLight"] : Localizer["Theme_SwitchToDark"])">
+                <span aria-hidden="true" data-theme-icon>@(theme == "dark" ? "☀" : "☾")</span>
+            </button>
             <form method="post" action="/language" class="language-form">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
@@ -40,6 +52,20 @@
     <main class="page-shell">
         @RenderBody()
     </main>
+
+    <dialog id="confirmDialog" class="app-dialog" aria-labelledby="confirmDialogTitle">
+        <form method="dialog" class="app-dialog-card">
+            <div class="app-dialog-icon" data-confirm-icon aria-hidden="true">!</div>
+            <div class="app-dialog-copy">
+                <h2 id="confirmDialogTitle" data-confirm-title>@Localizer["Dialog_ConfirmTitle"]</h2>
+                <p data-confirm-message></p>
+            </div>
+            <div class="app-dialog-actions">
+                <button class="button button-ghost" type="submit" value="cancel" data-confirm-cancel>@Localizer["Dialog_Cancel"]</button>
+                <button class="button button-primary" type="submit" value="confirm" data-confirm-accept>@Localizer["Dialog_Confirm"]</button>
+            </div>
+        </form>
+    </dialog>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

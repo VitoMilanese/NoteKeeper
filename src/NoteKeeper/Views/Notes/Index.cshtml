@@ -107,7 +107,13 @@ else
                 </a>
                 <div class="note-card-actions">
                     <a class="icon-button" href="/notes/@note.Id" title="@Localizer["Index_Edit"]" aria-label="@Localizer["Index_Edit"]">✎</a>
-                    <form method="post" action="/notes/@note.Id/delete" onsubmit="return confirm('@Localizer["Index_DeleteConfirm"]');">
+                    <form method="post"
+                          action="/notes/@note.Id/delete"
+                          data-confirm-form
+                          data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
+                          data-confirm-message="@Localizer["Index_DeleteDialogMessage", note.Title]"
+                          data-confirm-label="@Localizer["Index_Delete"]"
+                          data-confirm-danger="true">
                         @Html.AntiForgeryToken()
                         <button class="icon-button danger" type="submit" title="@Localizer["Index_Delete"]" aria-label="@Localizer["Index_Delete"]">×</button>
                     </form>

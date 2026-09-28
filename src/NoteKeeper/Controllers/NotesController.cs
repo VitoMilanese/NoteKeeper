@@ -195,7 +195,7 @@ public sealed class NotesController(
 
         var tags = TagExtractor.Extract(note.Blocks
             .Where(x => x.Type is BlockType.Text or BlockType.Link)
-            .Select(x => x.TextContent));
+            .Select(x => RichTextContent.ToPlainText(x.TextContent)));
         var desiredTags = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var tagsToRemove = note.Tags
@@ -406,7 +406,7 @@ public sealed class NotesController(
             .OrderBy(x => x.SortOrder)
             .Select(x => x.Type switch
             {
-                BlockType.Text => NormalizePreviewText(x.TextContent),
+                BlockType.Text => NormalizePreviewText(RichTextContent.ToPlainText(x.TextContent)),
                 BlockType.Link => BuildLinkPreview(x),
                 BlockType.Image => x.Caption,
                 _ => null
