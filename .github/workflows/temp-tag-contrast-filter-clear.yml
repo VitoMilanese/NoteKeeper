@@ -1,0 +1,31 @@
+name: Temporary tag contrast and filter clear verification
+on:
+  push:
+    branches:
+      - ci/pr2-tag-contrast-filter-clear
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Verify markup and styles
+        shell: bash
+        run: |
+          grep -F 'is-status-tag' src/NoteKeeper/Views/Notes/Index.cshtml
+          grep -F 'Index_Clear' src/NoteKeeper/Views/Notes/Index.cshtml
+          grep -F 'html[data-theme="light"] .tag-chip' src/NoteKeeper/wwwroot/css/site.css
+          grep -F 'font-weight: 800;' src/NoteKeeper/wwwroot/css/site.css
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
