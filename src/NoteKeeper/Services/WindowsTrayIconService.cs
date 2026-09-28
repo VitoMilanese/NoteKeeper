@@ -7,6 +7,7 @@ namespace NoteKeeper.Services;
 
 public sealed class WindowsTrayIconService(
     IHostApplicationLifetime applicationLifetime,
+    IHostEnvironment environment,
     IServer server,
     ILogger<WindowsTrayIconService> logger) : IHostedService, IDisposable
 {
@@ -25,10 +26,10 @@ public sealed class WindowsTrayIconService(
             return Task.CompletedTask;
         }
 
-        if (Debugger.IsAttached)
+        if (environment.IsDevelopment())
         {
             logger.LogInformation(
-                "Skipping the NoteKeeper tray helper while a debugger is attached. Run NoteKeeper.exe directly to test tray integration.");
+                "Skipping the NoteKeeper tray helper in the Development environment. Run NoteKeeper.exe directly to test tray integration.");
             return Task.CompletedTask;
         }
 
