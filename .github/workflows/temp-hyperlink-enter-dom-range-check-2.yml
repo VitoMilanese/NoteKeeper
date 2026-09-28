@@ -1,0 +1,37 @@
+name: Temporary hyperlink Enter DOM range verification 2
+on:
+  push:
+    branches:
+      - ci/pr2-hyperlink-enter-dom-range-check-2
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check editor JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify robust hyperlink application path
+        shell: bash
+        run: |
+          grep -F "dialog.addEventListener('keydown'" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "event.stopImmediatePropagation();" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "const fragment = range.extractContents();" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "range.insertNode(link);" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "link.setAttribute('href'" src/NoteKeeper/wwwroot/js/editor.js
+          ! grep -F "document.execCommand('createLink'" src/NoteKeeper/wwwroot/js/editor.js
+          ! grep -F '<form class="app-dialog-card hyperlink-dialog-card">' src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
