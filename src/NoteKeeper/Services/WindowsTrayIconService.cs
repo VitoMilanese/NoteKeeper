@@ -8,6 +8,7 @@ namespace NoteKeeper.Services;
 public sealed class WindowsTrayIconService(
     IHostApplicationLifetime applicationLifetime,
     IHostEnvironment environment,
+    IConfiguration configuration,
     IServer server,
     ILogger<WindowsTrayIconService> logger) : IHostedService, IDisposable
 {
@@ -183,18 +184,19 @@ public sealed class WindowsTrayIconService(
     private string ResolveHomeUrl()
     {
         var addresses = server.Features.Get<IServerAddressesFeature>()?.Addresses;
-        var address = addresses?
-            .Where(value =>
-                value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(value =>
-                value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault();
+        var address = SelectPreferredAddress(addresses);
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            address = SelectPreferredAddress(
+                configuration["urls"]?
+                    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
 
         if (string.IsNullOrWhiteSpace(address) ||
             !Uri.TryCreate(address, UriKind.Absolute, out var uri))
         {
-            return "http://localhost:5000";
+            return "https://localhost:7147";
         }
 
         var host = uri.Host is "0.0.0.0" or "::" or "*" or "+"
@@ -205,5 +207,16 @@ public sealed class WindowsTrayIconService(
         {
             Host = host
         }.Uri.ToString().TrimEnd('/');
+    }
+
+    private static string? SelectPreferredAddress(IEnumerable<string>? addresses)
+    {
+        return addresses?
+            .Where(value =>
+                value.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(value =>
+                value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault();
     }
 }

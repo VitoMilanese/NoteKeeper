@@ -25,6 +25,20 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 // into the build output so direct executable launches work reliably.
 builder.WebHost.UseStaticWebAssets();
 
+var hasExplicitUrlOverride =
+    args.Any(argument =>
+        argument.Equals("--urls", StringComparison.OrdinalIgnoreCase) ||
+        argument.StartsWith("--urls=", StringComparison.OrdinalIgnoreCase)) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")) ||
+    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DOTNET_URLS"));
+
+if (!hasExplicitUrlOverride)
+{
+    builder.WebHost.UseUrls(
+        "https://localhost:7147",
+        "http://localhost:5147");
+}
+
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services
     .AddControllersWithViews()

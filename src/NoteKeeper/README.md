@@ -36,6 +36,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - tray integration is intentionally skipped in the Development environment used by the Visual Studio F5 profile; run the built executable directly when testing the tray;
 - direct launches from the build output use the executable directory as the content root and copy `wwwroot` into the build output, so CSS, JavaScript, favicon, and other static resources are available reliably outside the Development profile;
 - direct executable launches use the same default URLs as the Visual Studio profile: `https://localhost:7147` and `http://localhost:5147`;
+- the tray home-page URL is resolved from the actual server addresses, with the configured URL list as a fallback, instead of falling back to port 5000;
 - responsive interface that uses the available viewport width;
 - no external JavaScript or CSS dependencies.
 
