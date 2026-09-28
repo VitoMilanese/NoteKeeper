@@ -1,0 +1,97 @@
+name: Temporary tag and tray startup verification 2
+on:
+  push:
+    branches:
+      - ci/pr2-tag-tray-startup-check-2
+
+jobs:
+  linux-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+      - name: Tag extraction smoke test
+        shell: bash
+        run: |
+          mkdir -p .tmp-tag-smoke
+          cat > .tmp-tag-smoke/TagSmoke.csproj <<'EOF'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <ProjectReference Include="../src/NoteKeeper/NoteKeeper.csproj" />
+            </ItemGroup>
+          </Project>
+          EOF
+          cat > .tmp-tag-smoke/Program.cs <<'EOF'
+          using NoteKeeper.Services;
+
+          var rich = RichTextContent.Prefix +
+              "<div>#outside <code>#code</code>" +
+              "<blockquote>#quote <code>#nested</code></blockquote> #after</div>";
+
+          var text = RichTextContent.ToTagSearchText(rich);
+          var tags = TagExtractor.Extract(new[] { text }).ToArray();
+          var expected = new[] { "after", "outside" };
+
+          if (!tags.SequenceEqual(expected))
+          {
+              throw new Exception($"Unexpected tags: {string.Join(", ", tags)}");
+          }
+
+          var plainTags = TagExtractor.Extract(new[] { "link comment #comment" }).ToArray();
+          if (!plainTags.SequenceEqual(new[] { "comment" }))
+          {
+              throw new Exception($"Plain-text tag extraction regressed: {string.Join(", ", plainTags)}");
+          }
+          EOF
+          dotnet run --project .tmp-tag-smoke/TagSmoke.csproj --configuration Release
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+  windows-startup:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish Windows executable
+        run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false --output publish
+      - name: Verify Windows startup and tray initialization
+        shell: pwsh
+        run: |
+          $stdout = Join-Path $env:RUNNER_TEMP "notekeeper.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "notekeeper.stderr.log"
+          $process = Start-Process -FilePath "$env:GITHUB_WORKSPACE\publish\NoteKeeper.exe" -ArgumentList "--urls","http://127.0.0.1:51777" -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+
+          try {
+              Start-Sleep -Seconds 6
+              if ($process.HasExited) {
+                  Write-Host "--- stdout ---"
+                  if (Test-Path $stdout) { Get-Content $stdout }
+                  Write-Host "--- stderr ---"
+                  if (Test-Path $stderr) { Get-Content $stderr }
+                  throw "NoteKeeper exited during startup with code $($process.ExitCode)."
+              }
+
+              $response = Invoke-WebRequest -Uri "http://127.0.0.1:51777/" -UseBasicParsing
+              if ($response.StatusCode -ne 200) {
+                  throw "Unexpected HTTP status: $($response.StatusCode)"
+              }
+          }
+          finally {
+              if (-not $process.HasExited) {
+                  Stop-Process -Id $process.Id -Force
+              }
+          }
