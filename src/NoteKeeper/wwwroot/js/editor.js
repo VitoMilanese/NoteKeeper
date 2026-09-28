@@ -1637,6 +1637,13 @@
         const hasFormatModifier = event.ctrlKey || event.metaKey;
 
         if (richEditor && hasFormatModifier) {
+            if (event.code === 'KeyK') {
+                event.preventDefault();
+                saveRichSelection(richEditor);
+                openHyperlinkDialog(richEditor);
+                return;
+            }
+
             const command = {
                 KeyB: 'bold',
                 KeyI: 'italic',

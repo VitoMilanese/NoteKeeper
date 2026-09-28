@@ -11,7 +11,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - clear the search and tag filter fields from a dedicated button while preserving the selected sort and direction;
 - sorting by title, creation date, or last update;
 - rich text blocks with bold, italic, underline, strikethrough, inline code, hyperlinks on selected rich text, quotes, expandable containers, dividers, text sizing, numbered lists, bullet lists, dash lists, and a quick symbol palette;
-- rich-text keyboard shortcuts for `Ctrl+B`, `Ctrl+I`, and `Ctrl+U`;
+- rich-text keyboard shortcuts for `Ctrl+B`, `Ctrl+I`, `Ctrl+U`, and `Ctrl+K` for hyperlinks;
 - link blocks with a title, URL, and optional comment;
 - image blocks with captions, compact thumbnails, and click-to-open full-size previews;
 - automatically convert opaque uploaded images to JPEG while preserving transparency and animated images;

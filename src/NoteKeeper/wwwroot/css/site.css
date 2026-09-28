@@ -1420,8 +1420,28 @@ html[data-theme="light"] .rich-text-editor code {
     margin-top: 5px;
 }
 
+.hyperlink-dialog {
+    width: min(720px, calc(100vw - 32px));
+    max-width: none;
+}
+
 .hyperlink-dialog-card {
-    width: min(520px, calc(100vw - 28px));
+    width: 100%;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 16px;
+    padding: 24px;
+}
+
+.hyperlink-dialog .app-dialog-copy {
+    min-width: 0;
+}
+
+.hyperlink-dialog-actions {
+    flex-wrap: wrap;
+}
+
+.hyperlink-dialog-actions .button {
+    white-space: nowrap;
 }
 
 .hyperlink-dialog-field {
@@ -1654,5 +1674,18 @@ html[data-theme="light"] .upload-toast {
 
     .app-dialog-actions .button {
         width: 100%;
+    }
+
+    .hyperlink-dialog-card {
+        grid-template-columns: 1fr;
+        padding: 18px;
+    }
+
+    .hyperlink-dialog .app-dialog-icon {
+        display: none;
+    }
+
+    .hyperlink-dialog-actions .hyperlink-remove {
+        margin-right: 0;
     }
 }
