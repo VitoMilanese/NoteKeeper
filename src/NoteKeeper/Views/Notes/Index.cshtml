@@ -87,6 +87,7 @@
 <div class="list-heading">
     <h2>@(hasFilters ? Localizer["Index_Results"] : Localizer["Index_Notes"])</h2>
     <span>@Model.TotalCount</span>
+    <partial name="_Pagination" model="Model" />
 </div>
 
 @if (Model.Notes.Count == 0)
@@ -100,8 +101,6 @@
 }
 else
 {
-    <partial name="_Pagination" model="Model" />
-
     <section class="notes-grid"
              data-notes-grid
              data-page="@Model.Page"

@@ -4,7 +4,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 
 ## Features
 
-- home page with a note list and server-side pagination above and below the note grid, shown only when more than one page is needed;
+- home page with a note list and server-side pagination shown only when more than one page is needed, with the top pagination aligned in the notes heading row and the second pager below the grid;
 - search by title, text, comments, links, and image captions;
 - filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
 - highlight `#active` and `#done` tags with stronger emphasis, with higher-contrast tag chips in the light theme;

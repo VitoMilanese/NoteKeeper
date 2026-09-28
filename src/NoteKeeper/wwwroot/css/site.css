@@ -466,6 +466,7 @@ html[data-theme="light"] .tag-chip.is-active {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .list-heading h2 {
@@ -495,8 +496,8 @@ html[data-theme="light"] .tag-chip.is-active {
     gap: 7px;
 }
 
-.pagination + .notes-grid {
-    margin-top: 14px;
+.list-heading .pagination {
+    margin-left: auto;
 }
 
 .notes-grid + .pagination {
