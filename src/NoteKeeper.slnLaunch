@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "NoteKeeper",
+    "Projects": [
+      {
+        "Path": "NoteKeeper\\NoteKeeper.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "NoteKeeper.Tray\\NoteKeeper.Tray.csproj",
+        "Action": "None"
+      }
+    ]
+  }
+]

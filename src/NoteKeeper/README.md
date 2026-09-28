@@ -34,6 +34,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - Windows executable icon and system tray integration through an isolated Windows Forms helper process, so tray failures cannot terminate the web application;
 - double-click the tray icon or choose `Open NoteKeeper` to open the home page, and choose `Exit` to stop the application;
 - tray integration is intentionally skipped in the Development environment used by the Visual Studio F5 profile; run the built executable directly when testing the tray;
+- the shared Visual Studio `NoteKeeper.slnLaunch` profile starts only the web application; the tray helper project is explicitly set to `None` so F5 cannot accidentally run the helper by itself;
 - direct launches from the build output use the executable directory as the content root and copy `wwwroot` into the build output, so CSS, JavaScript, favicon, and other static resources are available reliably outside the Development profile;
 - direct executable launches use the same default URLs as the Visual Studio profile: `https://localhost:7147` and `http://localhost:5147`;
 - the tray home-page URL is resolved from the actual server addresses, with the configured URL list as a fallback, instead of falling back to port 5000;
