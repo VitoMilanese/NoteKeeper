@@ -1,0 +1,172 @@
+name: Temporary expander editing verification 2
+on:
+  push:
+    branches:
+      - ci/pr2-expander-editing-check-2
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Build and test
+        run: |
+          dotnet build src/NoteKeeper.sln --configuration Release
+          dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          rm -f src/NoteKeeper/App_Data/notekeeper.db*
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53123 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53123/notes/new >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Verify expandable container editing
+        shell: bash
+        run: |
+          cat > expander-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+
+          try {
+            await page.goto('http://127.0.0.1:53123/notes/new');
+
+            const editor = page.locator('.rich-text-editor');
+            const addExpander = page.locator('.format-button[title="Expandable container"]');
+
+            await addExpander.click();
+
+            let details = editor.locator('details');
+            if (await details.count() !== 1) throw new Error('Expandable container was not inserted.');
+
+            const bodyText = await details.locator(':scope > div').first().textContent();
+            if ((bodyText || '').trim() !== '') throw new Error('New expandable body is not empty.');
+            if ((await editor.textContent()).includes('Expandable content')) {
+              throw new Error('Legacy default expandable content is still inserted.');
+            }
+
+            await editor.focus();
+            await page.keyboard.press('Control+Z');
+            await page.waitForTimeout(100);
+            if (await editor.locator('details').count() !== 0) {
+              throw new Error('Ctrl+Z did not undo expandable-container insertion.');
+            }
+
+            await addExpander.click();
+            details = editor.locator('details');
+            const summary = details.locator(':scope > summary');
+
+            const textRect = await summary.evaluate((node) => {
+              const text = Array.from(node.childNodes).find((child) => child.nodeType === Node.TEXT_NODE && child.nodeValue);
+              const range = document.createRange();
+              range.selectNodeContents(text);
+              const rect = range.getBoundingClientRect();
+              return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+            });
+
+            await page.mouse.click(textRect.x + textRect.width - 2, textRect.y + textRect.height / 2);
+            if (await details.evaluate((node) => node.open)) {
+              throw new Error('Clicking summary title text toggled the container.');
+            }
+
+            await page.keyboard.type(' test title');
+            const summaryText = (await summary.textContent()) || '';
+            if (!summaryText.includes(' test title')) {
+              throw new Error(`Could not type spaces/text into summary title: ${summaryText}`);
+            }
+            if (await details.evaluate((node) => node.open)) {
+              throw new Error('Typing spaces in summary toggled the container.');
+            }
+
+            const updatedTextRect = await summary.evaluate((node) => {
+              const text = Array.from(node.childNodes).find((child) => child.nodeType === Node.TEXT_NODE && child.nodeValue);
+              const range = document.createRange();
+              range.selectNodeContents(text);
+              const rect = range.getBoundingClientRect();
+              return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+            });
+
+            await page.mouse.click(updatedTextRect.x - 8, updatedTextRect.y + updatedTextRect.height / 2);
+            await page.waitForTimeout(50);
+            if (!(await details.evaluate((node) => node.open))) {
+              throw new Error('Disclosure arrow did not open the container.');
+            }
+
+            await page.mouse.click(updatedTextRect.x + 4, updatedTextRect.y + updatedTextRect.height / 2);
+            await page.waitForTimeout(50);
+            if (!(await details.evaluate((node) => node.open))) {
+              throw new Error('Clicking title text closed the open container.');
+            }
+
+            const boxes = await summary.evaluate((node) => {
+              const text = Array.from(node.childNodes).find((child) => child.nodeType === Node.TEXT_NODE && child.nodeValue);
+              const textRange = document.createRange();
+              textRange.selectNodeContents(text);
+              const textBox = textRange.getBoundingClientRect();
+              const summaryBox = node.getBoundingClientRect();
+              const deleteBox = node.querySelector('.expander-delete').getBoundingClientRect();
+              return { textRight: textBox.right, y: summaryBox.y + summaryBox.height / 2, deleteLeft: deleteBox.left };
+            });
+
+            const freeX = boxes.textRight + Math.max(8, (boxes.deleteLeft - boxes.textRight) / 2);
+            await page.mouse.click(Math.min(freeX, boxes.deleteLeft - 6), boxes.y);
+            await page.waitForTimeout(50);
+            if (await details.evaluate((node) => node.open)) {
+              throw new Error('Unused header area did not close the container.');
+            }
+
+            await details.locator('.expander-delete').click();
+            await page.waitForTimeout(50);
+            if (await editor.locator('details').count() !== 0) {
+              throw new Error('Expander delete control did not remove the container.');
+            }
+
+            await editor.focus();
+            await page.keyboard.press('Control+Z');
+            await page.waitForTimeout(100);
+            if (await editor.locator('details').count() !== 1) {
+              throw new Error('Ctrl+Z did not restore deleted expandable container.');
+            }
+            if (await editor.locator('details .expander-delete').count() !== 1) {
+              throw new Error('Restored expander is missing delete control.');
+            }
+
+            console.log('Expandable container browser verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node expander-check.mjs
+
+      - name: Show app log on failure
+        if: failure()
+        run: cat /tmp/notekeeper.log || true
+
+      - name: Stop NoteKeeper
+        if: always()
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then kill "$(cat /tmp/notekeeper.pid)" || true; fi
