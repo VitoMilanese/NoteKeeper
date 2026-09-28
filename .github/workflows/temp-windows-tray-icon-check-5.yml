@@ -1,0 +1,37 @@
+name: Temporary final Windows tray verification
+on:
+  push:
+    branches:
+      - ci/pr2-windows-tray-icon-check-5
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore src/NoteKeeper.sln
+      - run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+      - run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+  windows-publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore src/NoteKeeper.sln
+      - run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false
+      - name: Verify executable and tray icon
+        shell: pwsh
+        run: |
+          $publish = "src/NoteKeeper/bin/Release/net8.0/win-x64/publish"
+          $exe = Resolve-Path "$publish/NoteKeeper.exe"
+          if (-not (Test-Path "$publish/Assets/notekeeper.ico")) { throw "Tray icon was not published." }
+          Add-Type -AssemblyName System.Drawing
+          $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exe)
+          if ($null -eq $icon) { throw "NoteKeeper.exe does not contain an application icon." }
+          $icon.Dispose()
