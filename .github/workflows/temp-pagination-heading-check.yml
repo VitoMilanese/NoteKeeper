@@ -1,0 +1,99 @@
+name: Temporary pagination heading verification
+on:
+  push:
+    branches:
+      - ci/pr2-pagination-heading-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build and test
+        run: |
+          dotnet build src/NoteKeeper.sln --configuration Release
+          dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start NoteKeeper
+        shell: bash
+        run: |
+          rm -f src/NoteKeeper/App_Data/notekeeper.db*
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/NoteKeeper/NoteKeeper.csproj --configuration Release --no-build -- --urls http://127.0.0.1:53120 > /tmp/notekeeper.log 2>&1 &
+          echo $! > /tmp/notekeeper.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:53120/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/notekeeper.log
+          exit 1
+
+      - name: Seed notes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from datetime import datetime, timezone, timedelta
+          db = sqlite3.connect("src/NoteKeeper/App_Data/notekeeper.db")
+          now = datetime.now(timezone.utc)
+          for i in range(1, 66):
+              stamp = (now + timedelta(seconds=i)).isoformat()
+              db.execute("INSERT INTO Notes (Title, CreatedAtUtc, UpdatedAtUtc) VALUES (?, ?, ?)",
+                         (f"note {i:02d}", stamp, stamp))
+          db.commit()
+          db.close()
+          PY
+
+      - name: Verify heading pagination position
+        shell: bash
+        run: |
+          cat > pagination-heading-check.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1900, height: 900 } });
+          try {
+            await page.goto('http://127.0.0.1:53120/');
+            await page.waitForURL(url => Number(url.searchParams.get('pageSize') || 30) > 30);
+
+            const heading = page.locator('.list-heading');
+            const topPager = heading.locator('.pagination');
+            if (await topPager.count() !== 1) throw new Error('Top pager is not inside the notes heading.');
+
+            const headingBox = await heading.boundingBox();
+            const titleBox = await heading.locator('h2').boundingBox();
+            const pagerBox = await topPager.boundingBox();
+            if (!headingBox || !titleBox || !pagerBox) throw new Error('Could not measure heading layout.');
+
+            const titleCenter = titleBox.y + titleBox.height / 2;
+            const pagerCenter = pagerBox.y + pagerBox.height / 2;
+            if (Math.abs(titleCenter - pagerCenter) > 8) {
+              throw new Error('Top pager is not vertically aligned with Notes heading.');
+            }
+
+            if (await page.locator('.notes-grid + .pagination').count() !== 1) {
+              throw new Error('Bottom pager is missing.');
+            }
+
+            console.log('Heading pagination verification passed.');
+          } finally {
+            await browser.close();
+          }
+          EOF
+          node pagination-heading-check.mjs
+
+      - name: Stop NoteKeeper
+        if: always()
+        run: |
+          if [ -f /tmp/notekeeper.pid ]; then kill "$(cat /tmp/notekeeper.pid)" || true; fi
