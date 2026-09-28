@@ -635,6 +635,77 @@
         notifyRichInput(richEditor);
     }
 
+    function closestQuote(node, richEditor) {
+        const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+        const quote = element?.closest?.('blockquote');
+        return quote && richEditor.contains(quote) ? quote : null;
+    }
+
+    function quoteForSelection(richEditor, range) {
+        const startQuote = closestQuote(range.startContainer, richEditor);
+        const endQuote = closestQuote(range.endContainer, richEditor);
+
+        if (startQuote && startQuote === endQuote) {
+            return startQuote;
+        }
+
+        const intersectingQuotes = Array.from(richEditor.querySelectorAll('blockquote')).filter((quote) => {
+            try {
+                return range.intersectsNode(quote);
+            } catch {
+                return false;
+            }
+        });
+
+        if (intersectingQuotes.length !== 1) return null;
+
+        const quote = intersectingQuotes[0];
+        const selectedText = range.toString().replace(/\s+/g, ' ').trim();
+        const quoteText = (quote.textContent || '').replace(/\s+/g, ' ').trim();
+        return selectedText && selectedText === quoteText ? quote : null;
+    }
+
+    function rangeHtml(range) {
+        const container = document.createElement('div');
+        container.appendChild(range.cloneContents());
+        return container.innerHTML;
+    }
+
+    function toggleQuote(richEditor) {
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        if (!richEditor.contains(range.commonAncestorContainer) && range.commonAncestorContainer !== richEditor) {
+            return;
+        }
+
+        const existingQuote = quoteForSelection(richEditor, range);
+        if (existingQuote) {
+            const quoteRange = document.createRange();
+            quoteRange.selectNode(existingQuote);
+            selection.removeAllRanges();
+            selection.addRange(quoteRange);
+            richEditor._savedRange = quoteRange.cloneRange();
+
+            const replacement = `<div>${existingQuote.innerHTML || '<br>'}</div>`;
+            document.execCommand('insertHTML', false, replacement);
+            notifyRichInput(richEditor);
+            return;
+        }
+
+        const selectedHtml = range.collapsed ? '' : rangeHtml(range);
+        const quoteContent = selectedHtml || escapeHtml(strings.quoteContent);
+        document.execCommand(
+            'insertHTML',
+            false,
+            `<blockquote>${quoteContent}</blockquote><div><br></div>`
+        );
+        notifyRichInput(richEditor);
+    }
+
     function makeFormatButton(label, title, onClick, className = '') {
         const button = document.createElement('button');
         button.type = 'button';
@@ -662,12 +733,7 @@
                 const selected = selectedRichText(richEditor);
                 insertRichHtml(richEditor, `<code>${escapeHtml(selected || 'code')}</code><span>&nbsp;</span>`);
             }),
-            makeFormatButton('❝', strings.formatQuote, () => {
-                const selected = selectedRichText(richEditor);
-                const quote = document.createElement('blockquote');
-                quote.textContent = selected || strings.quoteContent;
-                insertBlockWithContinuation(richEditor, quote);
-            }),
+            makeFormatButton('❝', strings.formatQuote, () => toggleQuote(richEditor)),
             makeFormatButton('▸', strings.formatExpander, () => {
                 const selected = selectedRichText(richEditor);
                 const details = document.createElement('details');
