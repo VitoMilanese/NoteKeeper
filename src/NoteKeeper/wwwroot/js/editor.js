@@ -742,15 +742,6 @@
         notifyRichInput(richEditor);
     }
 
-    function hyperlinkHtml(href, innerHtml) {
-        const link = document.createElement('a');
-        link.setAttribute('href', href);
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
-        link.innerHTML = innerHtml;
-        return link.outerHTML;
-    }
-
     function closestHyperlink(node, richEditor) {
         const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
         const link = element?.closest?.('a[href]');
@@ -824,13 +815,18 @@
             if (!context || !link?.isConnected) return;
 
             const linkRange = document.createRange();
-            linkRange.selectNode(link);
+            linkRange.selectNodeContents(link);
             context.range = linkRange;
-            restoreHyperlinkRange(context);
 
-            document.execCommand('insertHTML', false, link.innerHTML || '');
-            notifyRichInput(context.richEditor);
+            // Close the modal first: while a modal <dialog> is open, the editor
+            // behind it is inert and Chromium may refuse to focus/edit it.
             dialog.close();
+
+            const selection = restoreHyperlinkRange(context);
+            if (!selection) return;
+
+            document.execCommand('unlink', false, null);
+            notifyRichInput(context.richEditor);
         });
 
         const applyHyperlink = () => {
@@ -845,30 +841,42 @@
                 return;
             }
 
-            error.hidden = true;
-
-            let replacementHtml;
-            if (context.existingLink?.isConnected) {
-                const linkRange = document.createRange();
-                linkRange.selectNode(context.existingLink);
-                context.range = linkRange;
-                replacementHtml = hyperlinkHtml(href, context.existingLink.innerHTML);
-            } else {
-                if (context.range.collapsed ||
-                    !context.richEditor.contains(context.range.commonAncestorContainer)) {
-                    return;
-                }
-
-                replacementHtml = hyperlinkHtml(href, rangeHtml(context.range));
+            if (context.range.collapsed ||
+                !context.richEditor.contains(context.range.commonAncestorContainer)) {
+                return;
             }
 
-            restoreHyperlinkRange(context);
+            error.hidden = true;
 
-            // Use insertHTML instead of direct DOM mutation so the browser records
-            // hyperlink creation/editing as a native undoable editing transaction.
-            document.execCommand('insertHTML', false, replacementHtml);
-            notifyRichInput(context.richEditor);
+            // Close the modal before restoring the contenteditable selection.
+            // The page behind a modal <dialog> is inert, so trying to edit it while
+            // the dialog is still open can make execCommand silently do nothing.
             dialog.close();
+
+            const selection = restoreHyperlinkRange(context);
+            if (!selection) return;
+
+            document.execCommand('createLink', false, href);
+
+            // Normalize the anchor produced by the browser.
+            let link = hyperlinkForSelection(context.richEditor, selection.getRangeAt(0));
+            if (!link && context.existingLink?.isConnected) {
+                link = context.existingLink;
+            }
+
+            if (link) {
+                link.setAttribute('href', href);
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+
+                const linkedRange = document.createRange();
+                linkedRange.selectNodeContents(link);
+                context.range = linkedRange;
+                context.existingLink = link;
+                context.richEditor._savedRange = linkedRange.cloneRange();
+            }
+
+            notifyRichInput(context.richEditor);
         };
 
         applyButton.addEventListener('click', applyHyperlink);
