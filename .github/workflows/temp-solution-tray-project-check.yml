@@ -1,0 +1,47 @@
+name: Temporary solution tray project verification
+on:
+  push:
+    branches:
+      - ci/pr2-solution-tray-project-check
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: List solution projects
+        run: dotnet sln src/NoteKeeper.sln list
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: List solution projects
+        shell: pwsh
+        run: |
+          $list = dotnet sln src/NoteKeeper.sln list | Out-String
+          Write-Host $list
+          if ($list -notmatch "NoteKeeper.Tray") { throw "NoteKeeper.Tray is missing from the solution." }
+      - name: Build solution
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+      - name: Verify tray helper output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "src/NoteKeeper.Tray/bin/Release/net8.0-windows/NoteKeeper.Tray.exe")) {
+            throw "NoteKeeper.Tray.exe was not built."
+          }
+          if (-not (Test-Path "src/NoteKeeper/bin/Release/net8.0/Tray/NoteKeeper.Tray.exe")) {
+            throw "NoteKeeper.Tray.exe was not copied into the NoteKeeper output."
+          }
