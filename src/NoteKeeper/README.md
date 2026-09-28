@@ -23,7 +23,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - preserve line breaks in text previews on note cards;
 - show both the title and URL when a link block is used as the note preview;
 - open link-block URLs directly from a button next to the URL field;
-- export individual notes to portable `.notekeeper.json` files and import them again, including embedded images;
+- export individual notes to readable portable `.notekeeper.json` files and import them again, including embedded images;
 - permanently delete notes from SQLite, including related blocks and tags, with unused uploaded images cleaned up;
 - automatically create the SQLite database at `App_Data/notekeeper.db`;
 - English, Italian, and Ukrainian UI localization;
@@ -65,4 +65,4 @@ After saving the note, `work` and `idea` become available as filters on the home
 
 Text blocks support formatting from the toolbar as well as `Ctrl+B`, `Ctrl+I`, and `Ctrl+U`. Click a divider and press `Delete` or `Backspace` to remove it. Inline code and quote insertion leave the caret in normal text after the inserted content so typing can continue normally.
 
-The symbol palette includes a shortcut entry for system emoji. A normal web page cannot programmatically open the native Windows emoji panel, so keep the editor focused and press `Win + .` to open it.
+The symbol palette includes an in-app emoji picker rendered with the system emoji font. Native operating-system emoji panels cannot be opened programmatically by a normal web page.

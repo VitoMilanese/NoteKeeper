@@ -296,7 +296,7 @@ html[data-theme="light"] .button-ghost {
     margin: 0 0 30px;
 }
 
-.hero-row > div {
+.hero-row > div:first-child {
     flex: 1 1 auto;
     min-width: 0;
 }
@@ -331,6 +331,7 @@ html[data-theme="light"] .button-ghost {
     align-items: center;
     gap: 9px;
     flex: 0 0 auto;
+    margin-left: auto;
 }
 
 .import-note-form {
@@ -1011,6 +1012,51 @@ html[data-theme="light"] .inline-link-open {
     background: rgba(124, 140, 255, 0.1);
 }
 
+.emoji-panel {
+    position: absolute;
+    z-index: 45;
+    top: calc(100% + 7px);
+    right: 0;
+    width: min(370px, calc(100vw - 54px));
+    max-height: 330px;
+    display: none;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 5px;
+    padding: 9px;
+    overflow-y: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #131d32;
+    box-shadow: var(--shadow);
+}
+
+.emoji-panel.is-open {
+    display: grid;
+}
+
+.emoji-panel button {
+    min-width: 0;
+    aspect-ratio: 1;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: 1.28rem;
+}
+
+.emoji-panel button:hover {
+    border-color: var(--border-strong);
+    background: #1b2741;
+}
+
+html[data-theme="light"] .emoji-panel {
+    background: #ffffff;
+}
+
+html[data-theme="light"] .emoji-panel button:hover {
+    background: #edf1fa;
+}
+
 .rich-text-editor {
     min-height: 180px;
     height: auto;
@@ -1029,11 +1075,11 @@ html[data-theme="light"] .inline-link-open {
 
 .rich-text-editor p,
 .rich-text-editor div {
-    margin: 0 0 0.5em;
+    margin: 0;
 }
 
 .rich-text-editor blockquote {
-    margin: 10px 0;
+    margin: 8px 0;
     padding: 8px 13px;
     border-left: 3px solid var(--accent);
     background: rgba(124, 140, 255, 0.07);
@@ -1041,15 +1087,19 @@ html[data-theme="light"] .inline-link-open {
 }
 
 .rich-text-editor [data-size="small"] {
-    font-size: 0.82em;
+    font-size: 0.82rem;
+}
+
+.rich-text-editor [data-size="normal"] {
+    font-size: 1rem;
 }
 
 .rich-text-editor [data-size="large"] {
-    font-size: 1.25em;
+    font-size: 1.25rem;
 }
 
 .rich-text-editor [data-size="xlarge"] {
-    font-size: 1.55em;
+    font-size: 1.55rem;
 }
 
 .rich-text-editor code {
@@ -1062,7 +1112,7 @@ html[data-theme="light"] .inline-link-open {
 }
 
 .rich-text-editor details {
-    margin: 10px 0;
+    margin: 8px 0;
     padding: 9px 11px;
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -1076,7 +1126,7 @@ html[data-theme="light"] .inline-link-open {
 }
 
 .rich-text-editor hr {
-    margin: 16px 0;
+    margin: 10px 0;
     border: 0;
     border-top: 1px solid var(--border-strong);
     cursor: pointer;

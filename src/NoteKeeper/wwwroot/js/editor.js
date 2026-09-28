@@ -23,6 +23,7 @@
         'DIV', 'P', 'BR', 'SPAN'
     ]);
     const quickSymbols = ['—', '•', '◉', '◎', '★', '☑', '☒', '☐', '✓', '➢', 'ℹ️', '🔥', '❤️', '❓', '❗', '💡', '🟥', '🟩', '🟨'];
+    let emojiCharacters = null;
 
     let dirty = false;
     let saving = false;
@@ -121,7 +122,7 @@
                     const keepOpen = child.tagName === 'DETAILS' && attribute.name === 'open';
                     const keepTextSize = child.tagName === 'SPAN' &&
                         attribute.name === 'data-size' &&
-                        ['small', 'large', 'xlarge'].includes(attribute.value);
+                        ['small', 'normal', 'large', 'xlarge'].includes(attribute.value);
 
                     if (!keepMarker && !keepOpen && !keepTextSize) {
                         child.removeAttribute(attribute.name);
@@ -157,14 +158,17 @@
     }
 
     function restoreRichSelection(richEditor) {
-        richEditor.focus();
+        const savedRange = richEditor._savedRange?.cloneRange() || null;
+        richEditor.focus({ preventScroll: true });
+
         const selection = window.getSelection();
         if (!selection) return;
 
         selection.removeAllRanges();
 
-        if (richEditor._savedRange) {
-            selection.addRange(richEditor._savedRange);
+        if (savedRange) {
+            selection.addRange(savedRange);
+            richEditor._savedRange = savedRange.cloneRange();
             return;
         }
 
@@ -172,6 +176,7 @@
         range.selectNodeContents(richEditor);
         range.collapse(false);
         selection.addRange(range);
+        richEditor._savedRange = range.cloneRange();
     }
 
     function notifyRichInput(richEditor) {
@@ -208,6 +213,69 @@
         notifyRichInput(richEditor);
     }
 
+    function insertBlockWithContinuation(richEditor, blockElement) {
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const continuation = document.createElement('div');
+        continuation.appendChild(document.createElement('br'));
+
+        const fragment = document.createDocumentFragment();
+        fragment.append(blockElement, continuation);
+        range.insertNode(fragment);
+
+        const caret = document.createRange();
+        caret.setStart(continuation, 0);
+        caret.collapse(true);
+
+        selection.removeAllRanges();
+        selection.addRange(caret);
+        richEditor._savedRange = caret.cloneRange();
+        notifyRichInput(richEditor);
+    }
+
+    function getEmojiCharacters() {
+        if (emojiCharacters) return emojiCharacters;
+
+        const extendedPictographic = /\p{Extended_Pictographic}/u;
+        const emojiPresentation = /\p{Emoji_Presentation}/u;
+        const result = [];
+        const seen = new Set();
+
+        const add = (value) => {
+            if (!value || seen.has(value)) return;
+            seen.add(value);
+            result.push(value);
+        };
+
+        const ranges = [
+            [0x2600, 0x27BF],
+            [0x1F300, 0x1FAFF]
+        ];
+
+        for (const [start, end] of ranges) {
+            for (let codePoint = start; codePoint <= end; codePoint++) {
+                const character = String.fromCodePoint(codePoint);
+                if (!extendedPictographic.test(character)) continue;
+                add(emojiPresentation.test(character) ? character : `${character}\uFE0F`);
+            }
+        }
+
+        [
+            '❤️', '❣️', '♥️', '☑️', '☒️', '☀️', '☁️', '☂️', '☃️', '☄️',
+            '✈️', '⌚', '⌛', '⚡', '⚽', '⚾', '⛳', '⛵', '⛺',
+            '🇺🇦', '🇮🇹', '🇺🇸', '🇬🇧', '🇩🇪', '🇫🇷', '🇪🇸', '🇵🇱', '🇪🇺'
+        ].forEach(add);
+
+        emojiCharacters = result;
+        return emojiCharacters;
+    }
+
     function normalizeFontSizeMarkup(richEditor) {
         const sizeMap = {
             '1': 'small',
@@ -218,12 +286,6 @@
 
         richEditor.querySelectorAll('font[size]').forEach((font) => {
             const size = sizeMap[font.getAttribute('size')] || 'normal';
-
-            if (size === 'normal') {
-                font.replaceWith(...Array.from(font.childNodes));
-                return;
-            }
-
             const span = document.createElement('span');
             span.dataset.size = size;
             span.append(...Array.from(font.childNodes));
@@ -292,19 +354,23 @@
             }),
             makeFormatButton('❝', strings.formatQuote, () => {
                 const selected = selectedRichText(richEditor);
-                insertRichHtml(
-                    richEditor,
-                    `<blockquote>${escapeHtml(selected || strings.quoteContent)}</blockquote><div><br></div>`
-                );
+                const quote = document.createElement('blockquote');
+                quote.textContent = selected || strings.quoteContent;
+                insertBlockWithContinuation(richEditor, quote);
             }),
             makeFormatButton('▸', strings.formatExpander, () => {
                 const selected = selectedRichText(richEditor);
-                insertRichHtml(
-                    richEditor,
-                    `<details><summary>${escapeHtml(strings.expanderSummary)}</summary><div>${escapeHtml(selected || strings.expanderContent)}</div></details><div><br></div>`
-                );
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+                const content = document.createElement('div');
+                summary.textContent = strings.expanderSummary;
+                content.textContent = selected || strings.expanderContent;
+                details.append(summary, content);
+                insertBlockWithContinuation(richEditor, details);
             }),
-            makeFormatButton('―', strings.formatDivider, () => insertRichHtml(richEditor, '<hr><div><br></div>'))
+            makeFormatButton('―', strings.formatDivider, () => {
+                insertBlockWithContinuation(richEditor, document.createElement('hr'));
+            })
         );
 
         const sizeSelect = document.createElement('select');
@@ -380,6 +446,33 @@
             symbolPanel.appendChild(button);
         });
 
+        const emojiPanel = document.createElement('div');
+        emojiPanel.className = 'emoji-panel';
+
+        const populateEmojiPanel = () => {
+            if (emojiPanel.dataset.loaded === 'true') return;
+
+            const fragment = document.createDocumentFragment();
+            getEmojiCharacters().forEach((emoji) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = emoji;
+                button.title = emoji;
+                button.addEventListener('mousedown', (event) => {
+                    event.preventDefault();
+                });
+                button.addEventListener('click', () => {
+                    insertRichText(richEditor, emoji);
+                    emojiPanel.classList.remove('is-open');
+                    symbols.open = false;
+                });
+                fragment.appendChild(button);
+            });
+
+            emojiPanel.appendChild(fragment);
+            emojiPanel.dataset.loaded = 'true';
+        };
+
         const systemEmojiButton = document.createElement('button');
         systemEmojiButton.type = 'button';
         systemEmojiButton.className = 'system-emoji-button';
@@ -388,16 +481,18 @@
         systemEmojiButton.setAttribute('aria-label', strings.systemEmoji);
         systemEmojiButton.addEventListener('mousedown', (event) => {
             event.preventDefault();
-            saveRichSelection(richEditor);
         });
         systemEmojiButton.addEventListener('click', () => {
-            symbols.open = false;
-            restoreRichSelection(richEditor);
-            showToast(strings.systemEmojiHint);
+            populateEmojiPanel();
+            emojiPanel.classList.toggle('is-open');
         });
         symbolPanel.appendChild(systemEmojiButton);
 
-        symbols.append(summary, symbolPanel);
+        symbols.addEventListener('toggle', () => {
+            if (!symbols.open) emojiPanel.classList.remove('is-open');
+        });
+
+        symbols.append(summary, symbolPanel, emojiPanel);
         toolbar.appendChild(symbols);
         return toolbar;
     }

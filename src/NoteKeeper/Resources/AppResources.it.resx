@@ -119,7 +119,7 @@
   <data name="Editor_FormatSizeExtraLarge" xml:space="preserve"><value>Molto grande</value></data>
   <data name="Editor_QuoteContent" xml:space="preserve"><value>Citazione</value></data>
   <data name="Editor_DividerDeleteHint" xml:space="preserve"><value>Separatore selezionato. Premi Canc o Backspace per eliminarlo.</value></data>
-  <data name="Editor_SystemEmoji" xml:space="preserve"><value>Emoji di sistema</value></data>
+  <data name="Editor_SystemEmoji" xml:space="preserve"><value>Altre emoji</value></data>
   <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Il browser non può aprire direttamente il pannello emoji di Windows. Premi Win + . mentre l&apos;editor è attivo.</value></data>
   <data name="Server_ImportInvalid" xml:space="preserve"><value>Il file non è un&apos;esportazione valida di una nota NoteKeeper.</value></data>
   <data name="Server_ImportTooLarge" xml:space="preserve"><value>L&apos;esportazione della nota è vuota o troppo grande per essere importata.</value></data>
