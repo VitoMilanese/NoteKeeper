@@ -65,7 +65,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     private readonly TrayOptions _options;
     private readonly NotifyIcon _notifyIcon;
     private readonly ContextMenuStrip _menu;
-    private readonly System.Windows.Forms.Timer _parentTimer;
+    private System.Windows.Forms.Timer? _parentTimer;
     private readonly Icon _icon;
     private Process? _parentProcess;
     private bool _disposed;
