@@ -1,0 +1,65 @@
+name: Temporary tray hide show verification
+on:
+  push:
+    branches:
+      - ci/pr2-tray-hide-show-check
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build solution
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Publish NoteKeeper
+        run: dotnet publish src/NoteKeeper/NoteKeeper.csproj --configuration Release --runtime win-x64 --self-contained false --output publish
+
+      - name: Verify tray helper starts with direct executable
+        shell: pwsh
+        run: |
+          $exe = "$env:GITHUB_WORKSPACE\publish\NoteKeeper.exe"
+          $process = Start-Process -FilePath $exe -ArgumentList "--urls","http://127.0.0.1:53017" -PassThru
+
+          try {
+              Start-Sleep -Seconds 4
+
+              if ($process.HasExited) {
+                  throw "NoteKeeper exited unexpectedly with code $($process.ExitCode)."
+              }
+
+              $tray = Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue
+              if ($null -eq $tray) {
+                  throw "NoteKeeper.Tray did not start."
+              }
+
+              if (-not (Test-Path "$env:GITHUB_WORKSPACE\publish\Tray\NoteKeeper.Tray.exe")) {
+                  throw "Published tray helper executable is missing."
+              }
+          }
+          finally {
+              if (-not $process.HasExited) {
+                  Stop-Process -Id $process.Id -Force
+              }
+              Get-Process -Name "NoteKeeper.Tray" -ErrorAction SilentlyContinue |
+                  Stop-Process -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Verify tray source contains Hide Show toggle
+        shell: pwsh
+        run: |
+          $source = Get-Content "src/NoteKeeper.Tray/Program.cs" -Raw
+          foreach ($required in @(
+              'new ToolStripMenuItem("Hide")',
+              'ToggleConsoleVisibility',
+              'ParentConsoleWindow.TryGetHandle',
+              '"Show"'
+          )) {
+              if (-not $source.Contains($required)) {
+                  throw "Missing expected tray visibility implementation: $required"
+              }
+          }
