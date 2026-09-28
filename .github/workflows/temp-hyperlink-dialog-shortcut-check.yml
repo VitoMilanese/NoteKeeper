@@ -1,0 +1,35 @@
+name: Temporary hyperlink dialog shortcut verification
+on:
+  push:
+    branches:
+      - ci/pr2-hyperlink-dialog-shortcut-check
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check editor JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify Ctrl K and dialog sizing hooks
+        shell: bash
+        run: |
+          grep -F "event.code === 'KeyK'" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F "openHyperlinkDialog(richEditor)" src/NoteKeeper/wwwroot/js/editor.js
+          grep -F ".hyperlink-dialog {" src/NoteKeeper/wwwroot/css/site.css
+          grep -F "width: min(720px, calc(100vw - 32px));" src/NoteKeeper/wwwroot/css/site.css
+          grep -F "grid-template-columns: 48px minmax(0, 1fr);" src/NoteKeeper/wwwroot/css/site.css
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
