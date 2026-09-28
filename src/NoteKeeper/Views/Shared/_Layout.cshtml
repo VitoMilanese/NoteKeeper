@@ -1,5 +1,12 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
+@{
+    var culture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var returnUrl = $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}";
+}
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="@culture">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,12 +16,24 @@
 </head>
 <body>
     <header class="site-header">
-        <a class="brand" href="/" aria-label="NoteKeeper — головна">
+        <a class="brand" href="/" aria-label="@Localizer["Header_HomeAria"]">
             <span class="brand-mark">N</span>
             <span>NoteKeeper</span>
         </a>
         <nav class="top-nav">
-            <a class="button button-primary button-small" href="/notes/new">+ Нова нотатка</a>
+            <form method="post" action="/language" class="language-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <label>
+                    <span class="sr-only">@Localizer["Language_Label"]</span>
+                    <select class="language-select" name="culture" aria-label="@Localizer["Language_Label"]" onchange="this.form.submit()">
+                        <option value="en" selected="@(culture == "en" ? "selected" : null)">English</option>
+                        <option value="it" selected="@(culture == "it" ? "selected" : null)">Italiano</option>
+                        <option value="uk" selected="@(culture == "uk" ? "selected" : null)">Українська</option>
+                    </select>
+                </label>
+            </form>
+            <a class="button button-primary button-small" href="/notes/new">@Localizer["Common_NewNote"]</a>
         </nav>
     </header>
 

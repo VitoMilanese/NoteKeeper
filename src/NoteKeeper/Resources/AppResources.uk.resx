@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Header_HomeAria" xml:space="preserve"><value>NoteKeeper — головна</value></data>
+  <data name="Common_NewNote" xml:space="preserve"><value>+ Нова нотатка</value></data>
+  <data name="Language_Label" xml:space="preserve"><value>Мова</value></data>
+  <data name="Index_PageTitle" xml:space="preserve"><value>Нотатки — NoteKeeper</value></data>
+  <data name="Index_Eyebrow" xml:space="preserve"><value>Твоя база нотаток</value></data>
+  <data name="Index_HeroTitle" xml:space="preserve"><value>Усе важливе — в одному місці.</value></data>
+  <data name="Index_HeroCopy" xml:space="preserve"><value>Текст, посилання, зображення, теги та швидкий пошук без зайвого шуму.</value></data>
+  <data name="Index_CreateNote" xml:space="preserve"><value>+ Створити нотатку</value></data>
+  <data name="Index_Search" xml:space="preserve"><value>Пошук</value></data>
+  <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Назва, текст, посилання…</value></data>
+  <data name="Index_Tag" xml:space="preserve"><value>Тег</value></data>
+  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#ідея</value></data>
+  <data name="Index_Sort" xml:space="preserve"><value>Сортувати</value></data>
+  <data name="Index_SortUpdated" xml:space="preserve"><value>За зміною</value></data>
+  <data name="Index_SortCreated" xml:space="preserve"><value>За створенням</value></data>
+  <data name="Index_SortTitle" xml:space="preserve"><value>За назвою</value></data>
+  <data name="Index_Direction" xml:space="preserve"><value>Напрямок</value></data>
+  <data name="Index_DirectionDesc" xml:space="preserve"><value>Спочатку нові / Я→А</value></data>
+  <data name="Index_DirectionAsc" xml:space="preserve"><value>Спочатку старі / А→Я</value></data>
+  <data name="Index_Apply" xml:space="preserve"><value>Застосувати</value></data>
+  <data name="Index_Reset" xml:space="preserve"><value>Скинути</value></data>
+  <data name="Index_PopularTagsAria" xml:space="preserve"><value>Популярні теги</value></data>
+  <data name="Index_Results" xml:space="preserve"><value>Результати</value></data>
+  <data name="Index_Notes" xml:space="preserve"><value>Нотатки</value></data>
+  <data name="Index_NoResults" xml:space="preserve"><value>Нічого не знайдено</value></data>
+  <data name="Index_NoNotes" xml:space="preserve"><value>Тут поки порожньо</value></data>
+  <data name="Index_NoResultsCopy" xml:space="preserve"><value>Спробуй змінити пошуковий запит або тег.</value></data>
+  <data name="Index_NoNotesCopy" xml:space="preserve"><value>Створи першу нотатку і додай до неї текст, посилання або картинку.</value></data>
+  <data name="Index_BlockCount" xml:space="preserve"><value>Блоків: {0}</value></data>
+  <data name="Index_Edit" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Index_Delete" xml:space="preserve"><value>Видалити</value></data>
+  <data name="Index_DeleteConfirm" xml:space="preserve"><value>Видалити цю нотатку?</value></data>
+  <data name="Edit_PageTitleNew" xml:space="preserve"><value>Нова нотатка — NoteKeeper</value></data>
+  <data name="Edit_BackToList" xml:space="preserve"><value>← До списку</value></data>
+  <data name="Edit_Saved" xml:space="preserve"><value>Збережено</value></data>
+  <data name="Edit_NewNoteStatus" xml:space="preserve"><value>Нова нотатка</value></data>
+  <data name="Edit_Save" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Назва нотатки</value></data>
+  <data name="Edit_HelpBefore" xml:space="preserve"><value>Додай блоки нижче. </value></data>
+  <data name="Edit_HelpAfter" xml:space="preserve"><value> в тексті автоматично стануть доступними для пошуку.</value></data>
+  <data name="Edit_AddText" xml:space="preserve"><value>＋ Текст</value></data>
+  <data name="Edit_AddLink" xml:space="preserve"><value>↗ Посилання</value></data>
+  <data name="Edit_AddImage" xml:space="preserve"><value>▧ Зображення</value></data>
+  <data name="Edit_PasteHint" xml:space="preserve"><value>вставляє картинку з буфера як новий блок</value></data>
+  <data name="Edit_AddTextBlock" xml:space="preserve"><value>＋ Додати текстовий блок</value></data>
+  <data name="Edit_SaveChanges" xml:space="preserve"><value>Зберегти зміни</value></data>
+  <data name="Editor_TypeText" xml:space="preserve"><value>Текст</value></data>
+  <data name="Editor_TypeLink" xml:space="preserve"><value>Посилання</value></data>
+  <data name="Editor_TypeImage" xml:space="preserve"><value>Зображення</value></data>
+  <data name="Editor_Unsaved" xml:space="preserve"><value>Є незбережені зміни</value></data>
+  <data name="Editor_OpenLink" xml:space="preserve"><value>Відкрити посилання</value></data>
+  <data name="Editor_DragBlock" xml:space="preserve"><value>Перетягнути блок</value></data>
+  <data name="Editor_MoveUp" xml:space="preserve"><value>Перемістити вище</value></data>
+  <data name="Editor_MoveDown" xml:space="preserve"><value>Перемістити нижче</value></data>
+  <data name="Editor_RemoveBlock" xml:space="preserve"><value>Видалити блок</value></data>
+  <data name="Editor_TextPlaceholder" xml:space="preserve"><value>Текст, коментар, ідея… Використовуй #теги для швидкого пошуку.</value></data>
+  <data name="Editor_LinkTitlePlaceholder" xml:space="preserve"><value>Назва посилання</value></data>
+  <data name="Editor_LinkCommentPlaceholder" xml:space="preserve"><value>Коментар до посилання (необов’язково)</value></data>
+  <data name="Editor_ImageAlt" xml:space="preserve"><value>Зображення в нотатці</value></data>
+  <data name="Editor_ImageCaptionPlaceholder" xml:space="preserve"><value>Підпис до зображення (необов’язково)</value></data>
+  <data name="Editor_ReplaceImage" xml:space="preserve"><value>Замінити</value></data>
+  <data name="Editor_UploadFailed" xml:space="preserve"><value>Не вдалося завантажити зображення.</value></data>
+  <data name="Editor_Uploading" xml:space="preserve"><value>Завантаження зображення…</value></data>
+  <data name="Editor_ImageAdded" xml:space="preserve"><value>Зображення додано.</value></data>
+  <data name="Editor_ImagesAdded" xml:space="preserve"><value>Додано зображень: {0}.</value></data>
+  <data name="Editor_UploadError" xml:space="preserve"><value>Помилка завантаження.</value></data>
+  <data name="Editor_UploadErrorStatus" xml:space="preserve"><value>Помилка завантаження</value></data>
+  <data name="Editor_LinkMustHttp" xml:space="preserve"><value>Посилання має починатися з http:// або https://</value></data>
+  <data name="Editor_Saving" xml:space="preserve"><value>Збереження…</value></data>
+  <data name="Editor_SaveErrorStatus" xml:space="preserve"><value>Помилка збереження ({0}).</value></data>
+  <data name="Editor_SavedAt" xml:space="preserve"><value>Збережено {0}</value></data>
+  <data name="Editor_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти нотатку</value></data>
+  <data name="Editor_SaveFailedToast" xml:space="preserve"><value>Не вдалося зберегти нотатку.</value></data>
+  <data name="Editor_OpenLinkInvalid" xml:space="preserve"><value>Вкажи коректне HTTP/HTTPS посилання.</value></data>
+  <data name="Server_TooManyBlocks" xml:space="preserve"><value>У нотатці забагато блоків.</value></data>
+  <data name="Server_NoteNotFound" xml:space="preserve"><value>Нотатку не знайдено.</value></data>
+  <data name="Server_ImageTooLarge" xml:space="preserve"><value>Зображення має бути не більше 12 МБ.</value></data>
+  <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>Підтримуються PNG, JPEG, WEBP та GIF.</value></data>
+  <data name="Server_UntitledNote" xml:space="preserve"><value>Без назви</value></data>
+  <data name="Server_EmptyNote" xml:space="preserve"><value>Порожня нотатка</value></data>
+</root>
