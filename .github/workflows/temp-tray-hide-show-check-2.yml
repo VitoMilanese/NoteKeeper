@@ -1,0 +1,56 @@
+name: Temporary tray hide show verification 2
+on:
+  push:
+    branches:
+      - ci/pr2-tray-hide-show-check-2
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build solution
+        run: dotnet build src/NoteKeeper.sln --configuration Release
+
+      - name: Start tray helper directly
+        shell: pwsh
+        run: |
+          $trayExe = "$env:GITHUB_WORKSPACE\src\NoteKeeper.Tray\bin\Release\net8.0-windows\NoteKeeper.Tray.exe"
+          if (-not (Test-Path $trayExe)) { throw "Tray helper executable is missing." }
+
+          $eventName = "Local\NoteKeeper.Test.$PID"
+          $tray = Start-Process -FilePath $trayExe -ArgumentList "--parent-pid","$PID","--url","http://127.0.0.1:1","--exit-event",$eventName -PassThru
+
+          try {
+              Start-Sleep -Seconds 3
+              if ($tray.HasExited) {
+                  throw "Tray helper exited unexpectedly with code $($tray.ExitCode)."
+              }
+          }
+          finally {
+              if (-not $tray.HasExited) {
+                  Stop-Process -Id $tray.Id -Force
+              }
+          }
+
+      - name: Verify Hide Show implementation
+        shell: pwsh
+        run: |
+          $source = Get-Content "src/NoteKeeper.Tray/Program.cs" -Raw
+          foreach ($required in @(
+              'new ToolStripMenuItem("Hide")',
+              'ToggleConsoleVisibility',
+              'UpdateConsoleVisibilityItem',
+              'ParentConsoleWindow.TryGetHandle',
+              'ShowWindow',
+              'IsWindowVisible',
+              '"Show"'
+          )) {
+              if (-not $source.Contains($required)) {
+                  throw "Missing expected tray visibility implementation: $required"
+              }
+          }
