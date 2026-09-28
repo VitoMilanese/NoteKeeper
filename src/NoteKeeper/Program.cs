@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using NoteKeeper.Data;
+using NoteKeeper.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHostedService<WindowsTrayIconService>();
 
 var app = builder.Build();
 

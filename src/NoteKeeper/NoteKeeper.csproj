@@ -4,7 +4,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <UseAppHost>true</UseAppHost>
+    <ApplicationIcon>Assets\notekeeper.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="Assets\notekeeper.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
