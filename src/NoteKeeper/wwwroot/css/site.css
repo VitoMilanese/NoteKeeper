@@ -1102,6 +1102,11 @@ html[data-theme="light"] .image-viewer-card {
     background: rgba(255, 255, 255, 0.025);
 }
 
+.format-toolbar-spacer {
+    height: 0;
+    pointer-events: none;
+}
+
 .format-toolbar-floating {
     position: fixed;
     z-index: 80;

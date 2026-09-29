@@ -1181,10 +1181,11 @@
         document.querySelectorAll('.rich-text-wrap').forEach((wrap) => {
             const topToolbar = wrap.querySelector('.format-toolbar-primary');
             const floatingToolbar = wrap.querySelector('.format-toolbar-floating');
+            const floatingSpacer = wrap.querySelector('.format-toolbar-spacer');
             const richEditor = wrap.querySelector('.rich-text-editor');
             const block = wrap.closest('.note-block');
 
-            if (!topToolbar || !floatingToolbar || !richEditor || !block) return;
+            if (!topToolbar || !floatingToolbar || !floatingSpacer || !richEditor || !block) return;
 
             const topRect = topToolbar.getBoundingClientRect();
             const editorRect = richEditor.getBoundingClientRect();
@@ -1206,6 +1207,9 @@
 
             floatingToolbar.classList.toggle('is-visible', shouldShow);
             floatingToolbar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+            floatingSpacer.style.height = shouldShow
+                ? `${toolbarHeight + 12}px`
+                : '0px';
 
             if (!shouldShow) {
                 floatingToolbar.querySelectorAll('.symbol-picker[open]').forEach((picker) => {
@@ -1220,7 +1224,8 @@
 
             const bottomGap = 12;
             const viewportTop = viewportHeight - toolbarHeight - bottomGap;
-            const blockBottomTop = wrapRect.bottom - toolbarHeight;
+            const reservedWrapRect = wrap.getBoundingClientRect();
+            const blockBottomTop = reservedWrapRect.bottom - toolbarHeight;
             floatingToolbar.style.top = `${Math.max(topBoundary, Math.min(viewportTop, blockBottomTop))}px`;
         });
     }
@@ -1471,11 +1476,15 @@
         const topToolbar = createFormattingToolbar(richEditor);
         topToolbar.classList.add('format-toolbar-primary');
 
+        const floatingSpacer = document.createElement('div');
+        floatingSpacer.className = 'format-toolbar-spacer';
+        floatingSpacer.setAttribute('aria-hidden', 'true');
+
         const floatingToolbar = createFormattingToolbar(richEditor);
         floatingToolbar.classList.add('format-toolbar-floating');
         floatingToolbar.setAttribute('aria-hidden', 'true');
 
-        body.append(topToolbar, richEditor, floatingToolbar);
+        body.append(topToolbar, richEditor, floatingSpacer, floatingToolbar);
         scheduleFloatingFormattingToolbarUpdate();
         return body;
     }
