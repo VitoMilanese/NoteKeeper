@@ -114,6 +114,7 @@
   <data name="Editor_HyperlinkInvalidUrl" xml:space="preserve"><value>Введіть коректну HTTP або HTTPS адресу.</value></data>
   <data name="Editor_FormatQuote" xml:space="preserve"><value>Цитата</value></data>
   <data name="Editor_FormatExpander" xml:space="preserve"><value>Розгортаний контейнер</value></data>
+  <data name="Editor_FormatAddLineBelow" xml:space="preserve"><value>Додати порожній рядок під поточним рядком</value></data>
   <data name="Editor_FormatDivider" xml:space="preserve"><value>Розділювач</value></data>
   <data name="Editor_FormatList" xml:space="preserve"><value>Список</value></data>
   <data name="Editor_FormatOrderedList" xml:space="preserve"><value>Нумерований список</value></data>

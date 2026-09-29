@@ -279,6 +279,66 @@
         notifyRichInput(richEditor);
     }
 
+    function addEmptyLineBelowCaret(richEditor) {
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const currentRange = selection.getRangeAt(0);
+        if (!richEditor.contains(currentRange.commonAncestorContainer) &&
+            currentRange.commonAncestorContainer !== richEditor) {
+            return;
+        }
+
+        // Keep existing text intact when a range is selected: the command is
+        // about the caret line, not replacing the current selection.
+        if (!currentRange.collapsed) {
+            const collapsed = currentRange.cloneRange();
+            collapsed.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(collapsed);
+        }
+
+        // Move to the visual end of the current line so inserting the new line
+        // never splits the text that follows the caret on that same line.
+        if (typeof selection.modify === 'function') {
+            selection.modify('move', 'forward', 'lineboundary');
+        }
+
+        document.execCommand('insertLineBreak', false);
+
+        // A line break created at the end of inline formatting (especially
+        // <code>) can leave the caret inside that formatting. Move only the
+        // caret outside the outermost inline wrapper; the inserted line break
+        // remains in native undo history and Ctrl+Z / Cmd+Z can remove it.
+        const inlineTags = new Set([
+            'A', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE', 'SPAN'
+        ]);
+        const anchor = selection.anchorNode;
+        let element = anchor?.nodeType === Node.ELEMENT_NODE
+            ? anchor
+            : anchor?.parentElement;
+        let outermostInline = null;
+
+        while (element && element !== richEditor && inlineTags.has(element.tagName)) {
+            outermostInline = element;
+            element = element.parentElement;
+        }
+
+        if (outermostInline) {
+            const normalCaret = document.createRange();
+            normalCaret.setStartAfter(outermostInline);
+            normalCaret.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(normalCaret);
+        }
+
+        saveRichSelection(richEditor);
+        notifyRichInput(richEditor);
+        scheduleFloatingFormattingToolbarUpdate();
+    }
+
     function insertBlockWithContinuation(richEditor, blockElement) {
         restoreRichSelection(richEditor);
 
@@ -1261,7 +1321,10 @@
             }),
             makeFormatButton('―', strings.formatDivider, () => {
                 insertBlockWithContinuation(richEditor, document.createElement('hr'));
-            })
+            }),
+            makeFormatButton('↵+', strings.formatAddLineBelow, () => {
+                addEmptyLineBelowCaret(richEditor);
+            }, 'add-line-below')
         );
 
         const sizeSelect = document.createElement('select');
