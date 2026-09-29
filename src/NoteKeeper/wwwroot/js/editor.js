@@ -1208,6 +1208,10 @@
             floatingToolbar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
 
             if (!shouldShow) {
+                floatingToolbar.querySelectorAll('.symbol-picker[open]').forEach((picker) => {
+                    picker.open = false;
+                });
+
                 if (activeEmojiPicker?.anchor && floatingToolbar.contains(activeEmojiPicker.anchor)) {
                     closeEmojiPicker(false);
                 }

@@ -1236,6 +1236,11 @@ html[data-theme="light"] .image-viewer-card {
     box-shadow: var(--shadow);
 }
 
+.format-toolbar-floating .symbol-panel {
+    top: auto;
+    bottom: calc(100% + 7px);
+}
+
 .symbol-panel button {
     min-width: 0;
     height: 36px;
