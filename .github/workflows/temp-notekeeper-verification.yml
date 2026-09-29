@@ -1,0 +1,54 @@
+name: Temporary NoteKeeper verification
+
+on:
+  push:
+    branches:
+      - ci/temp-notekeeper-verification
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Validate localized resources and color hooks
+        shell: python
+        run: |
+          import pathlib
+          import xml.etree.ElementTree as ET
+
+          root = pathlib.Path(".")
+          for path in [
+              root / "src/NoteKeeper/Resources/AppResources.resx",
+              root / "src/NoteKeeper/Resources/AppResources.it.resx",
+              root / "src/NoteKeeper/Resources/AppResources.uk.resx",
+          ]:
+              tree = ET.parse(path)
+              names = {item.attrib.get("name") for item in tree.getroot().findall("data")}
+              assert "Editor_FormatTextColor" in names, path
+
+          editor = (root / "src/NoteKeeper/wwwroot/js/editor.js").read_text(encoding="utf-8")
+          assert "function applyTextColor" in editor
+          assert "normalizeRichTextColor" in editor
+          assert "document.execCommand('foreColor'" in editor
+          assert "child.dataset.color = textColor" in editor
+          assert "child.style.color = textColor" in editor
+
+          view = (root / "src/NoteKeeper/Views/Notes/Edit.cshtml").read_text(encoding="utf-8")
+          assert '["formatTextColor"]' in view
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
