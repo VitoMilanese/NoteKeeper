@@ -47,7 +47,7 @@ jobs:
 
       - name: Real Chromium line-below scenarios
         run: |
-          cat > /tmp/test-line-below.js <<'NODE'
+          cat > .tmp-test-line-below.cjs <<'NODE'
           const { chromium } = require('playwright');
           const assert = require('assert');
           const path = require('path');
@@ -153,4 +153,4 @@ jobs:
           });
           NODE
 
-          node /tmp/test-line-below.js
+          node .tmp-test-line-below.cjs
