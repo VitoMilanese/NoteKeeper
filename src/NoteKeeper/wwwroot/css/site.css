@@ -1131,6 +1131,53 @@ html[data-theme="light"] .image-viewer-card {
     max-width: 160px;
 }
 
+.format-color-picker {
+    position: relative;
+    width: 38px;
+    height: 32px;
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #151f35;
+    color: #c9d3e8;
+    cursor: pointer;
+}
+
+.format-color-picker:hover {
+    border-color: var(--border-strong);
+    background: #1c2843;
+}
+
+.format-color-letter {
+    margin-top: -3px;
+    font-weight: 850;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.format-color-swatch {
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    bottom: 4px;
+    height: 3px;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.format-color-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
 .format-button.is-bold { font-weight: 850; }
 .format-button.is-italic { font-style: italic; }
 .format-button.is-underline { text-decoration: underline; }
@@ -1470,13 +1517,15 @@ html[data-theme="light"] .format-toolbar {
 }
 
 html[data-theme="light"] .format-button,
-html[data-theme="light"] .format-select {
+html[data-theme="light"] .format-select,
+html[data-theme="light"] .format-color-picker {
     background: #ffffff;
     color: #42506a;
 }
 
 html[data-theme="light"] .format-button:hover,
-html[data-theme="light"] .format-select:hover {
+html[data-theme="light"] .format-select:hover,
+html[data-theme="light"] .format-color-picker:hover {
     background: #edf1fa;
 }
 

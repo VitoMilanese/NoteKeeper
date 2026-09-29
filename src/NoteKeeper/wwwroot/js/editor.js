@@ -115,6 +115,20 @@
         }
     }
 
+    function normalizeRichTextColor(value) {
+        const raw = String(value || '').trim().toLowerCase();
+        const hex = /^#([0-9a-f]{6})$/i.exec(raw);
+        if (hex) return `#${hex[1].toLowerCase()}`;
+
+        const rgb = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i.exec(raw);
+        if (!rgb) return null;
+
+        const channels = rgb.slice(1).map(Number);
+        if (channels.some((channel) => channel < 0 || channel > 255)) return null;
+
+        return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+    }
+
     function sanitizeRichHtml(html) {
         const template = document.createElement('template');
         template.innerHTML = html || '';
@@ -157,6 +171,10 @@
                     continue;
                 }
 
+                const textColor = child.tagName === 'SPAN'
+                    ? normalizeRichTextColor(child.dataset.color || child.style.color)
+                    : null;
+
                 for (const attribute of Array.from(child.attributes)) {
                     const keepMarker = child.tagName === 'UL' &&
                         attribute.name === 'data-marker' &&
@@ -169,6 +187,11 @@
                     if (!keepMarker && !keepOpen && !keepTextSize) {
                         child.removeAttribute(attribute.name);
                     }
+                }
+
+                if (textColor) {
+                    child.dataset.color = textColor;
+                    child.style.color = textColor;
                 }
 
                 sanitizeNode(child);
@@ -621,6 +644,23 @@
         selection.addRange(selectedRange);
         richEditor._savedRange = selectedRange.cloneRange();
 
+        notifyRichInput(richEditor);
+    }
+
+    function applyTextColor(richEditor, color) {
+        const normalizedColor = normalizeRichTextColor(color);
+        if (!normalizedColor) return;
+
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        if (range.collapsed || !richEditor.contains(range.commonAncestorContainer)) return;
+
+        document.execCommand('styleWithCSS', false, true);
+        document.execCommand('foreColor', false, normalizedColor);
         notifyRichInput(richEditor);
     }
 
@@ -1179,6 +1219,33 @@
             sizeSelect.value = '';
         });
         toolbar.appendChild(sizeSelect);
+
+        const colorPicker = document.createElement('label');
+        colorPicker.className = 'format-color-picker';
+        colorPicker.title = strings.formatTextColor;
+
+        const colorLetter = document.createElement('span');
+        colorLetter.className = 'format-color-letter';
+        colorLetter.textContent = 'A';
+
+        const colorSwatch = document.createElement('span');
+        colorSwatch.className = 'format-color-swatch';
+
+        const colorInput = document.createElement('input');
+        colorInput.className = 'format-color-input';
+        colorInput.type = 'color';
+        colorInput.value = '#7c8cff';
+        colorInput.title = strings.formatTextColor;
+        colorInput.setAttribute('aria-label', strings.formatTextColor);
+        colorSwatch.style.backgroundColor = colorInput.value;
+        colorInput.addEventListener('mousedown', () => saveRichSelection(richEditor));
+        colorInput.addEventListener('change', () => {
+            colorSwatch.style.backgroundColor = colorInput.value;
+            applyTextColor(richEditor, colorInput.value);
+        });
+
+        colorPicker.append(colorLetter, colorSwatch, colorInput);
+        toolbar.appendChild(colorPicker);
 
         const listSelect = document.createElement('select');
         listSelect.className = 'format-select';

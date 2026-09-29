@@ -128,6 +128,7 @@
   <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Вийти без збереження</value></data>
   <data name="Index_ImportNote" xml:space="preserve"><value>⇩ Імпортувати нотатку</value></data>
   <data name="Edit_ExportNote" xml:space="preserve"><value>⇧ Експорт</value></data>
+  <data name="Editor_FormatTextColor" xml:space="preserve"><value>Колір тексту</value></data>
   <data name="Editor_FormatTextSize" xml:space="preserve"><value>Розмір тексту</value></data>
   <data name="Editor_FormatSizeSmall" xml:space="preserve"><value>Малий</value></data>
   <data name="Editor_FormatSizeNormal" xml:space="preserve"><value>Звичайний</value></data>

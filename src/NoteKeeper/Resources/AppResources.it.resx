@@ -128,6 +128,7 @@
   <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Esci senza salvare</value></data>
   <data name="Index_ImportNote" xml:space="preserve"><value>⇩ Importa nota</value></data>
   <data name="Edit_ExportNote" xml:space="preserve"><value>⇧ Esporta</value></data>
+  <data name="Editor_FormatTextColor" xml:space="preserve"><value>Colore testo</value></data>
   <data name="Editor_FormatTextSize" xml:space="preserve"><value>Dimensione testo</value></data>
   <data name="Editor_FormatSizeSmall" xml:space="preserve"><value>Piccolo</value></data>
   <data name="Editor_FormatSizeNormal" xml:space="preserve"><value>Normale</value></data>
