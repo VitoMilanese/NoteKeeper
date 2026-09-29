@@ -291,15 +291,18 @@
     }
 
     function fragmentHasContent(fragment) {
-        return Array.from(fragment.childNodes).some((node) => {
+        const nodeHasContent = (node) => {
             if (node.nodeType === Node.TEXT_NODE) {
                 return (node.nodeValue || '').length > 0;
             }
 
             if (node.nodeType !== Node.ELEMENT_NODE) return false;
             if (node.tagName === 'BR') return true;
-            return (node.textContent || '').length > 0 || node.childNodes.length > 0;
-        });
+
+            return Array.from(node.childNodes).some(nodeHasContent);
+        };
+
+        return Array.from(fragment.childNodes).some(nodeHasContent);
     }
 
     function addEmptyLineBelowCaret(richEditor) {
