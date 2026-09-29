@@ -4,7 +4,7 @@ namespace NoteKeeper.Services;
 
 public static partial class TagExtractor
 {
-    [GeneratedRegex(@"(?<![\p{L}\p{N}_])#([\p{L}\p{N}_-]{1,50})", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"(?<![\p{L}\p{N}_])#([\p{L}\p{N}_-](?:[\p{L}\p{N}_-]|\.(?=[\p{L}\p{N}_-])){0,49})", RegexOptions.CultureInvariant)]
     private static partial Regex TagRegex();
 
     public static IReadOnlyCollection<string> Extract(IEnumerable<string?> texts)
