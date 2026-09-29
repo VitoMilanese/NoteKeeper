@@ -1,0 +1,47 @@
+name: Temporary floating toolbar verification
+
+on:
+  push:
+    branches:
+      - ci/temp-floating-toolbar-verification
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify floating toolbar hooks
+        shell: python
+        run: |
+          from pathlib import Path
+
+          js = Path("src/NoteKeeper/wwwroot/js/editor.js").read_text(encoding="utf-8")
+          css = Path("src/NoteKeeper/wwwroot/css/site.css").read_text(encoding="utf-8")
+
+          assert "updateFloatingFormattingToolbars" in js
+          assert "scheduleFloatingFormattingToolbarUpdate" in js
+          assert "format-toolbar-primary" in js
+          assert "format-toolbar-floating" in js
+          assert "block === activeBlock" in js
+          assert "topToolbarGone" in js
+          assert "blockStillVisible" in js
+          assert ".format-toolbar-floating.is-visible" in css
+          assert ".format-toolbar-floating .symbol-panel" in css
+          assert "bottom: calc(100% + 7px)" in css
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
