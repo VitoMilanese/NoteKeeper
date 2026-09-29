@@ -279,6 +279,29 @@
         notifyRichInput(richEditor);
     }
 
+    function topLevelRichNode(richEditor, node) {
+        if (!node || node === richEditor) return null;
+
+        let current = node.nodeType === Node.TEXT_NODE ? node : node;
+        while (current?.parentNode && current.parentNode !== richEditor) {
+            current = current.parentNode;
+        }
+
+        return current?.parentNode === richEditor ? current : null;
+    }
+
+    function fragmentHasContent(fragment) {
+        return Array.from(fragment.childNodes).some((node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                return (node.nodeValue || '').length > 0;
+            }
+
+            if (node.nodeType !== Node.ELEMENT_NODE) return false;
+            if (node.tagName === 'BR') return true;
+            return (node.textContent || '').length > 0 || node.childNodes.length > 0;
+        });
+    }
+
     function addEmptyLineBelowCaret(richEditor) {
         restoreRichSelection(richEditor);
 
@@ -291,8 +314,8 @@
             return;
         }
 
-        // Keep existing text intact when a range is selected: the command is
-        // about the caret line, not replacing the current selection.
+        // This command never replaces selected text. Use the end of the
+        // selection as the logical caret position instead.
         if (!currentRange.collapsed) {
             const collapsed = currentRange.cloneRange();
             collapsed.collapse(false);
@@ -300,41 +323,67 @@
             selection.addRange(collapsed);
         }
 
-        // Move to the visual end of the current line so inserting the new line
-        // never splits the text that follows the caret on that same line.
+        // Put the insertion point after the current visual line first. This
+        // keeps any remaining text on that line together above the new line.
         if (typeof selection.modify === 'function') {
             selection.modify('move', 'forward', 'lineboundary');
         }
 
-        document.execCommand('insertLineBreak', false);
+        if (!selection.rangeCount) return;
+        const lineEndRange = selection.getRangeAt(0).cloneRange();
 
-        // A line break created at the end of inline formatting (especially
-        // <code>) can leave the caret inside that formatting. Move only the
-        // caret outside the outermost inline wrapper; the inserted line break
-        // remains in native undo history and Ctrl+Z / Cmd+Z can remove it.
-        const inlineTags = new Set([
-            'A', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE', 'SPAN'
-        ]);
-        const anchor = selection.anchorNode;
-        let element = anchor?.nodeType === Node.ELEMENT_NODE
-            ? anchor
-            : anchor?.parentElement;
-        let outermostInline = null;
+        const plainLine = document.createElement('div');
+        plainLine.appendChild(document.createElement('br'));
 
-        while (element && element !== richEditor && inlineTags.has(element.tagName)) {
-            outermostInline = element;
-            element = element.parentElement;
+        const topLevelNode = topLevelRichNode(richEditor, lineEndRange.startContainer);
+
+        if (!topLevelNode) {
+            // The caret can be directly in the editor between top-level nodes.
+            // Insert the plain line at that root position.
+            lineEndRange.insertNode(plainLine);
+        } else if (topLevelNode.nodeType === Node.TEXT_NODE) {
+            // Legacy/plain text can live directly under the rich editor.
+            // Split only that text node at the current line boundary.
+            const textNode = topLevelNode;
+            const offset = lineEndRange.startContainer === textNode
+                ? lineEndRange.startOffset
+                : textNode.length;
+            const tail = textNode.splitText(Math.max(0, Math.min(offset, textNode.length)));
+            richEditor.insertBefore(plainLine, tail);
+        } else {
+            // Split the complete top-level formatted container at the current
+            // line boundary. The new empty line is a sibling of that container,
+            // so quote/code/span/list formatting cannot leak into it.
+            const tailRange = document.createRange();
+            tailRange.setStart(lineEndRange.startContainer, lineEndRange.startOffset);
+            tailRange.setEnd(topLevelNode, topLevelNode.childNodes.length);
+            const tail = tailRange.extractContents();
+
+            topLevelNode.after(plainLine);
+
+            if (fragmentHasContent(tail)) {
+                // <details> cannot be cloned safely after its <summary> has
+                // already been consumed. For that special editor widget, keep
+                // the remainder inside the original container and place the
+                // escape line after the whole widget instead.
+                if (topLevelNode.tagName === 'DETAILS') {
+                    topLevelNode.appendChild(tail);
+                    topLevelNode.after(plainLine);
+                } else {
+                    const continuation = topLevelNode.cloneNode(false);
+                    continuation.appendChild(tail);
+                    plainLine.after(continuation);
+                }
+            }
         }
 
-        if (outermostInline) {
-            const normalCaret = document.createRange();
-            normalCaret.setStartAfter(outermostInline);
-            normalCaret.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(normalCaret);
-        }
+        const normalCaret = document.createRange();
+        normalCaret.setStart(plainLine, 0);
+        normalCaret.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(normalCaret);
+        richEditor._savedRange = normalCaret.cloneRange();
 
-        saveRichSelection(richEditor);
         notifyRichInput(richEditor);
         scheduleFloatingFormattingToolbarUpdate();
     }
