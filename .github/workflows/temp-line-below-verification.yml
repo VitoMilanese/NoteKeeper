@@ -1,0 +1,50 @@
+name: Temporary line-below verification
+
+on:
+  push:
+    branches:
+      - ci/temp-line-below-verification
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify line-below hooks and resources
+        shell: python
+        run: |
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          js = Path("src/NoteKeeper/wwwroot/js/editor.js").read_text(encoding="utf-8")
+          assert "function addEmptyLineBelowCaret" in js
+          assert "selection.modify('move', 'forward', 'lineboundary')" in js
+          assert "document.execCommand('insertLineBreak', false)" in js
+          assert "outermostInline" in js
+          assert "formatAddLineBelow" in js
+          assert "'↵+'" in js
+
+          for path in [
+              Path("src/NoteKeeper/Resources/AppResources.resx"),
+              Path("src/NoteKeeper/Resources/AppResources.it.resx"),
+              Path("src/NoteKeeper/Resources/AppResources.uk.resx"),
+          ]:
+              names = {x.attrib.get("name") for x in ET.parse(path).getroot().findall("data")}
+              assert "Editor_FormatAddLineBelow" in names, path
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
