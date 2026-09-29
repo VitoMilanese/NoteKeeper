@@ -31,6 +31,7 @@
     let activeBlock = null;
     let draggedBlock = null;
     let imageReplaceTarget = null;
+    let floatingToolbarFrame = null;
 
     const typeNames = {
         text: strings.typeText,
@@ -1172,6 +1173,63 @@
         return button;
     }
 
+    function updateFloatingFormattingToolbars() {
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const editorTopbar = document.querySelector('.editor-topbar');
+        const topBoundary = Math.max(0, editorTopbar?.getBoundingClientRect().bottom || 0) + 6;
+
+        document.querySelectorAll('.rich-text-wrap').forEach((wrap) => {
+            const topToolbar = wrap.querySelector('.format-toolbar-primary');
+            const floatingToolbar = wrap.querySelector('.format-toolbar-floating');
+            const richEditor = wrap.querySelector('.rich-text-editor');
+            const block = wrap.closest('.note-block');
+
+            if (!topToolbar || !floatingToolbar || !richEditor || !block) return;
+
+            const topRect = topToolbar.getBoundingClientRect();
+            const editorRect = richEditor.getBoundingClientRect();
+            const wrapRect = wrap.getBoundingClientRect();
+
+            floatingToolbar.style.left = `${wrapRect.left}px`;
+            floatingToolbar.style.width = `${wrapRect.width}px`;
+
+            const toolbarHeight = floatingToolbar.offsetHeight;
+            const topToolbarGone = topRect.bottom <= topBoundary;
+            const blockStillVisible =
+                editorRect.bottom > topBoundary + toolbarHeight &&
+                editorRect.top < viewportHeight;
+
+            const shouldShow =
+                block === activeBlock &&
+                topToolbarGone &&
+                blockStillVisible;
+
+            floatingToolbar.classList.toggle('is-visible', shouldShow);
+            floatingToolbar.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+
+            if (!shouldShow) {
+                if (activeEmojiPicker?.anchor && floatingToolbar.contains(activeEmojiPicker.anchor)) {
+                    closeEmojiPicker(false);
+                }
+                return;
+            }
+
+            const bottomGap = 12;
+            const viewportTop = viewportHeight - toolbarHeight - bottomGap;
+            const blockBottomTop = wrapRect.bottom - toolbarHeight;
+            floatingToolbar.style.top = `${Math.max(topBoundary, Math.min(viewportTop, blockBottomTop))}px`;
+        });
+    }
+
+    function scheduleFloatingFormattingToolbarUpdate() {
+        if (floatingToolbarFrame !== null) return;
+
+        floatingToolbarFrame = window.requestAnimationFrame(() => {
+            floatingToolbarFrame = null;
+            updateFloatingFormattingToolbars();
+        });
+    }
+
     function createFormattingToolbar(richEditor) {
         const toolbar = document.createElement('div');
         toolbar.className = 'format-toolbar';
@@ -1406,7 +1464,15 @@
             notifyRichInput(richEditor);
         });
 
-        body.append(createFormattingToolbar(richEditor), richEditor);
+        const topToolbar = createFormattingToolbar(richEditor);
+        topToolbar.classList.add('format-toolbar-primary');
+
+        const floatingToolbar = createFormattingToolbar(richEditor);
+        floatingToolbar.classList.add('format-toolbar-floating');
+        floatingToolbar.setAttribute('aria-hidden', 'true');
+
+        body.append(topToolbar, richEditor, floatingToolbar);
+        scheduleFloatingFormattingToolbarUpdate();
         return body;
     }
 
@@ -1540,10 +1606,15 @@
     }
 
     function setActiveBlock(block) {
-        if (activeBlock === block) return;
+        if (activeBlock === block) {
+            scheduleFloatingFormattingToolbarUpdate();
+            return;
+        }
+
         activeBlock?.classList.remove('is-active');
         activeBlock = block;
         activeBlock?.classList.add('is-active');
+        scheduleFloatingFormattingToolbarUpdate();
     }
 
     function moveBlock(block, direction) {
@@ -1926,8 +1997,14 @@
         });
     }, true);
 
-    window.addEventListener('resize', positionEmojiPicker);
-    document.addEventListener('scroll', positionEmojiPicker, true);
+    window.addEventListener('resize', () => {
+        positionEmojiPicker();
+        scheduleFloatingFormattingToolbarUpdate();
+    });
+    document.addEventListener('scroll', () => {
+        positionEmojiPicker();
+        scheduleFloatingFormattingToolbarUpdate();
+    }, true);
 
     document.addEventListener('click', (event) => {
         if (!dirty || event.defaultPrevented || event.button !== 0) return;

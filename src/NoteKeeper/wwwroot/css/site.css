@@ -1102,6 +1102,30 @@ html[data-theme="light"] .image-viewer-card {
     background: rgba(255, 255, 255, 0.025);
 }
 
+.format-toolbar-floating {
+    position: fixed;
+    z-index: 80;
+    top: -1000px;
+    left: -1000px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 11px;
+    background: rgba(13, 21, 39, 0.96);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(14px);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+
+.format-toolbar-floating.is-visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
 .format-button,
 .format-select {
     min-width: 32px;
@@ -1514,6 +1538,11 @@ html[data-theme="light"] .emoji-item:hover {
 
 html[data-theme="light"] .format-toolbar {
     background: #f5f7fc;
+}
+
+html[data-theme="light"] .format-toolbar-floating {
+    background: rgba(245, 247, 252, 0.97);
+    box-shadow: 0 12px 34px rgba(35, 48, 78, 0.18);
 }
 
 html[data-theme="light"] .format-button,
