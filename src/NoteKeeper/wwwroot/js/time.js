@@ -541,7 +541,7 @@
     const panel = document.querySelector('[data-time-tracked-panel]');
     if (!panel) return;
 
-    const durationPattern = /^(?:\\s*\\d+\\s*[wdhm])+\\s*$/i;
+    const durationPattern = /^(?:\s*\d+\s*[wdhm])+\s*$/i;
 
     const isValidDuration = (value) => {
         const text = String(value || '').trim();
