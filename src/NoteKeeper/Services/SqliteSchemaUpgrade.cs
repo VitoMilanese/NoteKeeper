@@ -62,6 +62,36 @@ public static class SqliteSchemaUpgrade
                         WHERE "NoteTags"."NoteId" = "Notes"."Id"
                           AND "NoteTags"."Name" = 'active' COLLATE NOCASE
                       );
+
+                    UPDATE "Notes"
+                    SET "Status" = 4
+                    WHERE "Status" = 0
+                      AND EXISTS (
+                        SELECT 1
+                        FROM "NoteTags"
+                        WHERE "NoteTags"."NoteId" = "Notes"."Id"
+                          AND "NoteTags"."Name" = 'selected' COLLATE NOCASE
+                      );
+
+                    UPDATE "Notes"
+                    SET "Status" = 5
+                    WHERE "Status" = 0
+                      AND EXISTS (
+                        SELECT 1
+                        FROM "NoteTags"
+                        WHERE "NoteTags"."NoteId" = "Notes"."Id"
+                          AND "NoteTags"."Name" = 'test' COLLATE NOCASE
+                      );
+
+                    UPDATE "Notes"
+                    SET "Status" = 7
+                    WHERE "Status" = 0
+                      AND EXISTS (
+                        SELECT 1
+                        FROM "NoteTags"
+                        WHERE "NoteTags"."NoteId" = "Notes"."Id"
+                          AND "NoteTags"."Name" = 'suspended' COLLATE NOCASE
+                      );
                     """);
             }
 
@@ -243,19 +273,39 @@ public static class SqliteSchemaUpgrade
             connection,
             """
             INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
+            SELECT "Id", 'backlog'
+            FROM "Notes"
+            WHERE "Status" = 0;
+
+            INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
+            SELECT "Id", 'selected'
+            FROM "Notes"
+            WHERE "Status" = 4;
+
+            INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
             SELECT "Id", 'active'
             FROM "Notes"
             WHERE "Status" = 1;
 
             INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
+            SELECT "Id", 'test'
+            FROM "Notes"
+            WHERE "Status" = 5;
+
+            INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
             SELECT "Id", 'done'
             FROM "Notes"
-            WHERE "Status" IN (2, 3);
+            WHERE "Status" IN (2, 3, 6);
 
             INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
             SELECT "Id", 'released'
             FROM "Notes"
             WHERE "Status" = 3;
+
+            INSERT OR IGNORE INTO "NoteTags" ("NoteId", "Name")
+            SELECT "Id", 'suspended'
+            FROM "Notes"
+            WHERE "Status" = 7;
             """);
     }
 

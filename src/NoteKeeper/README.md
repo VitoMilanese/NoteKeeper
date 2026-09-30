@@ -9,9 +9,9 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - project dashboard as the application home page, with project creation, rename, delete, search, sorting, and per-project note workspaces;
 - automatic migration of the existing global note list into a first `Default project`, preserving all existing notes;
 - whole-project export/import with note content, statuses, dates, and embedded images;
-- note status selection in the editor with Backlog, Active, Done, and Released states; Active implies `#active`, Done implies `#done`, and Released implies both `#done` and `#released`;
+- note status selection in the editor with Backlog, Selected, Active, Test, Done, Released, Rejected, and Suspended states; status-implied tags are `#backlog`, `#selected`, `#active`, `#test`, `#done`, `#done + #released`, `#done`, and `#suspended` respectively;
 - filtering by `#tags` extracted automatically from text blocks and link comments plus status-implied tags, with both the legacy comma/parenthesis syntax and an explicit logical-operator syntax;
-- show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;
+- show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` follows the status order: `backlog`, `selected`, `active`, `test`, `done`, `released`, `rejected`, `suspended`; changes to the file are picked up without restarting the app;
 - fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
 - show caret-aware tag suggestions while typing a tag-filter expression, using all tags in the database so additional filter terms remain discoverable even after narrowing the result set, and insert the selected tag without replacing the surrounding expression;
 - clear the search field, tag filter, and Group by selection from a dedicated button while preserving the selected sort and direction;
@@ -80,7 +80,7 @@ Add tags directly to a text block or a link comment, for example:
 Review this idea later. #work #idea
 ```
 
-After saving the note, `work` and `idea` become available as filters on the home page. Note statuses also contribute effective tags: `Active` adds `active`, `Done` adds `done`, and `Released` adds both `done` and `released`. These status tags participate in tag filtering, text search, autocomplete, tag counts, card tag displays, and Group by exactly like explicitly written tags. `Backlog` adds no automatic tag.
+After saving the note, `work` and `idea` become available as filters on the home page. Note statuses also contribute effective tags: `Backlog` adds `backlog`, `Selected` adds `selected`, `Active` adds `active`, `Test` adds `test`, `Done` adds `done`, `Released` adds both `done` and `released`, `Rejected` adds `done`, and `Suspended` adds `suspended`. These status tags participate in tag filtering, text search, autocomplete, tag counts, card tag displays, and Group by exactly like explicitly written tags.
 
 The legacy syntax remains available. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with `-` to make every tag in that expression negative without changing the group operator: `atm, done, -tn` means `atm AND done AND NOT tn`; `-(tn, dsde)` means `NOT tn AND NOT dsde`; and `-((tn, dsde))` means `NOT tn OR NOT dsde`. Repeated minus prefixes remain negative rather than toggling back, so `-(-tn)` is still `NOT tn`.
 
@@ -96,13 +96,17 @@ The symbol palette includes an in-app emoji picker rendered above the editor wit
 
 ## Note status
 
-Each note has a status selected in the editor:
+Each note has a status selected in this order in the editor:
 
-- `Backlog` — no automatic tag.
+- `Backlog` — behaves as if the note contains `#backlog`.
+- `Selected` — behaves as if the note contains `#selected`.
 - `Active` — behaves as if the note contains `#active`.
+- `Test` — behaves as if the note contains `#test`.
 - `Done` — behaves as if the note contains `#done`.
 - `Released` — behaves as if the note contains both `#done` and `#released`.
+- `Rejected` — behaves as if the note contains `#done`.
+- `Suspended` — behaves as if the note contains `#suspended`.
 
 Status-implied tags are stored together with extracted tags, so filtering, text search, autocomplete, tag counts, card tags, and Group by all use the same effective tag set. Changing a status removes automatic tags that are no longer implied unless those tags are still written explicitly in the note content.
 
-Existing SQLite databases are upgraded automatically on startup. The new `Status` column defaults to `Backlog`; existing notes are backfilled from `#released`, then `#done`, then `#active` when those tags are already present. Export/import preserves the status while remaining compatible with older exports that do not contain a status field.
+Existing numeric values for Active, Done, and Released are preserved for database compatibility. Existing SQLite databases are upgraded automatically on startup; databases that predate the Status column can also infer Selected, Test, and Suspended from matching tags, while Rejected cannot be inferred from `#done` because it intentionally shares that effective tag with Done. Export/import preserves the status while remaining compatible with older exports that do not contain a status field.

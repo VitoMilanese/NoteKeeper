@@ -56,9 +56,13 @@
   <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Назва нотатки</value></data>
   <data name="Edit_Status" xml:space="preserve"><value>Статус</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
+  <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="Edit_StatusTest" xml:space="preserve"><value>Test</value></data>
   <data name="Edit_StatusDone" xml:space="preserve"><value>Done</value></data>
   <data name="Edit_StatusReleased" xml:space="preserve"><value>Released</value></data>
+  <data name="Edit_StatusRejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Edit_StatusSuspended" xml:space="preserve"><value>Suspended</value></data>
   <data name="Edit_AddText" xml:space="preserve"><value>＋ Текст</value></data>
   <data name="Edit_AddLink" xml:space="preserve"><value>↗ Посилання</value></data>
   <data name="Edit_AddImage" xml:space="preserve"><value>▧ Зображення</value></data>
