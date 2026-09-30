@@ -3,6 +3,7 @@
     if (!editor) return;
 
     const titleInput = document.getElementById('titleInput');
+    const statusSelect = document.getElementById('statusSelect');
     const blocksContainer = document.getElementById('blocksContainer');
     const saveButton = document.getElementById('saveButton');
     const saveButtonBottom = document.getElementById('saveButtonBottom');
@@ -1876,6 +1877,7 @@
         const payload = {
             id: idText ? Number(idText) : null,
             title: titleInput.value,
+            status: Number(statusSelect?.value || 0),
             blocks: collectBlocks()
         };
 
@@ -1945,10 +1947,12 @@
     dirty = false;
 
     editor.addEventListener('input', (event) => {
-        if (event.target.matches('input, textarea, [contenteditable="true"]')) {
+        if (event.target.matches('input, textarea, select, [contenteditable="true"]')) {
             setDirty(true);
         }
     });
+
+    statusSelect?.addEventListener('change', () => setDirty(true));
 
     blocksContainer.addEventListener('focusin', (event) => {
         setActiveBlock(event.target.closest('.note-block'));

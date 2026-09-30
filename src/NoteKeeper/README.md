@@ -6,7 +6,8 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 
 - home page with a note list and server-side pagination shown only when more than one page is needed, with the top pagination aligned in the notes heading row and the second pager below the grid;
 - search by title, text, comments, links, and image captions;
-- filtering by `#tags` extracted automatically from text blocks and link comments, with both the legacy comma/parenthesis syntax and an explicit logical-operator syntax;
+- note status selection in the editor with Backlog, Active, Done, and Released states; Active implies `#active`, Done implies `#done`, and Released implies both `#done` and `#released`;
+- filtering by `#tags` extracted automatically from text blocks and link comments plus status-implied tags, with both the legacy comma/parenthesis syntax and an explicit logical-operator syntax;
 - show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;
 - fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
 - show caret-aware tag suggestions while typing a tag-filter expression, using all tags in the database so additional filter terms remain discoverable even after narrowing the result set, and insert the selected tag without replacing the surrounding expression;
@@ -76,7 +77,7 @@ Add tags directly to a text block or a link comment, for example:
 Review this idea later. #work #idea
 ```
 
-After saving the note, `work` and `idea` become available as filters on the home page.
+After saving the note, `work` and `idea` become available as filters on the home page. Note statuses also contribute effective tags: `Active` adds `active`, `Done` adds `done`, and `Released` adds both `done` and `released`. These status tags participate in tag filtering, text search, autocomplete, tag counts, card tag displays, and Group by exactly like explicitly written tags. `Backlog` adds no automatic tag.
 
 The legacy syntax remains available. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with `-` to make every tag in that expression negative without changing the group operator: `atm, done, -tn` means `atm AND done AND NOT tn`; `-(tn, dsde)` means `NOT tn AND NOT dsde`; and `-((tn, dsde))` means `NOT tn OR NOT dsde`. Repeated minus prefixes remain negative rather than toggling back, so `-(-tn)` is still `NOT tn`.
 
@@ -89,3 +90,16 @@ Hashtags inside inline code or quote blocks are treated as content and are not i
 Text blocks support formatting from the toolbar as well as `Ctrl+B`, `Ctrl+I`, `Ctrl+U`, and `Ctrl+K`. Expandable-container titles behave as editable text: clicking the title places the caret, spaces type normally, and the container toggles only from the disclosure arrow or the unused header area to the right. New expandable containers start with an empty body, include an editor-only × delete control, insert without adding real blank rows, and inserting a container participates in `Ctrl+Z` / `Cmd+Z` undo. When an expander has no normal text before or after it, the editor keeps a compact editor-only caret zone on that side so the user can always click outside the container and continue typing; these caret zones are not saved as note content. Hold `Ctrl` (or `Cmd` on macOS) and click a rich-text hyperlink to open it in a new tab. Press `Enter` in the hyperlink URL field to apply the link. Hyperlink application does not depend on native form submission, so keyboard and button application share the same selection logic. Creating, editing, and removing a rich-text hyperlink uses the browser's native contenteditable link commands, so the operation is recorded in the editing history and can be undone with `Ctrl+Z` / `Cmd+Z`. Surround inline text with backticks, for example `` `code` ``, to convert it to inline code automatically. Text-size and text-color changes keep the formatted selection active. For long text blocks, once the normal toolbar scrolls above the visible editor area, a duplicate toolbar appears near the bottom of the viewport while that text block remains active and visible, then disappears again near the block end or when returning to the top. The ↵+ toolbar action inserts a new empty unformatted line directly below the visual line containing the caret. It splits the current top-level rich-text container at that point when needed, so the new line is outside quote, inline-code, text-size, text-color, and other inherited formatting. Click a divider and press `Delete` or `Backspace` to remove it. Inline code and quote insertion leave the caret in normal text after the inserted content so typing can continue normally.
 
 The symbol palette includes an in-app emoji picker rendered above the editor with category tabs and search. It closes on outside click or `Esc` without leaving the note editor.
+
+## Note status
+
+Each note has a status selected in the editor:
+
+- `Backlog` — no automatic tag.
+- `Active` — behaves as if the note contains `#active`.
+- `Done` — behaves as if the note contains `#done`.
+- `Released` — behaves as if the note contains both `#done` and `#released`.
+
+Status-implied tags are stored together with extracted tags, so filtering, text search, autocomplete, tag counts, card tags, and Group by all use the same effective tag set. Changing a status removes automatic tags that are no longer implied unless those tags are still written explicitly in the note content.
+
+Existing SQLite databases are upgraded automatically on startup. The new `Status` column defaults to `Backlog`; existing notes are backfilled from `#released`, then `#done`, then `#active` when those tags are already present. Export/import preserves the status while remaining compatible with older exports that do not contain a status field.

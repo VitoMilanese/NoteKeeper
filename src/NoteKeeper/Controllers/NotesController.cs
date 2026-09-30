@@ -80,13 +80,19 @@ public sealed class NotesController(
         if (!string.IsNullOrWhiteSpace(q))
         {
             var pattern = $"%{q}%";
+            var tagSearch = q.TrimStart('#').Trim();
+            var tagPattern = $"%{tagSearch}%";
+
             query = query.Where(note =>
                 EF.Functions.Like(note.Title, pattern) ||
                 note.Blocks.Any(block =>
                     (block.TextContent != null && EF.Functions.Like(block.TextContent, pattern)) ||
                     (block.LinkTitle != null && EF.Functions.Like(block.LinkTitle, pattern)) ||
                     (block.Url != null && EF.Functions.Like(block.Url, pattern)) ||
-                    (block.Caption != null && EF.Functions.Like(block.Caption, pattern))));
+                    (block.Caption != null && EF.Functions.Like(block.Caption, pattern))) ||
+                (tagSearch.Length > 0 &&
+                 note.Tags.Any(tagItem =>
+                     EF.Functions.Like(tagItem.Name, tagPattern))));
         }
 
         query = tagFilter.Error == TagFilterError.None
@@ -206,6 +212,7 @@ public sealed class NotesController(
         return View("Edit", new NoteEditorViewModel
         {
             Title = string.Empty,
+            Status = NoteStatus.Backlog,
             Blocks =
             [
                 new NoteBlockViewModel { Type = BlockType.Text }
@@ -231,6 +238,7 @@ public sealed class NotesController(
             Id = note.Id,
             Title = note.Title,
             UpdatedAtUtc = note.UpdatedAtUtc,
+            Status = note.Status,
             Blocks = note.Blocks
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new NoteBlockViewModel
@@ -262,6 +270,7 @@ public sealed class NotesController(
         var document = new NoteTransferDocument
         {
             Title = note.Title,
+            Status = note.Status,
             Blocks = []
         };
 
@@ -329,6 +338,7 @@ public sealed class NotesController(
             var note = new Note
             {
                 Title = NormalizeTitle(document.Title),
+                Status = NormalizeStatus(document.Status),
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
                 Blocks = []
@@ -386,8 +396,10 @@ public sealed class NotesController(
             var tags = TagExtractor.Extract(note.Blocks
                 .Where(x => x.Type is BlockType.Text or BlockType.Link)
                 .Select(x => RichTextContent.ToTagSearchText(x.TextContent)));
+            var desiredTags = BuildDesiredTags(note.Status, tags);
 
-            note.Tags = tags
+            note.Tags = desiredTags
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
                 .Select(x => new NoteTag { Name = x })
                 .ToList();
 
@@ -455,6 +467,7 @@ public sealed class NotesController(
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         note.Title = NormalizeTitle(request.Title);
+        note.Status = NormalizeStatus(request.Status);
         note.UpdatedAtUtc = DateTime.UtcNow;
 
         if (note.Blocks.Count > 0)
@@ -471,7 +484,7 @@ public sealed class NotesController(
         var tags = TagExtractor.Extract(note.Blocks
             .Where(x => x.Type is BlockType.Text or BlockType.Link)
             .Select(x => RichTextContent.ToTagSearchText(x.TextContent)));
-        var desiredTags = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var desiredTags = BuildDesiredTags(note.Status, tags);
 
         var tagsToRemove = note.Tags
             .Where(x => !desiredTags.Contains(x.Name))
@@ -506,7 +519,8 @@ public sealed class NotesController(
             id = note.Id,
             updatedAtUtc = note.UpdatedAtUtc,
             title = note.Title,
-            tags
+            status = note.Status,
+            tags = desiredTags.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
         });
     }
 
@@ -780,6 +794,27 @@ public sealed class NotesController(
                 (current, item) => group.MatchAny
                     ? Expression.OrElse(current, item)
                     : Expression.AndAlso(current, item));
+    }
+
+    private static NoteStatus NormalizeStatus(NoteStatus status)
+    {
+        return Enum.IsDefined(status)
+            ? status
+            : NoteStatus.Backlog;
+    }
+
+    private static HashSet<string> BuildDesiredTags(
+        NoteStatus status,
+        IEnumerable<string> explicitTags)
+    {
+        var result = explicitTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tag in NoteStatusTags.GetImplicitTags(status))
+        {
+            result.Add(tag);
+        }
+
+        return result;
     }
 
     private string NormalizeTitle(string? value)

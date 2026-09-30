@@ -54,6 +54,11 @@
   <data name="Edit_NewNoteStatus" xml:space="preserve"><value>Nuova nota</value></data>
   <data name="Edit_Save" xml:space="preserve"><value>Salva</value></data>
   <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Titolo della nota</value></data>
+  <data name="Edit_Status" xml:space="preserve"><value>Stato</value></data>
+  <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
+  <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="Edit_StatusDone" xml:space="preserve"><value>Done</value></data>
+  <data name="Edit_StatusReleased" xml:space="preserve"><value>Released</value></data>
   <data name="Edit_HelpBefore" xml:space="preserve"><value>Aggiungi i blocchi qui sotto. </value></data>
   <data name="Edit_HelpAfter" xml:space="preserve"><value> nei blocchi di testo e nei commenti dei link diventano automaticamente ricercabili.</value></data>
   <data name="Edit_AddText" xml:space="preserve"><value>＋ Testo</value></data>

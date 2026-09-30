@@ -11,6 +11,7 @@ public sealed class Note
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+    public NoteStatus Status { get; set; } = NoteStatus.Backlog;
 
     public List<NoteBlock> Blocks { get; set; } = [];
     public List<NoteTag> Tags { get; set; } = [];

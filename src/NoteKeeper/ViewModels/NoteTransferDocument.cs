@@ -10,6 +10,7 @@ public sealed class NoteTransferDocument
     public string Format { get; set; } = ExpectedFormat;
     public int Version { get; set; } = CurrentVersion;
     public string Title { get; set; } = string.Empty;
+    public NoteStatus Status { get; set; } = NoteStatus.Backlog;
     public List<NoteTransferBlock> Blocks { get; set; } = [];
 }
 
