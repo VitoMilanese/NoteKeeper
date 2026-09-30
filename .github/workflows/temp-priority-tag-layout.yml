@@ -1,0 +1,156 @@
+name: Temporary priority-tag layout verification
+
+on:
+  push:
+    branches:
+      - ci/temp-priority-tag-layout
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/index.js
+
+      - name: Verify priority-tag source hooks
+        shell: python
+        run: |
+          from pathlib import Path
+
+          priority = Path("src/NoteKeeper/priority-tags.txt").read_text(encoding="utf-8").splitlines()
+          assert priority == ["active", "done", "released"]
+
+          view = Path("src/NoteKeeper/Views/Notes/Index.cshtml").read_text(encoding="utf-8")
+          assert "Take(6)" not in view
+          assert "data-note-tags" in view
+          assert "data-note-tag-overflow" in view
+          assert "is-priority-tag" in view
+
+          controller = Path("src/NoteKeeper/Controllers/NotesController.cs").read_text(encoding="utf-8")
+          assert "PriorityTagService priorityTagService" in controller
+          assert "PriorityTags = priorityTags.ToList()" in controller
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Verify priority file copied to build output
+        run: test -f src/NoteKeeper/bin/Release/net8.0/priority-tags.txt
+
+      - name: Install Playwright
+        run: |
+          npm install playwright@1.55.0 --no-save
+          npx playwright install --with-deps chromium
+
+      - name: Real Chromium two-row tag layout
+        run: |
+          cat > .tmp-tag-layout.cjs <<'NODE'
+          const { chromium } = require('playwright');
+          const assert = require('assert');
+          const path = require('path');
+
+          const scriptPath = path.resolve('src/NoteKeeper/wwwroot/js/index.js');
+
+          function rowCount(elements) {
+            const tops = [];
+            for (const el of elements) {
+              if (el.hidden) continue;
+              const top = el.offsetTop;
+              if (!tops.some(x => Math.abs(x - top) <= 2)) tops.push(top);
+            }
+            return tops.length;
+          }
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+
+            await page.setContent(`
+              <style>
+                .note-tags { width: 190px; display:flex; flex-wrap:wrap; gap:6px; }
+                .note-tags span { padding:5px 8px; font:12px Arial; white-space:nowrap; border:1px solid #aaa; border-radius:999px; }
+                .note-tags span[hidden] { display:none; }
+              </style>
+              <section data-notes-grid data-page="1" data-page-size="30" data-total-count="1">
+                <article>
+                  <div class="note-tags" data-note-tags>
+                    <span data-note-tag>#active</span>
+                    <span data-note-tag>#done</span>
+                    <span data-note-tag>#released</span>
+                    <span data-note-tag>#automation</span>
+                    <span data-note-tag>#backend</span>
+                    <span data-note-tag>#frontend</span>
+                    <span data-note-tag>#database</span>
+                    <span data-note-tag>#deployment</span>
+                    <span data-note-tag>#documentation</span>
+                    <span data-note-tag>#testing</span>
+                    <span class="note-tag-overflow" data-note-tag-overflow hidden></span>
+                  </div>
+                </article>
+              </section>
+            `);
+            await page.addScriptTag({ path: scriptPath });
+            await page.waitForTimeout(100);
+
+            let result = await page.evaluate(() => {
+              const container = document.querySelector('[data-note-tags]');
+              const tags = [...container.querySelectorAll('[data-note-tag]')];
+              const overflow = container.querySelector('[data-note-tag-overflow]');
+              const visible = tags.filter(x => !x.hidden);
+              const tops = [];
+              for (const el of [...visible, overflow].filter(x => !x.hidden)) {
+                if (!tops.some(x => Math.abs(x - el.offsetTop) <= 2)) tops.push(el.offsetTop);
+              }
+              return {
+                rows: tops.length,
+                hidden: tags.filter(x => x.hidden).length,
+                overflowHidden: overflow.hidden,
+                overflowText: overflow.textContent
+              };
+            });
+
+            assert.ok(result.hidden > 0);
+            assert.strictEqual(result.rows, 2);
+            assert.strictEqual(result.overflowHidden, false);
+            assert.strictEqual(result.overflowText, '+' + result.hidden);
+
+            await page.evaluate(() => {
+              document.querySelector('[data-note-tags]').style.width = '800px';
+            });
+            await page.waitForTimeout(150);
+
+            result = await page.evaluate(() => {
+              const container = document.querySelector('[data-note-tags]');
+              const tags = [...container.querySelectorAll('[data-note-tag]')];
+              const overflow = container.querySelector('[data-note-tag-overflow]');
+              return {
+                hidden: tags.filter(x => x.hidden).length,
+                overflowHidden: overflow.hidden,
+                overflowText: overflow.textContent
+              };
+            });
+
+            assert.strictEqual(result.hidden, 0);
+            assert.strictEqual(result.overflowHidden, true);
+            assert.strictEqual(result.overflowText, '');
+
+            await browser.close();
+            console.log('Chromium two-row tag layout passed.');
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+          node .tmp-tag-layout.cjs
