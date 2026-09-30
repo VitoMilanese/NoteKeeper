@@ -66,18 +66,10 @@ public sealed class NotesController(
             .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        var availableTags = allTagCounts
-            .Select(x => x.Name)
-            .ToList();
         var requestedGroupBy = groupBy?
             .Trim()
             .TrimStart('#')
             .Trim();
-        groupBy = string.IsNullOrWhiteSpace(requestedGroupBy)
-            ? string.Empty
-            : availableTags.FirstOrDefault(x =>
-                x.Equals(requestedGroupBy, StringComparison.OrdinalIgnoreCase))
-                ?? string.Empty;
 
         IQueryable<Note> query = db.Notes.AsNoTracking();
 
@@ -96,6 +88,31 @@ public sealed class NotesController(
         query = tagFilter.Error == TagFilterError.None
             ? ApplyTagFilter(query, tagFilter.Expression)
             : query.Where(_ => false);
+
+        var filteredTagCounts = (await query
+            .SelectMany(note => note.Tags)
+            .GroupBy(tagItem => tagItem.Name)
+            .Select(group => new TagCountViewModel
+            {
+                Name = group.Key,
+                Count = group.Count()
+            })
+            .ToListAsync(cancellationToken))
+            .OrderBy(x => priorityRanks.ContainsKey(x.Name) ? 0 : 1)
+            .ThenBy(x => priorityRanks.TryGetValue(x.Name, out var rank) ? rank : int.MaxValue)
+            .ThenByDescending(x => x.Count)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var availableTags = filteredTagCounts
+            .Select(x => x.Name)
+            .ToList();
+
+        groupBy = string.IsNullOrWhiteSpace(requestedGroupBy)
+            ? string.Empty
+            : availableTags.FirstOrDefault(x =>
+                x.Equals(requestedGroupBy, StringComparison.OrdinalIgnoreCase))
+                ?? string.Empty;
 
         var totalCount = await query.CountAsync(cancellationToken);
         var totalPages = totalCount == 0
