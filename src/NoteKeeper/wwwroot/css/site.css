@@ -1642,6 +1642,62 @@ html[data-theme="light"] .editor-time-field input[readonly] {
     background: #f4f6fa;
 }
 
+.editor-time-history {
+    appearance: none;
+    width: 34px;
+    height: 36px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    background: transparent;
+    color: #8d9ab1;
+    cursor: pointer;
+    transition:
+        color 120ms ease,
+        transform 120ms ease,
+        background 120ms ease;
+}
+
+.editor-time-history svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.editor-time-history:hover:not(:disabled) {
+    color: #c4cde0;
+    background: rgba(124, 140, 255, 0.08);
+    transform: scale(1.08);
+}
+
+.editor-time-history:focus-visible {
+    outline: 2px solid rgba(124, 140, 255, 0.72);
+    outline-offset: 2px;
+}
+
+.editor-time-history:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+html[data-theme="light"] .editor-time-history {
+    color: #77839a;
+}
+
+html[data-theme="light"] .editor-time-history:hover:not(:disabled) {
+    color: #4f5d76;
+    background: rgba(88, 105, 233, 0.07);
+}
+
 .editor-time-star {
     appearance: none;
     width: 34px;
@@ -2560,6 +2616,141 @@ html[data-theme="light"] .rich-text-editor code {
     justify-content: flex-end;
     gap: 9px;
     margin-top: 5px;
+}
+
+.time-history-dialog {
+    width: min(780px, calc(100vw - 28px));
+    max-width: none;
+}
+
+.time-history-dialog-card {
+    width: 100%;
+    grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.time-history-dialog-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.time-history-body {
+    grid-column: 1 / -1;
+    max-height: min(520px, calc(100vh - 250px));
+    min-height: 100px;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 3px;
+}
+
+.time-history-day {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: rgba(124, 140, 255, 0.035);
+}
+
+.time-history-day-heading {
+    padding: 10px 13px;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent-strong);
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.time-history-day-records {
+    display: grid;
+}
+
+.time-history-entry {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+}
+
+.time-history-entry + .time-history-entry {
+    border-top: 1px solid var(--border);
+}
+
+.time-history-entry-time,
+.time-history-entry-comment {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.time-history-entry-time > span,
+.time-history-entry-comment > span:first-child {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.time-history-entry-comment > span:last-child {
+    overflow: hidden;
+    color: var(--text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.time-history-entry-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.time-history-message {
+    display: grid;
+    min-height: 100px;
+    place-items: center;
+    padding: 20px;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.time-history-message.is-error {
+    border-color: rgba(255, 110, 129, 0.38);
+    color: var(--danger);
+}
+
+.time-history-actions {
+    margin-top: 0;
+}
+
+html[data-theme="light"] .time-history-day {
+    background: rgba(88, 105, 233, 0.025);
+}
+
+@media (max-width: 620px) {
+    .time-history-dialog-card {
+        grid-template-columns: 1fr;
+    }
+
+    .time-history-dialog-icon {
+        display: none;
+    }
+
+    .time-history-entry {
+        grid-template-columns: 90px minmax(0, 1fr);
+    }
+
+    .time-history-entry-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+
+    .time-history-body {
+        max-height: min(500px, calc(100vh - 230px));
+    }
 }
 
 .hyperlink-dialog {

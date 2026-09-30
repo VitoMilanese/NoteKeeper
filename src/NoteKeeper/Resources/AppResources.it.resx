@@ -59,6 +59,16 @@
   <data name="Edit_SpentTime" xml:space="preserve"><value>Tempo impiegato</value></data>
   <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Formato Jira: 1w 2d 3h 15m</value></data>
   <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Aggiungi o rimuovi questa nota dalla gestione del tempo</value></data>
+  <data name="Edit_TimeHistoryButton" xml:space="preserve"><value>Mostra registrazioni di tempo</value></data>
+  <data name="Edit_TimeHistoryTitle" xml:space="preserve"><value>Registrazioni di tempo</value></data>
+  <data name="Edit_TimeHistoryDescription" xml:space="preserve"><value>Registrazioni del calendario collegate a questa nota.</value></data>
+  <data name="Edit_TimeHistoryLoading" xml:space="preserve"><value>Caricamento registrazioni di tempo…</value></data>
+  <data name="Edit_TimeHistoryEmpty" xml:space="preserve"><value>Nessuna registrazione di tempo è collegata a questa nota.</value></data>
+  <data name="Edit_TimeHistoryOpenDate" xml:space="preserve"><value>Apri questa data nella gestione del tempo</value></data>
+  <data name="Edit_TimeHistoryDeleteEntry" xml:space="preserve"><value>Elimina questa registrazione di tempo</value></data>
+  <data name="Edit_TimeHistoryLoadFailed" xml:space="preserve"><value>Impossibile caricare le registrazioni di tempo.</value></data>
+  <data name="Edit_TimeHistoryDeleteFailed" xml:space="preserve"><value>Impossibile eliminare la registrazione di tempo.</value></data>
+  <data name="Edit_TimeHistoryClose" xml:space="preserve"><value>Chiudi</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>

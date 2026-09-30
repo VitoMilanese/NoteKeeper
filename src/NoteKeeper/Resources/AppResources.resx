@@ -59,6 +59,16 @@
   <data name="Edit_SpentTime" xml:space="preserve"><value>Spent time</value></data>
   <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Jira format: 1w 2d 3h 15m</value></data>
   <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Add or remove this note from Time management</value></data>
+  <data name="Edit_TimeHistoryButton" xml:space="preserve"><value>Show time records</value></data>
+  <data name="Edit_TimeHistoryTitle" xml:space="preserve"><value>Time records</value></data>
+  <data name="Edit_TimeHistoryDescription" xml:space="preserve"><value>Calendar records linked to this note.</value></data>
+  <data name="Edit_TimeHistoryLoading" xml:space="preserve"><value>Loading time records…</value></data>
+  <data name="Edit_TimeHistoryEmpty" xml:space="preserve"><value>No time records are linked to this note.</value></data>
+  <data name="Edit_TimeHistoryOpenDate" xml:space="preserve"><value>Open this date in Time management</value></data>
+  <data name="Edit_TimeHistoryDeleteEntry" xml:space="preserve"><value>Delete this time record</value></data>
+  <data name="Edit_TimeHistoryLoadFailed" xml:space="preserve"><value>Could not load time records.</value></data>
+  <data name="Edit_TimeHistoryDeleteFailed" xml:space="preserve"><value>Could not delete the time record.</value></data>
+  <data name="Edit_TimeHistoryClose" xml:space="preserve"><value>Close</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>

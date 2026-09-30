@@ -539,6 +539,23 @@ public sealed class TimeManagementController(
         await TouchProjectAsync(projectId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
+        if (IsAjaxRequest())
+        {
+            var spentTimeMinutes = noteId.HasValue
+                ? await db.Notes
+                    .AsNoTracking()
+                    .Where(x => x.Id == noteId.Value)
+                    .Select(x => x.SpentTimeMinutes)
+                    .FirstOrDefaultAsync(cancellationToken)
+                : null;
+
+            return Ok(new
+            {
+                deletedEntryId = entryId,
+                spentTime = JiraDuration.Format(spentTimeMinutes ?? 0)
+            });
+        }
+
         return RedirectToMonth(projectId, date, dayId);
     }
 
@@ -709,6 +726,45 @@ public sealed class TimeManagementController(
         }
 
         return RedirectToMonth(projectId, ParseMonth(month));
+    }
+
+    [HttpGet("/notes/{noteId:int}/time-entries")]
+    public async Task<IActionResult> GetNoteTimeEntries(
+        int noteId,
+        CancellationToken cancellationToken)
+    {
+        var note = await db.Notes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == noteId, cancellationToken);
+
+        if (note is null)
+        {
+            return NotFound();
+        }
+
+        var entries = await db.TimeManagementEntries
+            .AsNoTracking()
+            .Where(x => x.NoteId == noteId)
+            .Include(x => x.Day)
+            .OrderByDescending(x => x.Day.Date)
+            .ThenByDescending(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        return Ok(new
+        {
+            entries = entries.Select(entry => new
+            {
+                id = entry.Id,
+                dayId = entry.TimeManagementDayId,
+                date = entry.Day.Date.ToString(
+                    "dd/MM/yy",
+                    CultureInfo.InvariantCulture),
+                month = MonthKey(entry.Day.Date),
+                timeSpent = JiraDuration.Format(
+                    entry.TimeSpentMinutes),
+                comment = entry.Comment ?? string.Empty
+            })
+        });
     }
 
     [HttpPost("/notes/{noteId:int}/time-pin")]

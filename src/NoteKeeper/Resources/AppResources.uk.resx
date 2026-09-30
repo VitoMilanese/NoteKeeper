@@ -59,6 +59,16 @@
   <data name="Edit_SpentTime" xml:space="preserve"><value>Витрачений час</value></data>
   <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Формат Jira: 1w 2d 3h 15m</value></data>
   <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Додати або прибрати цю нотатку з Time management</value></data>
+  <data name="Edit_TimeHistoryButton" xml:space="preserve"><value>Показати записи часу</value></data>
+  <data name="Edit_TimeHistoryTitle" xml:space="preserve"><value>Записи часу</value></data>
+  <data name="Edit_TimeHistoryDescription" xml:space="preserve"><value>Календарні записи, пов’язані з цією нотаткою.</value></data>
+  <data name="Edit_TimeHistoryLoading" xml:space="preserve"><value>Завантаження записів часу…</value></data>
+  <data name="Edit_TimeHistoryEmpty" xml:space="preserve"><value>З цією нотаткою не пов’язано жодного запису часу.</value></data>
+  <data name="Edit_TimeHistoryOpenDate" xml:space="preserve"><value>Відкрити цю дату в Time management</value></data>
+  <data name="Edit_TimeHistoryDeleteEntry" xml:space="preserve"><value>Видалити цей запис часу</value></data>
+  <data name="Edit_TimeHistoryLoadFailed" xml:space="preserve"><value>Не вдалося завантажити записи часу.</value></data>
+  <data name="Edit_TimeHistoryDeleteFailed" xml:space="preserve"><value>Не вдалося видалити запис часу.</value></data>
+  <data name="Edit_TimeHistoryClose" xml:space="preserve"><value>Закрити</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>

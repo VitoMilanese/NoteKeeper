@@ -7,6 +7,9 @@
     const estimatedTimeInput = document.getElementById('estimatedTimeInput');
     const spentTimeInput = document.getElementById('spentTimeInput');
     const timeManagementStarButton = document.getElementById('timeManagementStarButton');
+    const timeHistoryButton = document.getElementById('timeHistoryButton');
+    const timeHistoryDialog = document.getElementById('timeHistoryDialog');
+    const timeHistoryBody = timeHistoryDialog?.querySelector('[data-time-history-body]');
     const projectId = Number(editor.dataset.projectId || 0);
     const projectListUrl = projectId > 0
         ? `/projects/${projectId}`
@@ -1972,6 +1975,9 @@
                 timeManagementStarButton.classList.toggle('is-active', isPinned);
                 timeManagementStarButton.textContent = isPinned ? '★' : '☆';
             }
+            if (timeHistoryButton) {
+                timeHistoryButton.disabled = false;
+            }
             dirty = false;
 
             if (deleteNoteForm) {
@@ -2064,6 +2070,210 @@
             showToast(error.message || strings.timePinFailed, true);
         } finally {
             timeManagementStarButton.disabled = false;
+        }
+    });
+
+    function createTimeHistoryMessage(message, isError = false) {
+        const element = document.createElement('div');
+        element.className =
+            `time-history-message${isError ? ' is-error' : ''}`;
+        element.textContent = message || '';
+        return element;
+    }
+
+    function createTimeHistoryEntry(entry) {
+        const row = document.createElement('div');
+        row.className = 'time-history-entry';
+        row.dataset.timeEntryId = String(entry.id);
+
+        const time = document.createElement('div');
+        time.className = 'time-history-entry-time';
+
+        const timeLabel = document.createElement('span');
+        timeLabel.textContent = strings.timeHistorySpent || '';
+
+        const timeValue = document.createElement('strong');
+        timeValue.textContent = entry.timeSpent || '0h';
+
+        time.append(timeLabel, timeValue);
+
+        const comment = document.createElement('div');
+        comment.className = 'time-history-entry-comment';
+
+        const commentLabel = document.createElement('span');
+        commentLabel.textContent = strings.timeHistoryComment || '';
+
+        const commentValue = document.createElement('span');
+        commentValue.textContent = entry.comment || '—';
+
+        comment.append(commentLabel, commentValue);
+
+        const actions = document.createElement('div');
+        actions.className = 'time-history-entry-actions';
+
+        const openLink = document.createElement('a');
+        openLink.className = 'icon-button time-history-open-date';
+        openLink.href =
+            `/projects/${projectId}/time?month=${encodeURIComponent(entry.month)}#time-day-${entry.dayId}`;
+        openLink.target = '_blank';
+        openLink.rel = 'noopener noreferrer';
+        openLink.title = strings.timeHistoryOpenDate || '';
+        openLink.setAttribute(
+            'aria-label',
+            strings.timeHistoryOpenDate || '');
+        openLink.textContent = '↗';
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'icon-button danger';
+        deleteButton.title = strings.timeHistoryDeleteEntry || '';
+        deleteButton.setAttribute(
+            'aria-label',
+            strings.timeHistoryDeleteEntry || '');
+        deleteButton.dataset.timeHistoryDelete = String(entry.id);
+        deleteButton.textContent = '×';
+
+        actions.append(openLink, deleteButton);
+        row.append(time, comment, actions);
+        return row;
+    }
+
+    function renderTimeHistory(entries) {
+        if (!timeHistoryBody) return;
+
+        timeHistoryBody.replaceChildren();
+
+        if (!Array.isArray(entries) || entries.length === 0) {
+            timeHistoryBody.appendChild(
+                createTimeHistoryMessage(strings.timeHistoryEmpty));
+            return;
+        }
+
+        const groups = new Map();
+
+        entries.forEach((entry) => {
+            const key = String(entry.dayId);
+
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    dayId: entry.dayId,
+                    date: entry.date,
+                    entries: []
+                });
+            }
+
+            groups.get(key).entries.push(entry);
+        });
+
+        groups.forEach((groupData) => {
+            const group = document.createElement('section');
+            group.className = 'time-history-day';
+            group.dataset.timeHistoryDayId = String(groupData.dayId);
+
+            const heading = document.createElement('div');
+            heading.className = 'time-history-day-heading';
+            heading.textContent = groupData.date || '';
+
+            const records = document.createElement('div');
+            records.className = 'time-history-day-records';
+
+            groupData.entries.forEach((entry) => {
+                records.appendChild(createTimeHistoryEntry(entry));
+            });
+
+            group.append(heading, records);
+            timeHistoryBody.appendChild(group);
+        });
+    }
+
+    timeHistoryButton?.addEventListener('click', async () => {
+        const noteId = Number(editor.dataset.noteId || 0);
+
+        if (!noteId ||
+            timeHistoryButton.disabled ||
+            !timeHistoryDialog ||
+            !timeHistoryBody) {
+            return;
+        }
+
+        timeHistoryBody.replaceChildren(
+            createTimeHistoryMessage(strings.timeHistoryLoading));
+        timeHistoryDialog.showModal();
+        timeHistoryButton.disabled = true;
+
+        try {
+            const response = await fetch(
+                `/notes/${noteId}/time-entries`,
+                {
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                });
+
+            if (!response.ok) {
+                throw new Error(strings.timeHistoryLoadFailed);
+            }
+
+            const result = await response.json();
+            renderTimeHistory(result.entries);
+        } catch (error) {
+            timeHistoryBody.replaceChildren(
+                createTimeHistoryMessage(
+                    error.message || strings.timeHistoryLoadFailed,
+                    true));
+        } finally {
+            timeHistoryButton.disabled = false;
+        }
+    });
+
+    timeHistoryBody?.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-time-history-delete]');
+        if (!button || button.disabled) return;
+
+        const entryId = Number(button.dataset.timeHistoryDelete || 0);
+        if (!entryId) return;
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(
+                `/projects/${projectId}/time/entries/${entryId}/delete`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        Accept: 'application/json',
+                        RequestVerificationToken: antiForgeryToken
+                    }
+                });
+
+            if (!response.ok) {
+                throw new Error(strings.timeHistoryDeleteFailed);
+            }
+
+            const result = await response.json();
+            const row = button.closest('.time-history-entry');
+            const group = row?.closest('.time-history-day');
+
+            row?.remove();
+
+            if (group &&
+                !group.querySelector('.time-history-entry')) {
+                group.remove();
+            }
+
+            if (spentTimeInput) {
+                spentTimeInput.value = result.spentTime || '0h';
+            }
+
+            if (!timeHistoryBody.querySelector('.time-history-entry')) {
+                timeHistoryDialog?.close();
+            }
+        } catch (error) {
+            button.disabled = false;
+            showToast(
+                error.message || strings.timeHistoryDeleteFailed,
+                true);
         }
     });
 

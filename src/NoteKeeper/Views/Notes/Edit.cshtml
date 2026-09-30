@@ -95,7 +95,15 @@
         ["emojiCategoryObjects"] = Localizer["Editor_EmojiCategoryObjects"].Value,
         ["emojiCategorySymbols"] = Localizer["Editor_EmojiCategorySymbols"].Value,
         ["emojiCategoryFlags"] = Localizer["Editor_EmojiCategoryFlags"].Value,
-        ["timePinFailed"] = Localizer["Editor_TimePinFailed"].Value
+        ["timePinFailed"] = Localizer["Editor_TimePinFailed"].Value,
+        ["timeHistoryLoading"] = Localizer["Edit_TimeHistoryLoading"].Value,
+        ["timeHistoryEmpty"] = Localizer["Edit_TimeHistoryEmpty"].Value,
+        ["timeHistorySpent"] = Localizer["Time_TimeSpent"].Value,
+        ["timeHistoryComment"] = Localizer["Time_Comment"].Value,
+        ["timeHistoryOpenDate"] = Localizer["Edit_TimeHistoryOpenDate"].Value,
+        ["timeHistoryDeleteEntry"] = Localizer["Edit_TimeHistoryDeleteEntry"].Value,
+        ["timeHistoryLoadFailed"] = Localizer["Edit_TimeHistoryLoadFailed"].Value,
+        ["timeHistoryDeleteFailed"] = Localizer["Edit_TimeHistoryDeleteFailed"].Value
     };
     var editorStringsJson = JsonSerializer.Serialize(editorStrings);
 }
@@ -147,6 +155,17 @@
                         aria-label="@Localizer["Edit_TimeManagementStar"]"
                         aria-pressed="@(Model.IsTimeManagementPinned ? "true" : "false")"
                         disabled="@(!Model.Id.HasValue ? "disabled" : null)">@(Model.IsTimeManagementPinned ? "★" : "☆")</button>
+                <button id="timeHistoryButton"
+                        class="editor-time-history"
+                        type="button"
+                        title="@Localizer["Edit_TimeHistoryButton"]"
+                        aria-label="@Localizer["Edit_TimeHistoryButton"]"
+                        disabled="@(!Model.Id.HasValue ? "disabled" : null)">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <circle cx="12" cy="12" r="8.5" />
+                        <path d="M12 7.5v5l3.25 2" />
+                    </svg>
+                </button>
             </div>
             <form id="deleteNoteForm"
                   method="post"
@@ -202,6 +221,30 @@
         <button id="saveButtonBottom" class="button button-primary" type="button">@Localizer["Edit_SaveChanges"]</button>
     </div>
 </section>
+
+<dialog id="timeHistoryDialog"
+        class="app-dialog time-history-dialog"
+        aria-labelledby="timeHistoryTitle">
+    <div class="app-dialog-card time-history-dialog-card">
+        <div class="app-dialog-icon time-history-dialog-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5v5l3.25 2" />
+            </svg>
+        </div>
+        <div class="app-dialog-copy">
+            <h2 id="timeHistoryTitle">@Localizer["Edit_TimeHistoryTitle"]</h2>
+            <p>@Localizer["Edit_TimeHistoryDescription"]</p>
+        </div>
+        <div class="time-history-body"
+             data-time-history-body
+             aria-live="polite"></div>
+        <form method="dialog" class="app-dialog-actions time-history-actions">
+            <button class="button button-secondary"
+                    type="submit">@Localizer["Edit_TimeHistoryClose"]</button>
+        </form>
+    </div>
+</dialog>
 
 <script id="initialBlocks" type="application/json">@Html.Raw(initialJson)</script>
 <script id="editorStrings" type="application/json">@Html.Raw(editorStringsJson)</script>
