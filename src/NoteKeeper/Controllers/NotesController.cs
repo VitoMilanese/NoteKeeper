@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -646,42 +647,63 @@ public sealed class NotesController(
             return query;
         }
 
-        var matchingIds = BuildMatchingIds(query, expression);
-        return query.Where(note => matchingIds.Contains(note.Id));
+        var noteParameter = Expression.Parameter(typeof(Note), "note");
+        var body = BuildTagFilterExpression(noteParameter, expression);
+        var predicate = Expression.Lambda<Func<Note, bool>>(
+            body,
+            noteParameter);
+
+        return query.Where(predicate);
     }
 
-    private static IQueryable<int> BuildMatchingIds(
-        IQueryable<Note> source,
+    private static Expression BuildTagFilterExpression(
+        ParameterExpression noteParameter,
         TagFilterExpression expression)
     {
         if (expression is TagFilterTag tag)
         {
+            var tagParameter = Expression.Parameter(typeof(NoteTag), "tag");
+            var tagName = Expression.Property(
+                tagParameter,
+                nameof(NoteTag.Name));
+            var equalsName = Expression.Equal(
+                tagName,
+                Expression.Constant(tag.Name));
+            var tagPredicate = Expression.Lambda<Func<NoteTag, bool>>(
+                equalsName,
+                tagParameter);
+            var noteTags = Expression.Property(
+                noteParameter,
+                nameof(Note.Tags));
+            var anyTag = Expression.Call(
+                typeof(Enumerable),
+                nameof(Enumerable.Any),
+                [typeof(NoteTag)],
+                noteTags,
+                tagPredicate);
+
             return tag.Negated
-                ? source
-                    .Where(note => !note.Tags.Any(x => x.Name == tag.Name))
-                    .Select(note => note.Id)
-                : source
-                    .Where(note => note.Tags.Any(x => x.Name == tag.Name))
-                    .Select(note => note.Id);
+                ? Expression.Not(anyTag)
+                : anyTag;
         }
 
         var group = (TagFilterGroup)expression;
-        IQueryable<int>? ids = null;
+        var itemExpressions = group.Items
+            .Select(item => BuildTagFilterExpression(noteParameter, item))
+            .ToArray();
 
-        foreach (var item in group.Items)
+        if (itemExpressions.Length == 0)
         {
-            var itemIds = BuildMatchingIds(source, item);
-
-            ids = ids is null
-                ? itemIds
-                : group.MatchAny
-                    ? ids.Union(itemIds)
-                    : ids.Intersect(itemIds);
+            return Expression.Constant(true);
         }
 
-        return ids ?? source
-            .Where(_ => false)
-            .Select(note => note.Id);
+        return itemExpressions
+            .Skip(1)
+            .Aggregate(
+                itemExpressions[0],
+                (current, item) => group.MatchAny
+                    ? Expression.OrElse(current, item)
+                    : Expression.AndAlso(current, item));
     }
 
     private string NormalizeTitle(string? value)
