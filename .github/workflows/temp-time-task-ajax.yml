@@ -1,0 +1,81 @@
+name: Temporary Time task and AJAX verification
+
+on:
+  push:
+    branches:
+      - ci/temp-time-task-ajax
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/time.js
+
+      - name: Verify Time task/autocomplete/AJAX wiring
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          ctrl = Path("src/NoteKeeper/Controllers/TimeManagementController.cs").read_text()
+          vm = Path("src/NoteKeeper/ViewModels/TimeManagementViewModel.cs").read_text()
+          view = Path("src/NoteKeeper/Views/TimeManagement/Index.cshtml").read_text()
+          partial = Path("src/NoteKeeper/Views/TimeManagement/_TimeDay.cshtml").read_text()
+          js = Path("src/NoteKeeper/wwwroot/js/time.js").read_text()
+
+          assert "OrderByDescending(x => x.IsTimeManagementPinned)" in ctrl
+          assert "IsPinned = x.IsTimeManagementPinned" in ctrl
+          assert "int? noteId" in ctrl
+          assert "string? taskTitle" in ctrl
+          assert "TaskTitle = note?.Title ?? Limit(taskTitle, 240) ?? string.Empty" in ctrl
+          assert "entry.NoteId = note?.Id;" in ctrl
+          assert "entry.TaskTitle = note?.Title ?? Limit(taskTitle, 240) ?? string.Empty;" in ctrl
+          assert 'Request.Headers["X-Requested-With"]' in ctrl
+          assert 'return PartialView(' in ctrl
+          assert '"_TimeDay"' in ctrl
+
+          assert "public bool IsPinned" in vm
+          assert "TimeDayPartialViewModel" in vm
+
+          assert 'id="timeTaskOptions"' in view
+          assert 'data-pinned="@(option.IsPinned ? "true" : "false")"' in view
+          assert 'data-time-add-day-form' in view
+          assert 'data-time-days' in view
+          assert '_TimeDay' in view
+
+          assert 'name="taskTitle"' in partial
+          assert 'list="timeTaskOptions"' in partial
+          assert 'data-time-task-input' in partial
+          assert 'data-time-task-note-id' in partial
+          assert 'name="noteId"' in partial
+          assert 'name="taskTitle"' in partial
+          assert 'required' not in partial[
+              partial.index('class="field time-entry-task"'):
+              partial.index('</label>', partial.index('class="field time-entry-task"'))
+          ]
+
+          assert "X-Requested-With" in js
+          assert "fetch(form.action" in js
+          assert "event.preventDefault();" in js
+          assert "days.insertBefore(newDay" in js
+          assert "data-time-task-input" in js
+          assert "hidden.value = match?.dataset.noteId || '';" in js
+
+          print("Time task/autocomplete/AJAX wiring passed.")
+          PY
