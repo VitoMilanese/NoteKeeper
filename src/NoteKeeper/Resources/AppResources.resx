@@ -57,8 +57,8 @@
   <data name="Edit_Status" xml:space="preserve"><value>Status</value></data>
   <data name="Edit_EstimatedTime" xml:space="preserve"><value>Estimated time</value></data>
   <data name="Edit_SpentTime" xml:space="preserve"><value>Spent time</value></data>
-  <data name="Edit_TimePlaceholder" xml:space="preserve"><value>1d 4h</value></data>
   <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Jira format: 1w 2d 3h 15m</value></data>
+  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Time management shortcut — coming soon</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>

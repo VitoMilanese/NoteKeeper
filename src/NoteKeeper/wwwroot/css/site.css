@@ -1075,10 +1075,6 @@ html[data-theme="light"] .editor-status-field select {
     font-size: 0.84rem;
 }
 
-.editor-time-field input::placeholder {
-    color: #66748d;
-}
-
 .editor-time-field input:focus {
     border-color: rgba(124, 140, 255, 0.62);
     box-shadow: 0 0 0 4px rgba(124, 140, 255, 0.09);
@@ -1086,6 +1082,23 @@ html[data-theme="light"] .editor-status-field select {
 
 html[data-theme="light"] .editor-time-field input {
     background: #ffffff;
+}
+
+.editor-time-field input[readonly] {
+    cursor: default;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.025);
+}
+
+html[data-theme="light"] .editor-time-field input[readonly] {
+    background: #f4f6fa;
+}
+
+.editor-time-star {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    font-size: 1.15rem;
 }
 
 .add-block-bar {

@@ -127,7 +127,6 @@
                     <input id="estimatedTimeInput"
                            value="@Model.EstimatedTime"
                            maxlength="80"
-                           placeholder="@Localizer["Edit_TimePlaceholder"]"
                            title="@Localizer["Edit_TimeFormatHint"]"
                            autocomplete="off" />
                 </label>
@@ -136,10 +135,15 @@
                     <input id="spentTimeInput"
                            value="@Model.SpentTime"
                            maxlength="80"
-                           placeholder="@Localizer["Edit_TimePlaceholder"]"
                            title="@Localizer["Edit_TimeFormatHint"]"
-                           autocomplete="off" />
+                           autocomplete="off"
+                           readonly />
                 </label>
+                <button id="timeManagementStarButton"
+                        class="icon-button editor-time-star"
+                        type="button"
+                        title="@Localizer["Edit_TimeManagementStar"]"
+                        aria-label="@Localizer["Edit_TimeManagementStar"]">☆</button>
             </div>
             <form id="deleteNoteForm"
                   method="post"
