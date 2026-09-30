@@ -6,7 +6,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 
 - home page with a note list and server-side pagination shown only when more than one page is needed, with the top pagination aligned in the notes heading row and the second pager below the grid;
 - search by title, text, comments, links, and image captions;
-- filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
+- filtering by `#tags` extracted automatically from text blocks and link comments, with both the legacy comma/parenthesis syntax and an explicit logical-operator syntax;
 - show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;
 - fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
 - clear the search and tag filter fields from a dedicated button while preserving the selected sort and direction;
@@ -74,7 +74,13 @@ Add tags directly to a text block or a link comment, for example:
 Review this idea later. #work #idea
 ```
 
-After saving the note, `work` and `idea` become available as filters on the home page. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with `-` to make every tag in that expression negative without changing the group operator: `atm, done, -tn` means `atm AND done AND NOT tn`; `-(tn, dsde)` means `NOT tn AND NOT dsde`; and `-((tn, dsde))` means `NOT tn OR NOT dsde`. Repeated minus prefixes remain negative rather than toggling back, so `-(-tn)` is still `NOT tn`. Hashtags inside inline code or quote blocks are treated as content and are not indexed as tags.
+After saving the note, `work` and `idea` become available as filters on the home page.
+
+The legacy syntax remains available. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with `-` to make every tag in that expression negative without changing the group operator: `atm, done, -tn` means `atm AND done AND NOT tn`; `-(tn, dsde)` means `NOT tn AND NOT dsde`; and `-((tn, dsde))` means `NOT tn OR NOT dsde`. Repeated minus prefixes remain negative rather than toggling back, so `-(-tn)` is still `NOT tn`.
+
+A second syntax is enabled automatically whenever the filter contains `&` or `|`. In this logical mode commas are not allowed: `&` means AND, `|` means OR, and `!` means NOT. Operator precedence is the conventional `!` first, then `&`, then `|`; parentheses only group expressions and do not change the meaning of operators. For example, `(tag1 | tag2) & tag3` requires `tag3` plus either `tag1` or `tag2`, while `((tag1 | tag2) & tag3) | ((tag4 | tag5) & !tag6)` combines two explicit alternatives. Invalid logical expressions, including mixing commas with `&` or `|`, are reported below the tag-filter field instead of being executed.
+
+Hashtags inside inline code or quote blocks are treated as content and are not indexed as tags.
 
 ## Rich text notes
 

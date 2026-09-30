@@ -16,6 +16,8 @@
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Title, text, link…</value></data>
   <data name="Index_Tag" xml:space="preserve"><value>Tags</value></data>
   <data name="Index_TagPlaceholder" xml:space="preserve"><value>#idea, #work</value></data>
+  <data name="Index_TagFilterLogicalCommaError" xml:space="preserve"><value>Commas cannot be used together with &amp; or |. Use logical operators only.</value></data>
+  <data name="Index_TagFilterLogicalSyntaxError" xml:space="preserve"><value>Invalid logical tag filter. Check operators, operands, and parentheses.</value></data>
   <data name="Index_Sort" xml:space="preserve"><value>Sort by</value></data>
   <data name="Index_SortUpdated" xml:space="preserve"><value>Last updated</value></data>
   <data name="Index_SortCreated" xml:space="preserve"><value>Created</value></data>

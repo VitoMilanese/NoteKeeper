@@ -41,7 +41,16 @@
 
         <label class="field">
             <span>@Localizer["Index_Tag"]</span>
-            <input name="tag" value="@Model.Tag" placeholder="@Localizer["Index_TagPlaceholder"]" autocomplete="off" />
+            <input name="tag"
+                   value="@Model.Tag"
+                   placeholder="@Localizer["Index_TagPlaceholder"]"
+                   autocomplete="off"
+                   aria-invalid="@(!string.IsNullOrWhiteSpace(Model.TagFilterError) ? "true" : null)"
+                   aria-describedby="@(!string.IsNullOrWhiteSpace(Model.TagFilterError) ? "tagFilterError" : null)" />
+            @if (!string.IsNullOrWhiteSpace(Model.TagFilterError))
+            {
+                <span id="tagFilterError" class="filter-error" role="alert">@Model.TagFilterError</span>
+            }
         </label>
 
         <label class="field">

@@ -34,6 +34,14 @@ public sealed class NotesController(
         q = q?.Trim();
         var tagFilter = TagFilterParser.Parse(tag);
         var includedTags = tagFilter.IncludedTags;
+        var tagFilterError = tagFilter.Error switch
+        {
+            TagFilterError.LogicalCommaNotAllowed =>
+                localizer["Index_TagFilterLogicalCommaError"].Value,
+            TagFilterError.LogicalSyntax =>
+                localizer["Index_TagFilterLogicalSyntaxError"].Value,
+            _ => string.Empty
+        };
         var priorityTags = priorityTagService.GetTags();
         var priorityRanks = priorityTags
             .Select((name, index) => new { name, index })
@@ -56,7 +64,9 @@ public sealed class NotesController(
                     (block.Caption != null && EF.Functions.Like(block.Caption, pattern))));
         }
 
-        query = ApplyTagFilter(query, tagFilter.Expression);
+        query = tagFilter.Error == TagFilterError.None
+            ? ApplyTagFilter(query, tagFilter.Expression)
+            : query.Where(_ => false);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var totalPages = totalCount == 0
@@ -104,6 +114,7 @@ public sealed class NotesController(
             Query = q ?? string.Empty,
             Tag = tag?.Trim() ?? string.Empty,
             IncludedTags = includedTags.ToList(),
+            TagFilterError = tagFilterError,
             Sort = sort,
             Direction = dir,
             Page = page,
@@ -660,6 +671,14 @@ public sealed class NotesController(
         ParameterExpression noteParameter,
         TagFilterExpression expression)
     {
+        if (expression is TagFilterNot not)
+        {
+            return Expression.Not(
+                BuildTagFilterExpression(
+                    noteParameter,
+                    not.Operand));
+        }
+
         if (expression is TagFilterTag tag)
         {
             var tagParameter = Expression.Parameter(typeof(NoteTag), "tag");

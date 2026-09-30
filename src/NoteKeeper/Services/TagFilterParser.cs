@@ -10,9 +10,20 @@ public sealed record TagFilterGroup(
     bool MatchAny,
     IReadOnlyList<TagFilterExpression> Items) : TagFilterExpression;
 
+public sealed record TagFilterNot(
+    TagFilterExpression Operand) : TagFilterExpression;
+
+public enum TagFilterError
+{
+    None,
+    LogicalCommaNotAllowed,
+    LogicalSyntax
+}
+
 public sealed record TagFilter(
     TagFilterExpression? Expression,
-    IReadOnlyList<string> IncludedTags);
+    IReadOnlyList<string> IncludedTags,
+    TagFilterError Error = TagFilterError.None);
 
 public static class TagFilterParser
 {
@@ -23,28 +34,65 @@ public static class TagFilterParser
             return new TagFilter(null, []);
         }
 
-        var expression = ParseExpression(
-            value.Trim(),
+        var normalizedValue = value.Trim();
+        if (normalizedValue.Contains('&') || normalizedValue.Contains('|'))
+        {
+            return ParseLogical(normalizedValue);
+        }
+
+        return ParseLegacy(normalizedValue);
+    }
+
+    private static TagFilter ParseLogical(string value)
+    {
+        if (value.Contains(','))
+        {
+            return new TagFilter(
+                null,
+                [],
+                TagFilterError.LogicalCommaNotAllowed);
+        }
+
+        var parser = new LogicalExpressionParser(value);
+        var expression = parser.Parse();
+
+        if (expression is null || parser.HasError)
+        {
+            return new TagFilter(
+                null,
+                [],
+                TagFilterError.LogicalSyntax);
+        }
+
+        return new TagFilter(
+            expression,
+            EnumeratePositiveTags(expression)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray());
+    }
+
+    private static TagFilter ParseLegacy(string value)
+    {
+        var expression = ParseLegacyExpression(
+            value,
             matchAny: false,
             inheritedNegated: false);
 
-        var includedTags = EnumerateTags(expression)
-            .Where(x => !x.Negated)
-            .Select(x => x.Name)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        return new TagFilter(expression, includedTags);
+        return new TagFilter(
+            expression,
+            EnumeratePositiveTags(expression)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray());
     }
 
-    private static TagFilterExpression? ParseExpression(
+    private static TagFilterExpression? ParseLegacyExpression(
         string value,
         bool matchAny,
         bool inheritedNegated)
     {
         var parts = SplitTopLevel(value);
         var items = parts
-            .Select(part => ParseTerm(part, inheritedNegated))
+            .Select(part => ParseLegacyTerm(part, inheritedNegated))
             .Where(x => x is not null)
             .Cast<TagFilterExpression>()
             .ToArray();
@@ -57,7 +105,7 @@ public static class TagFilterParser
         };
     }
 
-    private static TagFilterExpression? ParseTerm(
+    private static TagFilterExpression? ParseLegacyTerm(
         string rawValue,
         bool inheritedNegated)
     {
@@ -89,7 +137,7 @@ public static class TagFilterParser
 
         if (wrapperCount > 0)
         {
-            return ParseExpression(
+            return ParseLegacyExpression(
                 value,
                 matchAny: wrapperCount >= 2,
                 inheritedNegated: negated);
@@ -184,25 +232,232 @@ public static class TagFilterParser
             .ToLowerInvariant();
     }
 
-    private static IEnumerable<TagFilterTag> EnumerateTags(
-        TagFilterExpression? expression)
+    private static IEnumerable<string> EnumeratePositiveTags(
+        TagFilterExpression? expression,
+        bool logicalNegated = false)
     {
         switch (expression)
         {
             case TagFilterTag tag:
-                yield return tag;
+                if (!(logicalNegated ^ tag.Negated))
+                {
+                    yield return tag.Name;
+                }
+
+                yield break;
+
+            case TagFilterNot not:
+                foreach (var name in EnumeratePositiveTags(
+                             not.Operand,
+                             !logicalNegated))
+                {
+                    yield return name;
+                }
+
                 yield break;
 
             case TagFilterGroup group:
                 foreach (var item in group.Items)
                 {
-                    foreach (var tag in EnumerateTags(item))
+                    foreach (var name in EnumeratePositiveTags(
+                                 item,
+                                 logicalNegated))
                     {
-                        yield return tag;
+                        yield return name;
                     }
                 }
 
                 yield break;
+        }
+    }
+
+    private sealed class LogicalExpressionParser(string value)
+    {
+        private int index;
+
+        public bool HasError { get; private set; }
+
+        public TagFilterExpression? Parse()
+        {
+            SkipWhitespace();
+
+            var expression = ParseOr();
+            SkipWhitespace();
+
+            if (expression is null || index != value.Length)
+            {
+                HasError = true;
+                return null;
+            }
+
+            return expression;
+        }
+
+        private TagFilterExpression? ParseOr()
+        {
+            var left = ParseAnd();
+            if (left is null)
+            {
+                return null;
+            }
+
+            while (!HasError)
+            {
+                SkipWhitespace();
+
+                if (!TryConsume('|'))
+                {
+                    break;
+                }
+
+                var right = ParseAnd();
+                if (right is null)
+                {
+                    HasError = true;
+                    return null;
+                }
+
+                left = Combine(left, right, matchAny: true);
+            }
+
+            return left;
+        }
+
+        private TagFilterExpression? ParseAnd()
+        {
+            var left = ParseUnary();
+            if (left is null)
+            {
+                return null;
+            }
+
+            while (!HasError)
+            {
+                SkipWhitespace();
+
+                if (!TryConsume('&'))
+                {
+                    break;
+                }
+
+                var right = ParseUnary();
+                if (right is null)
+                {
+                    HasError = true;
+                    return null;
+                }
+
+                left = Combine(left, right, matchAny: false);
+            }
+
+            return left;
+        }
+
+        private TagFilterExpression? ParseUnary()
+        {
+            SkipWhitespace();
+
+            if (TryConsume('!'))
+            {
+                var operand = ParseUnary();
+                if (operand is null)
+                {
+                    HasError = true;
+                    return null;
+                }
+
+                return new TagFilterNot(operand);
+            }
+
+            return ParsePrimary();
+        }
+
+        private TagFilterExpression? ParsePrimary()
+        {
+            SkipWhitespace();
+
+            if (TryConsume('('))
+            {
+                var expression = ParseOr();
+                SkipWhitespace();
+
+                if (expression is null || !TryConsume(')'))
+                {
+                    HasError = true;
+                    return null;
+                }
+
+                return expression;
+            }
+
+            if (index >= value.Length ||
+                value[index] is ')' or '&' or '|' or '!' or ',')
+            {
+                HasError = true;
+                return null;
+            }
+
+            var start = index;
+
+            while (index < value.Length &&
+                   !char.IsWhiteSpace(value[index]) &&
+                   value[index] is not '(' and not ')' and
+                   not '&' and not '|' and not '!' and not ',')
+            {
+                index++;
+            }
+
+            var tag = NormalizeTag(value[start..index]);
+
+            if (tag.Length is 0 or > 50)
+            {
+                HasError = true;
+                return null;
+            }
+
+            return new TagFilterTag(tag, Negated: false);
+        }
+
+        private static TagFilterExpression Combine(
+            TagFilterExpression left,
+            TagFilterExpression right,
+            bool matchAny)
+        {
+            if (left is TagFilterGroup existing &&
+                existing.MatchAny == matchAny)
+            {
+                return existing with
+                {
+                    Items = existing.Items
+                        .Append(right)
+                        .ToArray()
+                };
+            }
+
+            return new TagFilterGroup(
+                matchAny,
+                [left, right]);
+        }
+
+        private bool TryConsume(char character)
+        {
+            if (index >= value.Length ||
+                value[index] != character)
+            {
+                return false;
+            }
+
+            index++;
+            return true;
+        }
+
+        private void SkipWhitespace()
+        {
+            while (index < value.Length &&
+                   char.IsWhiteSpace(value[index]))
+            {
+                index++;
+            }
         }
     }
 }

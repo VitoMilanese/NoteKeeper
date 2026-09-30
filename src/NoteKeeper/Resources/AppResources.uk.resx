@@ -16,6 +16,8 @@
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Назва, текст, посилання…</value></data>
   <data name="Index_Tag" xml:space="preserve"><value>Теги</value></data>
   <data name="Index_TagPlaceholder" xml:space="preserve"><value>#ідея, #робота</value></data>
+  <data name="Index_TagFilterLogicalCommaError" xml:space="preserve"><value>Коми не можна використовувати разом з &amp; або |. Використовуй тільки логічні оператори.</value></data>
+  <data name="Index_TagFilterLogicalSyntaxError" xml:space="preserve"><value>Некоректний логічний фільтр тегів. Перевір оператори, операнди та дужки.</value></data>
   <data name="Index_Sort" xml:space="preserve"><value>Сортувати</value></data>
   <data name="Index_SortUpdated" xml:space="preserve"><value>За зміною</value></data>
   <data name="Index_SortCreated" xml:space="preserve"><value>За створенням</value></data>

@@ -403,6 +403,21 @@ html[data-theme="light"] .image-caption {
     box-shadow: 0 0 0 4px rgba(124, 140, 255, 0.09);
 }
 
+.field input[aria-invalid="true"] {
+    border-color: rgba(248, 113, 113, 0.72);
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.08);
+}
+
+.field > .filter-error {
+    color: #fca5a5;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+html[data-theme="light"] .field > .filter-error {
+    color: #b4232d;
+}
+
 .tag-cloud {
     display: flex;
     flex-wrap: wrap;
