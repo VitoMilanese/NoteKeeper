@@ -1,8 +1,18 @@
 namespace NoteKeeper.Services;
 
+public abstract record TagFilterExpression;
+
+public sealed record TagFilterTag(
+    string Name,
+    bool Negated) : TagFilterExpression;
+
+public sealed record TagFilterGroup(
+    bool MatchAny,
+    IReadOnlyList<TagFilterExpression> Items) : TagFilterExpression;
+
 public sealed record TagFilter(
-    IReadOnlyList<string> IncludedTags,
-    IReadOnlyList<string> ExcludedTags);
+    TagFilterExpression? Expression,
+    IReadOnlyList<string> IncludedTags);
 
 public static class TagFilterParser
 {
@@ -10,136 +20,189 @@ public static class TagFilterParser
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return new TagFilter([], []);
+            return new TagFilter(null, []);
         }
 
-        var included = new List<string>();
-        var excluded = new List<string>();
-        var includedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var excludedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var index = 0;
+        var expression = ParseExpression(
+            value.Trim(),
+            matchAny: false,
+            inheritedNegated: false);
 
-        ParseSequence(
-            value,
-            ref index,
-            inheritedExcluded: false,
-            included,
-            excluded,
-            includedSet,
-            excludedSet);
+        var includedTags = EnumerateTags(expression)
+            .Where(x => !x.Negated)
+            .Select(x => x.Name)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
-        return new TagFilter(included, excluded);
+        return new TagFilter(expression, includedTags);
     }
 
-    private static void ParseSequence(
+    private static TagFilterExpression? ParseExpression(
         string value,
-        ref int index,
-        bool inheritedExcluded,
-        List<string> included,
-        List<string> excluded,
-        HashSet<string> includedSet,
-        HashSet<string> excludedSet)
+        bool matchAny,
+        bool inheritedNegated)
     {
-        while (index < value.Length)
+        var parts = SplitTopLevel(value);
+        var items = parts
+            .Select(part => ParseTerm(part, inheritedNegated))
+            .Where(x => x is not null)
+            .Cast<TagFilterExpression>()
+            .ToArray();
+
+        return items.Length switch
         {
-            SkipSeparators(value, ref index);
-
-            if (index >= value.Length)
-            {
-                return;
-            }
-
-            if (value[index] == ')')
-            {
-                index++;
-                return;
-            }
-
-            var isExcluded = inheritedExcluded;
-            if (value[index] == '-')
-            {
-                isExcluded = true;
-                index++;
-                SkipWhitespace(value, ref index);
-            }
-
-            if (index < value.Length && value[index] == '(')
-            {
-                index++;
-                ParseSequence(
-                    value,
-                    ref index,
-                    isExcluded,
-                    included,
-                    excluded,
-                    includedSet,
-                    excludedSet);
-                continue;
-            }
-
-            var start = index;
-            while (index < value.Length &&
-                   value[index] != ',' &&
-                   value[index] != '(' &&
-                   value[index] != ')')
-            {
-                index++;
-            }
-
-            AddTag(
-                value[start..index],
-                isExcluded,
-                included,
-                excluded,
-                includedSet,
-                excludedSet);
-        }
+            0 => null,
+            1 => items[0],
+            _ => new TagFilterGroup(matchAny, items)
+        };
     }
 
-    private static void AddTag(
+    private static TagFilterExpression? ParseTerm(
         string rawValue,
-        bool isExcluded,
-        List<string> included,
-        List<string> excluded,
-        HashSet<string> includedSet,
-        HashSet<string> excludedSet)
+        bool inheritedNegated)
     {
-        var tag = rawValue.Trim().TrimStart('#').Trim().ToLowerInvariant();
-        if (tag.Length is 0 or > 50)
+        var value = rawValue.Trim();
+        if (value.Length == 0)
         {
-            return;
+            return null;
         }
 
-        if (isExcluded)
+        var negated = inheritedNegated;
+
+        while (value.StartsWith('-', StringComparison.Ordinal))
         {
-            if (excludedSet.Add(tag))
+            negated = true;
+            value = value[1..].TrimStart();
+        }
+
+        if (value.Length == 0)
+        {
+            return null;
+        }
+
+        var wrapperCount = 0;
+        while (TryStripFullParentheses(value, out var inner))
+        {
+            wrapperCount++;
+            value = inner.Trim();
+        }
+
+        if (wrapperCount > 0)
+        {
+            return ParseExpression(
+                value,
+                matchAny: wrapperCount >= 2,
+                inheritedNegated: negated);
+        }
+
+        var tag = NormalizeTag(value);
+        return tag.Length is > 0 and <= 50
+            ? new TagFilterTag(tag, negated)
+            : null;
+    }
+
+    private static IReadOnlyList<string> SplitTopLevel(string value)
+    {
+        var result = new List<string>();
+        var start = 0;
+        var depth = 0;
+
+        for (var index = 0; index < value.Length; index++)
+        {
+            switch (value[index])
             {
-                excluded.Add(tag);
+                case '(':
+                    depth++;
+                    break;
+
+                case ')':
+                    depth = Math.Max(0, depth - 1);
+                    break;
+
+                case ',' when depth == 0:
+                    result.Add(value[start..index]);
+                    start = index + 1;
+                    break;
             }
-
-            return;
         }
 
-        if (includedSet.Add(tag))
-        {
-            included.Add(tag);
-        }
+        result.Add(value[start..]);
+        return result;
     }
 
-    private static void SkipSeparators(string value, ref int index)
+    private static bool TryStripFullParentheses(
+        string value,
+        out string inner)
     {
-        while (index < value.Length &&
-               (char.IsWhiteSpace(value[index]) || value[index] == ','))
+        inner = string.Empty;
+
+        if (value.Length < 2 ||
+            value[0] != '(' ||
+            value[^1] != ')')
         {
-            index++;
+            return false;
         }
+
+        var depth = 0;
+
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] == '(')
+            {
+                depth++;
+            }
+            else if (value[index] == ')')
+            {
+                depth--;
+                if (depth < 0)
+                {
+                    return false;
+                }
+
+                if (depth == 0 && index != value.Length - 1)
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (depth != 0)
+        {
+            return false;
+        }
+
+        inner = value[1..^1];
+        return true;
     }
 
-    private static void SkipWhitespace(string value, ref int index)
+    private static string NormalizeTag(string value)
     {
-        while (index < value.Length && char.IsWhiteSpace(value[index]))
+        return value
+            .Trim()
+            .TrimStart('#')
+            .Trim()
+            .ToLowerInvariant();
+    }
+
+    private static IEnumerable<TagFilterTag> EnumerateTags(
+        TagFilterExpression? expression)
+    {
+        switch (expression)
         {
-            index++;
+            case TagFilterTag tag:
+                yield return tag;
+                yield break;
+
+            case TagFilterGroup group:
+                foreach (var item in group.Items)
+                {
+                    foreach (var tag in EnumerateTags(item))
+                    {
+                        yield return tag;
+                    }
+                }
+
+                yield break;
         }
     }
 }

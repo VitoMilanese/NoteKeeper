@@ -74,7 +74,7 @@ Add tags directly to a text block or a link comment, for example:
 Review this idea later. #work #idea
 ```
 
-After saving the note, `work` and `idea` become available as filters on the home page. Enter multiple tags separated by commas to require all of them, for example `work, idea`. Prefix a tag with `-` to exclude notes containing that tag, for example `atm, done, -tn`. Parentheses can group tags: `(atm, done), -(tn, dsde, released)` requires `atm` and `done` while excluding notes that contain any of `tn`, `dsde`, or `released`. Positive parentheses are only grouping, so `(atm, done)` is equivalent to `atm, done`. Hashtags inside inline code or quote blocks are treated as content and are not indexed as tags.
+After saving the note, `work` and `idea` become available as filters on the home page. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with `-` to make every tag in that expression negative without changing the group operator: `atm, done, -tn` means `atm AND done AND NOT tn`; `-(tn, dsde)` means `NOT tn AND NOT dsde`; and `-((tn, dsde))` means `NOT tn OR NOT dsde`. Repeated minus prefixes remain negative rather than toggling back, so `-(-tn)` is still `NOT tn`. Hashtags inside inline code or quote blocks are treated as content and are not indexed as tags.
 
 ## Rich text notes
 

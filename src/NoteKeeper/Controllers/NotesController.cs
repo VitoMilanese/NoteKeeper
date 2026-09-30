@@ -33,7 +33,6 @@ public sealed class NotesController(
         q = q?.Trim();
         var tagFilter = TagFilterParser.Parse(tag);
         var includedTags = tagFilter.IncludedTags;
-        var excludedTags = tagFilter.ExcludedTags;
         var priorityTags = priorityTagService.GetTags();
         var priorityRanks = priorityTags
             .Select((name, index) => new { name, index })
@@ -56,15 +55,7 @@ public sealed class NotesController(
                     (block.Caption != null && EF.Functions.Like(block.Caption, pattern))));
         }
 
-        foreach (var includedTag in includedTags)
-        {
-            query = query.Where(note => note.Tags.Any(x => x.Name == includedTag));
-        }
-
-        foreach (var excludedTag in excludedTags)
-        {
-            query = query.Where(note => !note.Tags.Any(x => x.Name == excludedTag));
-        }
+        query = ApplyTagFilter(query, tagFilter.Expression);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var totalPages = totalCount == 0
@@ -644,6 +635,53 @@ public sealed class NotesController(
         {
             System.IO.File.Delete(physicalPath);
         }
+    }
+
+    private static IQueryable<Note> ApplyTagFilter(
+        IQueryable<Note> query,
+        TagFilterExpression? expression)
+    {
+        if (expression is null)
+        {
+            return query;
+        }
+
+        var matchingIds = BuildMatchingIds(query, expression);
+        return query.Where(note => matchingIds.Contains(note.Id));
+    }
+
+    private static IQueryable<int> BuildMatchingIds(
+        IQueryable<Note> source,
+        TagFilterExpression expression)
+    {
+        if (expression is TagFilterTag tag)
+        {
+            return tag.Negated
+                ? source
+                    .Where(note => !note.Tags.Any(x => x.Name == tag.Name))
+                    .Select(note => note.Id)
+                : source
+                    .Where(note => note.Tags.Any(x => x.Name == tag.Name))
+                    .Select(note => note.Id);
+        }
+
+        var group = (TagFilterGroup)expression;
+        IQueryable<int>? ids = null;
+
+        foreach (var item in group.Items)
+        {
+            var itemIds = BuildMatchingIds(source, item);
+
+            ids = ids is null
+                ? itemIds
+                : group.MatchAny
+                    ? ids.Union(itemIds)
+                    : ids.Intersect(itemIds);
+        }
+
+        return ids ?? source
+            .Where(_ => false)
+            .Select(note => note.Id);
     }
 
     private string NormalizeTitle(string? value)
