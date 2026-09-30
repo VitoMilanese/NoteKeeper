@@ -69,7 +69,7 @@ public static class TagFilterParser
 
         var negated = inheritedNegated;
 
-        while (value.StartsWith('-', StringComparison.Ordinal))
+        while (value.Length > 0 && value[0] == '-')
         {
             negated = true;
             value = value[1..].TrimStart();
