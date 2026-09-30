@@ -69,11 +69,12 @@
             </div>
             @foreach (var note in Model.TrackedNotes)
             {
-                <div class="time-note-row">
+                <div class="time-note-row"
+                     data-time-tracked-note-id="@note.Id">
                     <a class="time-note-title" href="/notes/@note.Id">@note.Title</a>
                     <span>@(string.IsNullOrWhiteSpace(note.EstimatedTime) ? "—" : note.EstimatedTime)</span>
-                    <span>@note.SpentTime</span>
-                    <span>@(string.IsNullOrWhiteSpace(note.RemainingTime) ? "—" : note.RemainingTime)</span>
+                    <span data-time-tracked-spent>@note.SpentTime</span>
+                    <span data-time-tracked-remaining>@(string.IsNullOrWhiteSpace(note.RemainingTime) ? "—" : note.RemainingTime)</span>
                     <form method="post"
                           action="/projects/@Model.ProjectId/time/notes/@note.Id/remove"
                           class="time-row-action">

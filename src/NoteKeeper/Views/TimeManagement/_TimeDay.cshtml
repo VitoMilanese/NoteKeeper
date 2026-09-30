@@ -63,11 +63,12 @@
                     data-time-day-date-edit>✎</button>
             <form method="post"
                   action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/delete"
-                  data-confirm-form
+                  data-time-day-delete-form
                   data-confirm-title="@Localizer["Time_DeleteDayTitle"]"
                   data-confirm-message="@Localizer["Time_DeleteDayMessage", Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)]"
                   data-confirm-label="@Localizer["Index_Delete"]"
-                  data-confirm-danger="true">
+                  data-confirm-danger="true"
+                  data-delete-day-error="@Localizer["Time_DeleteDayFailed"]">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="month" value="@Model.MonthKey" />
                 <button class="icon-button"

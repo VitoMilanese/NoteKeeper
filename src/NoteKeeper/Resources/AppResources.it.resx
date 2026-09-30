@@ -267,4 +267,5 @@
   <data name="Time_UpdateDateFailed" xml:space="preserve"><value>Impossibile modificare la data.</value></data>
   <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Esiste già un contenitore per questa data.</value></data>
 
+  <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Impossibile eliminare il contenitore della data.</value></data>
 </root>

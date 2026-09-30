@@ -330,6 +330,36 @@ public sealed class TimeManagementController(
         await TouchProjectAsync(projectId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
+        if (IsAjaxRequest())
+        {
+            var affectedNotes = new List<Note>();
+
+            if (affectedNoteIds.Length > 0)
+            {
+                affectedNotes = await db.Notes
+                    .AsNoTracking()
+                    .Where(x => affectedNoteIds.Contains(x.Id))
+                    .ToListAsync(cancellationToken);
+            }
+
+            return Ok(new
+            {
+                noteSummaries = affectedNotes.Select(note => new
+                {
+                    id = note.Id,
+                    spentTime = JiraDuration.Format(
+                        note.SpentTimeMinutes ?? 0),
+                    remainingTime = note.EstimatedTimeMinutes.HasValue
+                        ? JiraDuration.Format(
+                            Math.Max(
+                                0,
+                                note.EstimatedTimeMinutes.Value -
+                                (note.SpentTimeMinutes ?? 0)))
+                        : string.Empty
+                })
+            });
+        }
+
         return RedirectToMonth(
             projectId,
             ParseMonth(month ?? MonthKey(day.Date)));

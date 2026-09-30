@@ -267,4 +267,5 @@
   <data name="Time_UpdateDateFailed" xml:space="preserve"><value>Не вдалося змінити дату.</value></data>
   <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Контейнер для цієї дати вже існує.</value></data>
 
+  <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Не вдалося видалити контейнер дати.</value></data>
 </root>

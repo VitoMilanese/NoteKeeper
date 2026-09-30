@@ -411,3 +411,118 @@
         }
     });
 })();
+
+
+(() => {
+    const days = document.querySelector('[data-time-days]');
+    const emptyState = document.querySelector('[data-time-empty-month]');
+
+    if (!days) return;
+
+    const showDeleteError = (card, message) => {
+        let error = card.previousElementSibling;
+
+        if (!error?.matches?.('[data-time-delete-day-error]')) {
+            error = document.createElement('div');
+            error.className = 'time-error';
+            error.dataset.timeDeleteDayError = 'true';
+            card.before(error);
+        }
+
+        error.textContent = message;
+    };
+
+    const clearDeleteError = (card) => {
+        const error = card.previousElementSibling;
+        if (error?.matches?.('[data-time-delete-day-error]')) {
+            error.remove();
+        }
+    };
+
+    const updateTrackedNoteSummaries = (summaries) => {
+        for (const summary of summaries || []) {
+            const row = document.querySelector(
+                `[data-time-tracked-note-id="${summary.id}"]`);
+
+            if (!row) continue;
+
+            const spent = row.querySelector('[data-time-tracked-spent]');
+            const remaining =
+                row.querySelector('[data-time-tracked-remaining]');
+
+            if (spent) {
+                spent.textContent = summary.spentTime || '0h';
+            }
+
+            if (remaining) {
+                remaining.textContent = summary.remainingTime || '—';
+            }
+        }
+    };
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-time-day-delete-form]');
+        if (!form) return;
+
+        event.preventDefault();
+
+        const card = form.closest('.time-day-card');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        if (!card) return;
+
+        const confirmed = typeof window.noteKeeperConfirm === 'function'
+            ? await window.noteKeeperConfirm({
+                title: form.dataset.confirmTitle,
+                message: form.dataset.confirmMessage,
+                confirmLabel: form.dataset.confirmLabel,
+                danger: form.dataset.confirmDanger === 'true'
+            })
+            : window.confirm(form.dataset.confirmMessage || '');
+
+        if (!confirmed) return;
+
+        clearDeleteError(card);
+
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    form.dataset.deleteDayError ||
+                    '');
+            }
+
+            const result = await response.json();
+
+            updateTrackedNoteSummaries(result.noteSummaries);
+            card.remove();
+
+            if (emptyState &&
+                !days.querySelector('.time-day-card')) {
+                emptyState.hidden = false;
+            }
+        } catch (caught) {
+            showDeleteError(
+                card,
+                caught.message ||
+                form.dataset.deleteDayError ||
+                '');
+        } finally {
+            if (submitButton && card.isConnected) {
+                submitButton.disabled = false;
+            }
+        }
+    });
+})();

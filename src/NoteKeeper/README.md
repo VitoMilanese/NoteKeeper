@@ -10,6 +10,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - automatic migration of the existing global note list into a first `Default project`, preserving all existing notes;
 - whole-project export/import with note content, statuses, dates, and embedded images;
 - fixed `dd/MM/yy` calendar-date input in Time management, independent of browser/system locale, while keeping a native calendar picker for date selection;
+- Time management date-container deletion also uses AJAX after the existing confirmation dialog, preserving scroll position and updating affected tracked-note Spent/Remaining totals in place;
 - Time management calendar-container dates can be edited inline via the same `dd/MM/yy` + calendar-picker control used for Add date, with AJAX persistence; same-month changes re-sort the container in place, cross-month changes remove it from the current month without navigation, and duplicate dates are rejected;
 - Time management date creation uses AJAX so adding a calendar container does not reload or jump the page; entry Task is an optional free-text autocomplete where starred notes are suggested first, selecting a note links spent time back to that note and exposes a direct new-tab link, while arbitrary or empty Task values remain valid;
 - Time-entry Time spent is optional: empty input and explicit `0h` both store zero minutes, zero renders canonically as `0h`, the empty-field hint is `0h`, and invalid Jira-style input is blocked client-side without reloading the page or losing the draft row;
