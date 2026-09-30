@@ -4,9 +4,7 @@
 @{
     ViewData["Title"] = Localizer["Index_PageTitle"].Value;
     var hasFilters = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
-    var selectedTags = Model.Tag
-        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var selectedTags = Model.IncludedTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
     var priorityTags = Model.PriorityTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
 }
 

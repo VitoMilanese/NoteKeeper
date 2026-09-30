@@ -4,6 +4,7 @@ public sealed class NoteListViewModel
 {
     public string Query { get; set; } = string.Empty;
     public string Tag { get; set; } = string.Empty;
+    public List<string> IncludedTags { get; set; } = [];
     public string Sort { get; set; } = "updated";
     public string Direction { get; set; } = "desc";
     public int Page { get; set; } = 1;

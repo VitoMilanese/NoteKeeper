@@ -31,7 +31,9 @@ public sealed class NotesController(
         CancellationToken cancellationToken = default)
     {
         q = q?.Trim();
-        var selectedTags = NormalizeTags(tag);
+        var tagFilter = TagFilterParser.Parse(tag);
+        var includedTags = tagFilter.IncludedTags;
+        var excludedTags = tagFilter.ExcludedTags;
         var priorityTags = priorityTagService.GetTags();
         var priorityRanks = priorityTags
             .Select((name, index) => new { name, index })
@@ -54,9 +56,14 @@ public sealed class NotesController(
                     (block.Caption != null && EF.Functions.Like(block.Caption, pattern))));
         }
 
-        foreach (var selectedTag in selectedTags)
+        foreach (var includedTag in includedTags)
         {
-            query = query.Where(note => note.Tags.Any(x => x.Name == selectedTag));
+            query = query.Where(note => note.Tags.Any(x => x.Name == includedTag));
+        }
+
+        foreach (var excludedTag in excludedTags)
+        {
+            query = query.Where(note => !note.Tags.Any(x => x.Name == excludedTag));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -103,7 +110,8 @@ public sealed class NotesController(
         var model = new NoteListViewModel
         {
             Query = q ?? string.Empty,
-            Tag = string.Join(", ", selectedTags),
+            Tag = tag?.Trim() ?? string.Empty,
+            IncludedTags = includedTags.ToList(),
             Sort = sort,
             Direction = dir,
             Page = page,
@@ -647,22 +655,6 @@ public sealed class NotesController(
         }
 
         return title.Length <= 240 ? title : title[..240];
-    }
-
-    private static string[] NormalizeTags(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return [];
-        }
-
-        return value
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(x => x.TrimStart('#').Trim().ToLowerInvariant())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(20)
-            .ToArray();
     }
 
     private static string? NormalizeUrl(string? value)
