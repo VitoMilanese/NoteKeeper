@@ -642,13 +642,15 @@
             return;
         }
 
+        const formData = new FormData(form);
+
         input.disabled = true;
         input.classList.add('is-saving');
 
         try {
             const response = await fetch(form.action, {
                 method: 'POST',
-                body: new FormData(form),
+                body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     Accept: 'application/json'
