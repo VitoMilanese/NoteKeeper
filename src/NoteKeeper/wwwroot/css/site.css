@@ -345,7 +345,7 @@ html[data-theme="light"] .button-ghost {
 
 .filter-grid {
     display: grid;
-    grid-template-columns: minmax(220px, 2fr) minmax(160px, 1fr) minmax(160px, 1fr) minmax(180px, 1fr) auto auto;
+    grid-template-columns: minmax(220px, 2fr) minmax(240px, 1.5fr) minmax(145px, 1fr) minmax(165px, 1fr) minmax(180px, 1.1fr) auto auto;
     gap: 12px;
     align-items: end;
 }
@@ -356,11 +356,61 @@ html[data-theme="light"] .button-ghost {
     gap: 7px;
 }
 
-.field > span {
+.field > span,
+.field > label {
     color: var(--muted);
     font-size: 0.76rem;
     font-weight: 700;
     padding-left: 2px;
+}
+
+.tag-filter-field {
+    position: relative;
+}
+
+.tag-suggestions {
+    position: absolute;
+    z-index: 80;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #101a2f;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.3);
+}
+
+.tag-suggestions[hidden] {
+    display: none;
+}
+
+.tag-suggestion {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.tag-suggestion:hover,
+.tag-suggestion.is-active {
+    background: rgba(124, 140, 255, 0.16);
+    color: var(--accent-strong);
+}
+
+html[data-theme="light"] .tag-suggestions {
+    background: #ffffff;
+    box-shadow: 0 16px 36px rgba(41, 52, 86, 0.18);
 }
 
 .field input,
@@ -501,6 +551,33 @@ html[data-theme="light"] .tag-chip.is-active {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 15px;
+}
+
+.note-group-heading {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 9px 3px 2px;
+    border-bottom: 1px solid var(--border);
+}
+
+.note-group-heading:first-child {
+    margin-top: 0;
+}
+
+.note-group-heading h3 {
+    margin: 0;
+    font-size: 0.96rem;
+}
+
+.note-group-heading span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 7px;
 }
 
 .pagination {

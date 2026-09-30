@@ -9,6 +9,15 @@ var environmentName =
     Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
     Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 
+if (OperatingSystem.IsWindows() &&
+    !string.Equals(
+        environmentName,
+        Environments.Development,
+        StringComparison.OrdinalIgnoreCase))
+{
+    WindowsConsoleVisibility.HideOwnedConsole();
+}
+
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,

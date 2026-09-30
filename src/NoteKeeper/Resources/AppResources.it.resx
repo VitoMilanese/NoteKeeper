@@ -16,6 +16,11 @@
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Titolo, testo, link…</value></data>
   <data name="Index_Tag" xml:space="preserve"><value>Tag</value></data>
   <data name="Index_TagPlaceholder" xml:space="preserve"><value>#idea, #lavoro</value></data>
+  <data name="Index_TagSuggestionsAria" xml:space="preserve"><value>Suggerimenti tag</value></data>
+  <data name="Index_GroupBy" xml:space="preserve"><value>Raggruppa per</value></data>
+  <data name="Index_GroupByNone" xml:space="preserve"><value>Nessun raggruppamento</value></data>
+  <data name="Index_GroupWithTag" xml:space="preserve"><value>Con #{0}</value></data>
+  <data name="Index_GroupWithoutTag" xml:space="preserve"><value>Senza #{0}</value></data>
   <data name="Index_TagFilterLogicalCommaError" xml:space="preserve"><value>Le virgole non possono essere usate insieme a &amp; o |. Usa solo gli operatori logici.</value></data>
   <data name="Index_TagFilterLogicalSyntaxError" xml:space="preserve"><value>Filtro logico dei tag non valido. Controlla operatori, operandi e parentesi.</value></data>
   <data name="Index_Sort" xml:space="preserve"><value>Ordina per</value></data>

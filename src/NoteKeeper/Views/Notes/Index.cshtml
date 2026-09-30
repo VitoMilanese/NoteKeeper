@@ -6,6 +6,24 @@
     var hasFilters = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
     var selectedTags = Model.IncludedTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
     var priorityTags = Model.PriorityTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var noteGroups = new List<(string? Heading, List<NoteListItemViewModel> Notes)>();
+
+    if (string.IsNullOrWhiteSpace(Model.GroupBy))
+    {
+        noteGroups.Add((null, Model.Notes));
+    }
+    else
+    {
+        var withTag = Model.Notes
+            .Where(note => note.Tags.Contains(Model.GroupBy, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        var withoutTag = Model.Notes
+            .Where(note => !note.Tags.Contains(Model.GroupBy, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        noteGroups.Add((Localizer["Index_GroupWithTag", Model.GroupBy].Value, withTag));
+        noteGroups.Add((Localizer["Index_GroupWithoutTag", Model.GroupBy].Value, withoutTag));
+    }
 }
 
 <section class="hero-row">
@@ -39,19 +57,36 @@
             <input name="q" value="@Model.Query" placeholder="@Localizer["Index_SearchPlaceholder"]" autocomplete="off" />
         </label>
 
-        <label class="field">
-            <span>@Localizer["Index_Tag"]</span>
-            <input name="tag"
+        <div class="field tag-filter-field">
+            <label for="tagFilterInput">@Localizer["Index_Tag"]</label>
+            <input id="tagFilterInput"
+                   name="tag"
                    value="@Model.Tag"
                    placeholder="@Localizer["Index_TagPlaceholder"]"
                    autocomplete="off"
+                   data-tag-filter-input
+                   aria-autocomplete="list"
+                   aria-expanded="false"
+                   aria-controls="tagSuggestions"
                    aria-invalid="@(!string.IsNullOrWhiteSpace(Model.TagFilterError) ? "true" : null)"
                    aria-describedby="@(!string.IsNullOrWhiteSpace(Model.TagFilterError) ? "tagFilterError" : null)" />
+            <div id="tagSuggestions"
+                 class="tag-suggestions"
+                 data-tag-suggestions
+                 role="listbox"
+                 aria-label="@Localizer["Index_TagSuggestionsAria"]"
+                 hidden></div>
+            <template data-tag-suggestion-source>
+                @foreach (var availableTag in Model.AvailableTags)
+                {
+                    <span data-tag-value="@availableTag"></span>
+                }
+            </template>
             @if (!string.IsNullOrWhiteSpace(Model.TagFilterError))
             {
                 <span id="tagFilterError" class="filter-error" role="alert">@Model.TagFilterError</span>
             }
-        </label>
+        </div>
 
         <label class="field">
             <span>@Localizer["Index_Sort"]</span>
@@ -70,9 +105,23 @@
             </select>
         </label>
 
+        <label class="field">
+            <span>@Localizer["Index_GroupBy"]</span>
+            <select name="groupBy">
+                <option value="">@Localizer["Index_GroupByNone"]</option>
+                @foreach (var availableTag in Model.AvailableTags)
+                {
+                    <option value="@availableTag"
+                            selected="@(Model.GroupBy.Equals(availableTag, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                        #@availableTag
+                    </option>
+                }
+            </select>
+        </label>
+
         <button class="button button-secondary filter-submit" type="submit">@Localizer["Index_Apply"]</button>
         <a class="button button-ghost filter-reset"
-           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
+           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&groupBy=@Uri.EscapeDataString(Model.GroupBy)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
     </form>
 
     @if (Model.Tags.Count > 0)
@@ -82,7 +131,7 @@
             {
                 var isPriorityTag = priorityTags.Contains(item.Name);
                 <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "") @(isPriorityTag ? "is-priority-tag" : "")"
-                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction&pageSize=@Model.PageSize">
+                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&pageSize=@Model.PageSize">
                     #@item.Name <span>@item.Count</span>
                 </a>
             }
@@ -112,42 +161,54 @@ else
              data-page="@Model.Page"
              data-page-size="@Model.PageSize"
              data-total-count="@Model.TotalCount">
-        @foreach (var note in Model.Notes)
+        @foreach (var noteGroup in noteGroups.Where(group => group.Notes.Count > 0))
         {
-            <article class="note-card">
-                <a class="note-card-main" href="/notes/@note.Id">
-                    <div class="note-card-topline">
-                        <span>@Localizer["Index_BlockCount", note.BlockCount]</span>
-                        <time class="js-local-time" datetime="@note.UpdatedAtUtc.ToString("O")">@note.UpdatedAtUtc.ToString("yyyy-MM-dd HH:mm")</time>
-                    </div>
-                    <h3>@note.Title</h3>
-                    <p>@note.Preview</p>
-                    @if (note.Tags.Count > 0)
-                    {
-                        <div class="note-tags" data-note-tags>
-                            @foreach (var noteTag in note.Tags)
-                            {
-                                var isPriorityTag = priorityTags.Contains(noteTag);
-                                <span class="@(isPriorityTag ? "is-priority-tag" : "")" data-note-tag>#@noteTag</span>
-                            }
-                            <span class="note-tag-overflow" data-note-tag-overflow hidden></span>
-                        </div>
-                    }
-                </a>
-                <div class="note-card-actions">
-                    <a class="icon-button" href="/notes/@note.Id" title="@Localizer["Index_Edit"]" aria-label="@Localizer["Index_Edit"]">✎</a>
-                    <form method="post"
-                          action="/notes/@note.Id/delete"
-                          data-confirm-form
-                          data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
-                          data-confirm-message="@Localizer["Index_DeleteDialogMessage", note.Title]"
-                          data-confirm-label="@Localizer["Index_Delete"]"
-                          data-confirm-danger="true">
-                        @Html.AntiForgeryToken()
-                        <button class="icon-button danger" type="submit" title="@Localizer["Index_Delete"]" aria-label="@Localizer["Index_Delete"]">×</button>
-                    </form>
+            @if (!string.IsNullOrWhiteSpace(noteGroup.Heading))
+            {
+                <div class="note-group-heading">
+                    <h3>@noteGroup.Heading</h3>
+                    <span>@noteGroup.Notes.Count</span>
                 </div>
-            </article>
+            }
+
+            @foreach (var note in noteGroup.Notes)
+            {
+                <article class="note-card">
+                                <a class="note-card-main" href="/notes/@note.Id">
+                                    <div class="note-card-topline">
+                                        <span>@Localizer["Index_BlockCount", note.BlockCount]</span>
+                                        <time class="js-local-time" datetime="@note.UpdatedAtUtc.ToString("O")">@note.UpdatedAtUtc.ToString("yyyy-MM-dd HH:mm")</time>
+                                    </div>
+                                    <h3>@note.Title</h3>
+                                    <p>@note.Preview</p>
+                                    @if (note.Tags.Count > 0)
+                                    {
+                                        <div class="note-tags" data-note-tags>
+                                            @foreach (var noteTag in note.Tags)
+                                            {
+                                                var isPriorityTag = priorityTags.Contains(noteTag);
+                                                <span class="@(isPriorityTag ? "is-priority-tag" : "")" data-note-tag>#@noteTag</span>
+                                            }
+                                            <span class="note-tag-overflow" data-note-tag-overflow hidden></span>
+                                        </div>
+                                    }
+                                </a>
+                                <div class="note-card-actions">
+                                    <a class="icon-button" href="/notes/@note.Id" title="@Localizer["Index_Edit"]" aria-label="@Localizer["Index_Edit"]">✎</a>
+                                    <form method="post"
+                                          action="/notes/@note.Id/delete"
+                                          data-confirm-form
+                                          data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
+                                          data-confirm-message="@Localizer["Index_DeleteDialogMessage", note.Title]"
+                                          data-confirm-label="@Localizer["Index_Delete"]"
+                                          data-confirm-danger="true">
+                                        @Html.AntiForgeryToken()
+                                        <button class="icon-button danger" type="submit" title="@Localizer["Index_Delete"]" aria-label="@Localizer["Index_Delete"]">×</button>
+                                    </form>
+                                </div>
+                            </article>
+                
+            }
         }
     </section>
 

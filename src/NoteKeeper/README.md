@@ -9,8 +9,10 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - filtering by `#tags` extracted automatically from text blocks and link comments, with both the legacy comma/parenthesis syntax and an explicit logical-operator syntax;
 - show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;
 - fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
-- clear the search and tag filter fields from a dedicated button while preserving the selected sort and direction;
+- show caret-aware tag suggestions while typing a tag-filter expression and insert the selected available tag without replacing the surrounding expression;
+- clear the search and tag filter fields from a dedicated button while preserving the selected sort, direction, and grouping;
 - sorting by title, creation date, or last update;
+- optionally group note results by any available tag into “with tag” and “without tag” sections while keeping the selected sort/order inside each group;
 - rich text blocks with bold, italic, underline, strikethrough, inline code, hyperlinks on selected rich text, quotes, expandable containers, dividers, text sizing, custom text colors, numbered lists, bullet lists, dash lists, and a quick symbol palette;
 - show a duplicate floating rich-text toolbar near the bottom of the viewport while editing long text blocks after the original toolbar scrolls out of view;
 - add a toolbar action that inserts an unformatted empty line directly below the line containing the caret, escaping quote/code/size/color formatting;
@@ -38,7 +40,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - persist the selected language in a cookie;
 - switchable light and dark themes with the selected theme stored in a cookie;
 - Windows executable icon and system tray integration through an isolated Windows Forms helper process, so tray failures cannot terminate the web application;
-- double-click the tray icon or choose `Open NoteKeeper` to open the home page, use `Hide` / `Show` to hide or restore the NoteKeeper console window, and choose `Exit` to stop the application;
+- direct Windows executable launches hide NoteKeeper's own console window immediately on startup; use `Show` / `Hide` from the tray menu to restore or hide it, double-click the tray icon or choose `Open NoteKeeper` to open the home page, and choose `Exit` to stop the application;
 - tray integration is intentionally skipped in the Development environment used by the Visual Studio F5 profile; run the built executable directly when testing the tray;
 - the shared Visual Studio `NoteKeeper.slnLaunch` profile starts only the web application; the tray helper project is explicitly set to `None` so F5 cannot accidentally run the helper by itself;
 - direct launches from the build output use the executable directory as the content root and copy `wwwroot` into the build output, so CSS, JavaScript, favicon, and other static resources are available reliably outside the Development profile;
