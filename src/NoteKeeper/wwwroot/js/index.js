@@ -103,15 +103,19 @@
             const token = getCurrentToken();
             const query = token.query;
 
+            if (query.length === 0) {
+                hideTagSuggestions();
+                return;
+            }
+
             currentMatches = availableTags
                 .map((tag, index) => ({
                     tag,
                     index,
-                    startsWith: query.length === 0 ||
+                    startsWith:
                         tag.toLocaleLowerCase().startsWith(query)
                 }))
                 .filter((item) =>
-                    query.length === 0 ||
                     item.tag.toLocaleLowerCase().includes(query))
                 .sort((left, right) => {
                     if (left.startsWith !== right.startsWith) {
