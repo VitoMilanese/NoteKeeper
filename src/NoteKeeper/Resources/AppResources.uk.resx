@@ -10,7 +10,6 @@
   <data name="Index_PageTitle" xml:space="preserve"><value>Нотатки — NoteKeeper</value></data>
   <data name="Index_Eyebrow" xml:space="preserve"><value>Твоя база нотаток</value></data>
   <data name="Index_HeroTitle" xml:space="preserve"><value>Усе важливе — в одному місці.</value></data>
-  <data name="Index_HeroCopy" xml:space="preserve"><value>Текст, посилання, зображення, теги та швидкий пошук без зайвого шуму.</value></data>
   <data name="Index_CreateNote" xml:space="preserve"><value>+ Створити нотатку</value></data>
   <data name="Index_Search" xml:space="preserve"><value>Пошук</value></data>
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Назва, текст, посилання…</value></data>
@@ -170,7 +169,6 @@
   <data name="Projects_PageTitle" xml:space="preserve"><value>Проекти — NoteKeeper</value></data>
   <data name="Projects_Eyebrow" xml:space="preserve"><value>Dashboard</value></data>
   <data name="Projects_HeroTitle" xml:space="preserve"><value>Проекти</value></data>
-  <data name="Projects_HeroCopy" xml:space="preserve"><value>Зберігай окремі списки нотаток для різних напрямків і відкривай кожен проект як окремий робочий простір.</value></data>
   <data name="Projects_Import" xml:space="preserve"><value>⇩ Імпортувати проект</value></data>
   <data name="Projects_NewName" xml:space="preserve"><value>Новий проект</value></data>
   <data name="Projects_NewNamePlaceholder" xml:space="preserve"><value>Назва проекту</value></data>

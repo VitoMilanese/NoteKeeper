@@ -10,7 +10,6 @@
   <data name="Index_PageTitle" xml:space="preserve"><value>Note — NoteKeeper</value></data>
   <data name="Index_Eyebrow" xml:space="preserve"><value>Il tuo archivio di note</value></data>
   <data name="Index_HeroTitle" xml:space="preserve"><value>Tutto ciò che conta — in un unico posto.</value></data>
-  <data name="Index_HeroCopy" xml:space="preserve"><value>Testo, link, immagini, tag e ricerca veloce senza distrazioni.</value></data>
   <data name="Index_CreateNote" xml:space="preserve"><value>+ Crea nota</value></data>
   <data name="Index_Search" xml:space="preserve"><value>Cerca</value></data>
   <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Titolo, testo, link…</value></data>
@@ -170,7 +169,6 @@
   <data name="Projects_PageTitle" xml:space="preserve"><value>Progetti — NoteKeeper</value></data>
   <data name="Projects_Eyebrow" xml:space="preserve"><value>Dashboard</value></data>
   <data name="Projects_HeroTitle" xml:space="preserve"><value>Progetti</value></data>
-  <data name="Projects_HeroCopy" xml:space="preserve"><value>Organizza raccolte separate di note per aree di lavoro diverse e apri ogni progetto come spazio indipendente.</value></data>
   <data name="Projects_Import" xml:space="preserve"><value>⇩ Importa progetto</value></data>
   <data name="Projects_NewName" xml:space="preserve"><value>Nuovo progetto</value></data>
   <data name="Projects_NewNamePlaceholder" xml:space="preserve"><value>Nome progetto</value></data>
