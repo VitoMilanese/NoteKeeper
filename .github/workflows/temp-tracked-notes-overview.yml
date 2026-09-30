@@ -1,0 +1,71 @@
+name: Temporary tracked-notes overview verification
+
+on:
+  push:
+    branches:
+      - ci/temp-tracked-notes-overview
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/time.js
+
+      - name: Verify tracked-notes behavior
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          vm = Path("src/NoteKeeper/ViewModels/TimeManagementViewModel.cs").read_text()
+          ctrl = Path("src/NoteKeeper/Controllers/TimeManagementController.cs").read_text()
+          view = Path("src/NoteKeeper/Views/TimeManagement/Index.cshtml").read_text()
+          js = Path("src/NoteKeeper/wwwroot/js/time.js").read_text()
+          css = Path("src/NoteKeeper/wwwroot/css/site.css").read_text()
+
+          assert "public bool IsOvertime" in vm
+          assert 'RemainingTime = remainingMinutes.HasValue' in ctrl
+          assert '? $"+{JiraDuration.Format(-remainingMinutes.Value)}"' in ctrl
+          assert "IsOvertime = isOvertime" in ctrl
+          assert '[HttpPost("/projects/{projectId:int}/time/notes/remove-all")]' in ctrl
+          assert "removedNoteIds" in ctrl
+          assert "isOvertime = IsOvertime(" in ctrl
+
+          assert 'data-time-unpin-all-form' in view
+          assert 'data-time-unpin-form' in view
+          assert 'data-time-tracked-toggle' in view
+          assert 'data-time-tracked-content' in view
+          assert 'time-note-overtime' in view
+          assert 'data-overtime-label' in view
+
+          assert "notekeeper.time.trackedNotesCollapsed" in js
+          assert "localStorage.getItem" in js
+          assert "localStorage.setItem" in js
+          assert "data-time-unpin-all-form" in js
+          assert "data-time-unpin-form" in js
+          assert "removeTrackedRow" in js
+          assert "time-note-overtime" in js
+          assert "remaining.title = isOvertime" in js
+
+          assert ".time-note-overtime" in css
+          assert 'html[data-theme="light"] .time-note-overtime' in css
+          assert ".time-tracked-collapse-button" in css
+
+          print("Tracked notes overtime, bulk unpin, and collapse persistence passed.")
+          PY
