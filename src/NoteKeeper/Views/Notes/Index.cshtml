@@ -121,7 +121,7 @@
 
         <button class="button button-secondary filter-submit" type="submit">@Localizer["Index_Apply"]</button>
         <a class="button button-ghost filter-reset"
-           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&groupBy=@Uri.EscapeDataString(Model.GroupBy)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
+           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
     </form>
 
     @if (Model.Tags.Count > 0)
