@@ -1016,13 +1016,23 @@ html[data-theme="light"] .editor-topbar {
     color: #526079;
 }
 
-.editor-status-field {
+.editor-note-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-right: auto;
+}
+
+.editor-status-field,
+.editor-time-field {
     display: inline-flex;
     align-items: center;
     gap: 7px;
 }
 
-.editor-status-field > span {
+.editor-status-field > span,
+.editor-time-field > span {
     color: var(--muted);
     font-size: 0.75rem;
     font-weight: 750;
@@ -1048,6 +1058,33 @@ html[data-theme="light"] .editor-topbar {
 }
 
 html[data-theme="light"] .editor-status-field select {
+    background: #ffffff;
+}
+
+.editor-time-field input {
+    width: 92px;
+    min-width: 0;
+    min-height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    outline: none;
+    padding: 0 9px;
+    background: #111a2e;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.84rem;
+}
+
+.editor-time-field input::placeholder {
+    color: #66748d;
+}
+
+.editor-time-field input:focus {
+    border-color: rgba(124, 140, 255, 0.62);
+    box-shadow: 0 0 0 4px rgba(124, 140, 255, 0.09);
+}
+
+html[data-theme="light"] .editor-time-field input {
     background: #ffffff;
 }
 
@@ -2105,8 +2142,18 @@ html[data-theme="light"] .upload-toast {
         justify-content: flex-end;
     }
 
-    .editor-status-field {
-        margin-right: auto;
+    .editor-note-meta {
+        flex: 1 1 100%;
+        margin-right: 0;
+    }
+
+    .editor-time-field {
+        flex: 1 1 170px;
+    }
+
+    .editor-time-field input {
+        flex: 1 1 auto;
+        width: auto;
     }
 
     .save-status {

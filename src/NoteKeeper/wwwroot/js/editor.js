@@ -4,6 +4,8 @@
 
     const titleInput = document.getElementById('titleInput');
     const statusSelect = document.getElementById('statusSelect');
+    const estimatedTimeInput = document.getElementById('estimatedTimeInput');
+    const spentTimeInput = document.getElementById('spentTimeInput');
     const projectId = Number(editor.dataset.projectId || 0);
     const projectListUrl = projectId > 0
         ? `/projects/${projectId}`
@@ -1928,6 +1930,8 @@
             projectId,
             title: titleInput.value,
             status: Number(statusSelect?.value || 0),
+            estimatedTime: estimatedTimeInput?.value || '',
+            spentTime: spentTimeInput?.value || '',
             blocks: collectBlocks()
         };
 
@@ -1953,6 +1957,12 @@
             const result = await response.json();
             editor.dataset.noteId = String(result.id);
             titleInput.value = result.title;
+            if (estimatedTimeInput) {
+                estimatedTimeInput.value = result.estimatedTime || '';
+            }
+            if (spentTimeInput) {
+                spentTimeInput.value = result.spentTime || '';
+            }
             dirty = false;
 
             if (deleteNoteForm) {

@@ -12,6 +12,8 @@ public sealed class Note
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
+    public int? EstimatedTimeMinutes { get; set; }
+    public int? SpentTimeMinutes { get; set; }
 
     public int ProjectId { get; set; }
     public Project Project { get; set; } = null!;

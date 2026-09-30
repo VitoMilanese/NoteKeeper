@@ -215,6 +215,8 @@ public sealed class ProjectsController(
             {
                 Title = note.Title,
                 Status = note.Status,
+                EstimatedTimeMinutes = note.EstimatedTimeMinutes,
+                SpentTimeMinutes = note.SpentTimeMinutes,
                 CreatedAtUtc = note.CreatedAtUtc,
                 UpdatedAtUtc = note.UpdatedAtUtc,
                 Blocks = []
@@ -327,6 +329,10 @@ public sealed class ProjectsController(
                     Project = project,
                     Title = NormalizeNoteTitle(transferNote.Title),
                     Status = NormalizeStatus(transferNote.Status),
+                    EstimatedTimeMinutes = JiraDuration.NormalizeMinutes(
+                        transferNote.EstimatedTimeMinutes),
+                    SpentTimeMinutes = JiraDuration.NormalizeMinutes(
+                        transferNote.SpentTimeMinutes),
                     CreatedAtUtc = transferNote.CreatedAtUtc ?? now,
                     UpdatedAtUtc = transferNote.UpdatedAtUtc ?? now,
                     Blocks = []

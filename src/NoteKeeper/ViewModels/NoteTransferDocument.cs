@@ -11,6 +11,8 @@ public sealed class NoteTransferDocument
     public int Version { get; set; } = CurrentVersion;
     public string Title { get; set; } = string.Empty;
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
+    public int? EstimatedTimeMinutes { get; set; }
+    public int? SpentTimeMinutes { get; set; }
     public List<NoteTransferBlock> Blocks { get; set; } = [];
 }
 

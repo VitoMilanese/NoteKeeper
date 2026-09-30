@@ -55,6 +55,10 @@
   <data name="Edit_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Note title</value></data>
   <data name="Edit_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Edit_EstimatedTime" xml:space="preserve"><value>Estimated time</value></data>
+  <data name="Edit_SpentTime" xml:space="preserve"><value>Spent time</value></data>
+  <data name="Edit_TimePlaceholder" xml:space="preserve"><value>1d 4h</value></data>
+  <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Jira format: 1w 2d 3h 15m</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
@@ -100,6 +104,8 @@
   <data name="Editor_SaveFailedToast" xml:space="preserve"><value>Could not save the note.</value></data>
   <data name="Editor_OpenLinkInvalid" xml:space="preserve"><value>Enter a valid HTTP/HTTPS link.</value></data>
   <data name="Server_TooManyBlocks" xml:space="preserve"><value>This note has too many blocks.</value></data>
+  <data name="Server_InvalidEstimatedTime" xml:space="preserve"><value>Invalid estimated time. Use Jira format, for example: 1w, 2d, 3h, 15m, or 1d 4h.</value></data>
+  <data name="Server_InvalidSpentTime" xml:space="preserve"><value>Invalid spent time. Use Jira format, for example: 1w, 2d, 3h, 15m, or 1h 30m.</value></data>
   <data name="Server_NoteNotFound" xml:space="preserve"><value>Note not found.</value></data>
   <data name="Server_ImageTooLarge" xml:space="preserve"><value>The image must be no larger than 12 MB.</value></data>
   <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>PNG, JPEG, WEBP, and GIF are supported.</value></data>

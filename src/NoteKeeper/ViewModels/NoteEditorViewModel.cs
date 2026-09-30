@@ -10,6 +10,8 @@ public sealed class NoteEditorViewModel
     public string Title { get; set; } = string.Empty;
     public DateTime? UpdatedAtUtc { get; set; }
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
+    public string EstimatedTime { get; set; } = string.Empty;
+    public string SpentTime { get; set; } = string.Empty;
     public List<NoteBlockViewModel> Blocks { get; set; } = [];
 }
 
@@ -29,6 +31,8 @@ public sealed class SaveNoteRequest
     public int ProjectId { get; set; }
     public string? Title { get; set; }
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
+    public string? EstimatedTime { get; set; }
+    public string? SpentTime { get; set; }
     public List<SaveBlockRequest> Blocks { get; set; } = [];
 }
 

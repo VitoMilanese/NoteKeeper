@@ -21,6 +21,7 @@ public static class SqliteSchemaUpgrade
         try
         {
             EnsureProjectsSchema(connection);
+            EnsureTimeTrackingColumns(connection);
 
             if (!HasColumn(connection, "Notes", "Status"))
             {
@@ -106,6 +107,30 @@ public static class SqliteSchemaUpgrade
         }
     }
 
+
+    private static void EnsureTimeTrackingColumns(
+        System.Data.Common.DbConnection connection)
+    {
+        if (!HasColumn(connection, "Notes", "EstimatedTimeMinutes"))
+        {
+            Execute(
+                connection,
+                """
+                ALTER TABLE "Notes"
+                ADD COLUMN "EstimatedTimeMinutes" INTEGER NULL;
+                """);
+        }
+
+        if (!HasColumn(connection, "Notes", "SpentTimeMinutes"))
+        {
+            Execute(
+                connection,
+                """
+                ALTER TABLE "Notes"
+                ADD COLUMN "SpentTimeMinutes" INTEGER NULL;
+                """);
+        }
+    }
 
     private static void EnsureProjectsSchema(
         System.Data.Common.DbConnection connection)

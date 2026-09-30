@@ -55,6 +55,10 @@
   <data name="Edit_Save" xml:space="preserve"><value>Зберегти</value></data>
   <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Назва нотатки</value></data>
   <data name="Edit_Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Edit_EstimatedTime" xml:space="preserve"><value>Оцінений час</value></data>
+  <data name="Edit_SpentTime" xml:space="preserve"><value>Витрачений час</value></data>
+  <data name="Edit_TimePlaceholder" xml:space="preserve"><value>1d 4h</value></data>
+  <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Формат Jira: 1w 2d 3h 15m</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
@@ -100,6 +104,8 @@
   <data name="Editor_SaveFailedToast" xml:space="preserve"><value>Не вдалося зберегти нотатку.</value></data>
   <data name="Editor_OpenLinkInvalid" xml:space="preserve"><value>Вкажи коректне HTTP/HTTPS посилання.</value></data>
   <data name="Server_TooManyBlocks" xml:space="preserve"><value>У нотатці забагато блоків.</value></data>
+  <data name="Server_InvalidEstimatedTime" xml:space="preserve"><value>Некоректний оцінений час. Використовуй формат Jira, наприклад: 1w, 2d, 3h, 15m або 1d 4h.</value></data>
+  <data name="Server_InvalidSpentTime" xml:space="preserve"><value>Некоректний витрачений час. Використовуй формат Jira, наприклад: 1w, 2d, 3h, 15m або 1h 30m.</value></data>
   <data name="Server_NoteNotFound" xml:space="preserve"><value>Нотатку не знайдено.</value></data>
   <data name="Server_ImageTooLarge" xml:space="preserve"><value>Зображення має бути не більше 12 МБ.</value></data>
   <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>Підтримуються PNG, JPEG, WEBP та GIF.</value></data>

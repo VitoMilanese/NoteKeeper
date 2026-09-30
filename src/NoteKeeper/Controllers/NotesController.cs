@@ -271,6 +271,8 @@ public sealed class NotesController(
             Title = note.Title,
             UpdatedAtUtc = note.UpdatedAtUtc,
             Status = note.Status,
+            EstimatedTime = JiraDuration.Format(note.EstimatedTimeMinutes),
+            SpentTime = JiraDuration.Format(note.SpentTimeMinutes),
             Blocks = note.Blocks
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new NoteBlockViewModel
@@ -303,6 +305,8 @@ public sealed class NotesController(
         {
             Title = note.Title,
             Status = note.Status,
+            EstimatedTimeMinutes = note.EstimatedTimeMinutes,
+            SpentTimeMinutes = note.SpentTimeMinutes,
             Blocks = []
         };
 
@@ -383,6 +387,8 @@ public sealed class NotesController(
                 ProjectId = project.Id,
                 Title = NormalizeTitle(document.Title),
                 Status = NormalizeStatus(document.Status),
+                EstimatedTimeMinutes = JiraDuration.NormalizeMinutes(document.EstimatedTimeMinutes),
+                SpentTimeMinutes = JiraDuration.NormalizeMinutes(document.SpentTimeMinutes),
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
                 Blocks = []
@@ -482,6 +488,26 @@ public sealed class NotesController(
             return BadRequest(new { message = localizer["Server_TooManyBlocks"].Value });
         }
 
+        if (!JiraDuration.TryParse(
+                request.EstimatedTime,
+                out var estimatedTimeMinutes))
+        {
+            return BadRequest(new
+            {
+                message = localizer["Server_InvalidEstimatedTime"].Value
+            });
+        }
+
+        if (!JiraDuration.TryParse(
+                request.SpentTime,
+                out var spentTimeMinutes))
+        {
+            return BadRequest(new
+            {
+                message = localizer["Server_InvalidSpentTime"].Value
+            });
+        }
+
         Note note;
         if (request.Id is > 0)
         {
@@ -522,6 +548,8 @@ public sealed class NotesController(
 
         note.Title = NormalizeTitle(request.Title);
         note.Status = NormalizeStatus(request.Status);
+        note.EstimatedTimeMinutes = estimatedTimeMinutes;
+        note.SpentTimeMinutes = spentTimeMinutes;
         note.UpdatedAtUtc = DateTime.UtcNow;
         project.UpdatedAtUtc = note.UpdatedAtUtc;
 
@@ -576,6 +604,8 @@ public sealed class NotesController(
             updatedAtUtc = note.UpdatedAtUtc,
             title = note.Title,
             status = note.Status,
+            estimatedTime = JiraDuration.Format(note.EstimatedTimeMinutes),
+            spentTime = JiraDuration.Format(note.SpentTimeMinutes),
             tags = desiredTags.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
         });
     }

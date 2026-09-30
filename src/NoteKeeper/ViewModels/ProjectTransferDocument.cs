@@ -19,6 +19,8 @@ public sealed class ProjectTransferNote
 {
     public string Title { get; set; } = string.Empty;
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
+    public int? EstimatedTimeMinutes { get; set; }
+    public int? SpentTimeMinutes { get; set; }
     public DateTime? CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public List<NoteTransferBlock> Blocks { get; set; } = [];

@@ -108,19 +108,39 @@
     <div class="editor-topbar">
         <a class="button button-ghost button-small" href="/projects/@Model.ProjectId">@Localizer["Edit_BackToList"]</a>
         <div class="save-cluster">
-            <label class="editor-status-field" for="statusSelect">
-                <span>@Localizer["Edit_Status"]</span>
-                <select id="statusSelect">
-                    <option value="@((int)NoteStatus.Backlog)" selected="@(Model.Status == NoteStatus.Backlog ? "selected" : null)">@Localizer["Edit_StatusBacklog"]</option>
-                    <option value="@((int)NoteStatus.Selected)" selected="@(Model.Status == NoteStatus.Selected ? "selected" : null)">@Localizer["Edit_StatusSelected"]</option>
-                    <option value="@((int)NoteStatus.Active)" selected="@(Model.Status == NoteStatus.Active ? "selected" : null)">@Localizer["Edit_StatusActive"]</option>
-                    <option value="@((int)NoteStatus.Test)" selected="@(Model.Status == NoteStatus.Test ? "selected" : null)">@Localizer["Edit_StatusTest"]</option>
-                    <option value="@((int)NoteStatus.Done)" selected="@(Model.Status == NoteStatus.Done ? "selected" : null)">@Localizer["Edit_StatusDone"]</option>
-                    <option value="@((int)NoteStatus.Released)" selected="@(Model.Status == NoteStatus.Released ? "selected" : null)">@Localizer["Edit_StatusReleased"]</option>
-                    <option value="@((int)NoteStatus.Rejected)" selected="@(Model.Status == NoteStatus.Rejected ? "selected" : null)">@Localizer["Edit_StatusRejected"]</option>
-                    <option value="@((int)NoteStatus.Suspended)" selected="@(Model.Status == NoteStatus.Suspended ? "selected" : null)">@Localizer["Edit_StatusSuspended"]</option>
-                </select>
-            </label>
+            <div class="editor-note-meta">
+                <label class="editor-status-field" for="statusSelect">
+                    <span>@Localizer["Edit_Status"]</span>
+                    <select id="statusSelect">
+                        <option value="@((int)NoteStatus.Backlog)" selected="@(Model.Status == NoteStatus.Backlog ? "selected" : null)">@Localizer["Edit_StatusBacklog"]</option>
+                        <option value="@((int)NoteStatus.Selected)" selected="@(Model.Status == NoteStatus.Selected ? "selected" : null)">@Localizer["Edit_StatusSelected"]</option>
+                        <option value="@((int)NoteStatus.Active)" selected="@(Model.Status == NoteStatus.Active ? "selected" : null)">@Localizer["Edit_StatusActive"]</option>
+                        <option value="@((int)NoteStatus.Test)" selected="@(Model.Status == NoteStatus.Test ? "selected" : null)">@Localizer["Edit_StatusTest"]</option>
+                        <option value="@((int)NoteStatus.Done)" selected="@(Model.Status == NoteStatus.Done ? "selected" : null)">@Localizer["Edit_StatusDone"]</option>
+                        <option value="@((int)NoteStatus.Released)" selected="@(Model.Status == NoteStatus.Released ? "selected" : null)">@Localizer["Edit_StatusReleased"]</option>
+                        <option value="@((int)NoteStatus.Rejected)" selected="@(Model.Status == NoteStatus.Rejected ? "selected" : null)">@Localizer["Edit_StatusRejected"]</option>
+                        <option value="@((int)NoteStatus.Suspended)" selected="@(Model.Status == NoteStatus.Suspended ? "selected" : null)">@Localizer["Edit_StatusSuspended"]</option>
+                    </select>
+                </label>
+                <label class="editor-time-field" for="estimatedTimeInput">
+                    <span>@Localizer["Edit_EstimatedTime"]</span>
+                    <input id="estimatedTimeInput"
+                           value="@Model.EstimatedTime"
+                           maxlength="80"
+                           placeholder="@Localizer["Edit_TimePlaceholder"]"
+                           title="@Localizer["Edit_TimeFormatHint"]"
+                           autocomplete="off" />
+                </label>
+                <label class="editor-time-field" for="spentTimeInput">
+                    <span>@Localizer["Edit_SpentTime"]</span>
+                    <input id="spentTimeInput"
+                           value="@Model.SpentTime"
+                           maxlength="80"
+                           placeholder="@Localizer["Edit_TimePlaceholder"]"
+                           title="@Localizer["Edit_TimeFormatHint"]"
+                           autocomplete="off" />
+                </label>
+            </div>
             <form id="deleteNoteForm"
                   method="post"
                   action="@(Model.Id.HasValue ? $"/notes/{Model.Id}/delete" : "#")"
