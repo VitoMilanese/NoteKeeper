@@ -1,0 +1,51 @@
+name: Temporary note-title autofit verification
+
+on:
+  push:
+    branches:
+      - ci/temp-title-autofit
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Check editor JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/editor.js
+
+      - name: Verify title autofit wiring
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          js = Path("src/NoteKeeper/wwwroot/js/editor.js").read_text()
+          css = Path("src/NoteKeeper/wwwroot/css/site.css").read_text()
+
+          assert "function fitTitleInput()" in js
+          assert "titleInput.scrollWidth <= titleInput.clientWidth + 1" in js
+          assert "scheduleTitleFit();" in js
+          assert "document.fonts?.ready?.then(scheduleTitleFit)" in js
+          assert "event.target === titleInput" in js
+          assert "window.addEventListener('resize'" in js
+          assert "max-width: 100%;" in css
+          assert "box-sizing: border-box;" in css
+          assert ".editor-heading {" in css
+          assert "overflow: hidden;" in css
+
+          print("Title autofit wiring passed.")
+          PY
