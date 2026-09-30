@@ -1101,6 +1101,18 @@ html[data-theme="light"] .editor-time-field input[readonly] {
     font-size: 1.15rem;
 }
 
+.editor-time-star.is-active {
+    color: #f5c451;
+    border-color: rgba(245, 196, 81, 0.42);
+    background: rgba(245, 196, 81, 0.1);
+}
+
+.editor-time-star.is-active:hover {
+    color: #ffd778;
+    border-color: rgba(245, 196, 81, 0.58);
+    background: rgba(245, 196, 81, 0.14);
+}
+
 .add-block-bar {
     display: flex;
     align-items: center;

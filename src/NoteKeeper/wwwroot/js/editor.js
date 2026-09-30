@@ -6,6 +6,7 @@
     const statusSelect = document.getElementById('statusSelect');
     const estimatedTimeInput = document.getElementById('estimatedTimeInput');
     const spentTimeInput = document.getElementById('spentTimeInput');
+    const timeManagementStarButton = document.getElementById('timeManagementStarButton');
     const projectId = Number(editor.dataset.projectId || 0);
     const projectListUrl = projectId > 0
         ? `/projects/${projectId}`
@@ -2019,6 +2020,16 @@
     });
 
     statusSelect?.addEventListener('change', () => setDirty(true));
+
+    timeManagementStarButton?.addEventListener('click', () => {
+        const isActive = timeManagementStarButton.getAttribute('aria-pressed') !== 'true';
+
+        timeManagementStarButton.setAttribute(
+            'aria-pressed',
+            isActive ? 'true' : 'false');
+        timeManagementStarButton.classList.toggle('is-active', isActive);
+        timeManagementStarButton.textContent = isActive ? '★' : '☆';
+    });
 
     blocksContainer.addEventListener('focusin', (event) => {
         setActiveBlock(event.target.closest('.note-block'));
