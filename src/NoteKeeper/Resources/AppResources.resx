@@ -45,6 +45,7 @@
   <data name="Index_NoNotesCopy" xml:space="preserve"><value>Create your first note and add text, a link, or an image.</value></data>
   <data name="Index_BlockCount" xml:space="preserve"><value>Blocks: {0}</value></data>
   <data name="Index_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Index_OpenFirstLink" xml:space="preserve"><value>Open first link in a new tab</value></data>
   <data name="Index_Delete" xml:space="preserve"><value>Delete</value></data>
   <data name="Index_DeleteConfirm" xml:space="preserve"><value>Delete this note?</value></data>
   <data name="Edit_PageTitleNew" xml:space="preserve"><value>New note — NoteKeeper</value></data>

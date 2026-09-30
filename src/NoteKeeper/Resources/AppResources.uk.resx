@@ -45,6 +45,7 @@
   <data name="Index_NoNotesCopy" xml:space="preserve"><value>Створи першу нотатку і додай до неї текст, посилання або картинку.</value></data>
   <data name="Index_BlockCount" xml:space="preserve"><value>Блоків: {0}</value></data>
   <data name="Index_Edit" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Index_OpenFirstLink" xml:space="preserve"><value>Відкрити перше посилання в новій вкладці</value></data>
   <data name="Index_Delete" xml:space="preserve"><value>Видалити</value></data>
   <data name="Index_DeleteConfirm" xml:space="preserve"><value>Видалити цю нотатку?</value></data>
   <data name="Edit_PageTitleNew" xml:space="preserve"><value>Нова нотатка — NoteKeeper</value></data>

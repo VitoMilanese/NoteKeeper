@@ -194,6 +194,15 @@ else
                                     }
                                 </a>
                                 <div class="note-card-actions">
+                                    @if (!string.IsNullOrWhiteSpace(note.FirstBlockLinkUrl))
+                                    {
+                                        <a class="icon-button"
+                                           href="@note.FirstBlockLinkUrl"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           title="@Localizer["Index_OpenFirstLink"]"
+                                           aria-label="@Localizer["Index_OpenFirstLink"]">↗</a>
+                                    }
                                     <a class="icon-button" href="/notes/@note.Id" title="@Localizer["Index_Edit"]" aria-label="@Localizer["Index_Edit"]">✎</a>
                                     <form method="post"
                                           action="/notes/@note.Id/delete"

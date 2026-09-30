@@ -30,6 +30,7 @@ public sealed class NoteListItemViewModel
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
     public int BlockCount { get; set; }
+    public string? FirstBlockLinkUrl { get; set; }
     public List<string> Tags { get; set; } = [];
 }
 

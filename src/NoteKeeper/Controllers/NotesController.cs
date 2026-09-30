@@ -209,6 +209,7 @@ public sealed class NotesController(
                 CreatedAtUtc = note.CreatedAtUtc,
                 UpdatedAtUtc = note.UpdatedAtUtc,
                 BlockCount = note.Blocks.Count,
+                FirstBlockLinkUrl = GetFirstBlockLinkUrl(note.Blocks),
                 Tags = note.Tags
                     .Select(x => x.Name)
                     .OrderBy(x => priorityRanks.ContainsKey(x) ? 0 : 1)
@@ -857,6 +858,32 @@ public sealed class NotesController(
                 (current, item) => group.MatchAny
                     ? Expression.OrElse(current, item)
                     : Expression.AndAlso(current, item));
+    }
+
+    private static string? GetFirstBlockLinkUrl(
+        IEnumerable<NoteBlock> blocks)
+    {
+        var firstBlock = blocks
+            .OrderBy(block => block.SortOrder)
+            .ThenBy(block => block.Id)
+            .FirstOrDefault();
+
+        if (firstBlock?.Type != BlockType.Link ||
+            string.IsNullOrWhiteSpace(firstBlock.Url))
+        {
+            return null;
+        }
+
+        if (!Uri.TryCreate(
+                firstBlock.Url,
+                UriKind.Absolute,
+                out var parsed) ||
+            parsed.Scheme is not ("http" or "https"))
+        {
+            return null;
+        }
+
+        return parsed.ToString();
     }
 
     private static NoteStatus NormalizeStatus(NoteStatus status)
