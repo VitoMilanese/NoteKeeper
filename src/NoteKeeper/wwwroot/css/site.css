@@ -340,6 +340,8 @@ html[data-theme="light"] .button-ghost {
 }
 
 .filter-panel {
+    position: relative;
+    z-index: 20;
     padding: 18px;
 }
 
