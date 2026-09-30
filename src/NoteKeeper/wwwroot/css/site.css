@@ -822,7 +822,9 @@ html[data-theme="light"] .editor-topbar {
 .save-cluster {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .save-status {
@@ -868,35 +870,30 @@ html[data-theme="light"] .editor-topbar {
     color: #526079;
 }
 
-.editor-meta-row {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 18px;
-    margin: 10px 4px 0;
-}
-
 .editor-status-field {
-    display: grid;
-    gap: 6px;
-    min-width: 180px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
 }
 
 .editor-status-field > span {
     color: var(--muted);
-    font-size: 0.76rem;
+    font-size: 0.75rem;
     font-weight: 750;
+    white-space: nowrap;
 }
 
 .editor-status-field select {
-    min-height: 40px;
+    min-height: 36px;
+    min-width: 128px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 9px;
     outline: none;
-    padding: 0 34px 0 11px;
+    padding: 0 30px 0 10px;
     background: #111a2e;
     color: var(--text);
     font: inherit;
+    font-size: 0.84rem;
 }
 
 .editor-status-field select:focus {
@@ -906,17 +903,6 @@ html[data-theme="light"] .editor-topbar {
 
 html[data-theme="light"] .editor-status-field select {
     background: #ffffff;
-}
-
-.editor-heading p {
-    flex: 1 1 auto;
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-
-.editor-heading code {
-    color: #bdc5ff;
 }
 
 .add-block-bar {
@@ -1933,13 +1919,17 @@ html[data-theme="light"] .upload-toast {
         margin-bottom: 25px;
     }
 
-    .editor-meta-row {
-        align-items: stretch;
-        flex-direction: column;
+    .editor-topbar {
+        flex-wrap: wrap;
+    }
+
+    .save-cluster {
+        flex: 1 1 100%;
+        justify-content: flex-end;
     }
 
     .editor-status-field {
-        width: 100%;
+        margin-right: auto;
     }
 
     .save-status {

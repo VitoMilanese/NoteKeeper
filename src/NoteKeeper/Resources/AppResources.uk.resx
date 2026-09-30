@@ -59,8 +59,6 @@
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
   <data name="Edit_StatusDone" xml:space="preserve"><value>Done</value></data>
   <data name="Edit_StatusReleased" xml:space="preserve"><value>Released</value></data>
-  <data name="Edit_HelpBefore" xml:space="preserve"><value>Додай блоки нижче. </value></data>
-  <data name="Edit_HelpAfter" xml:space="preserve"><value> у текстових блоках і коментарях до посилань автоматично стануть доступними для пошуку.</value></data>
   <data name="Edit_AddText" xml:space="preserve"><value>＋ Текст</value></data>
   <data name="Edit_AddLink" xml:space="preserve"><value>↗ Посилання</value></data>
   <data name="Edit_AddImage" xml:space="preserve"><value>▧ Зображення</value></data>

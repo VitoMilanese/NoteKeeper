@@ -59,8 +59,6 @@
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
   <data name="Edit_StatusDone" xml:space="preserve"><value>Done</value></data>
   <data name="Edit_StatusReleased" xml:space="preserve"><value>Released</value></data>
-  <data name="Edit_HelpBefore" xml:space="preserve"><value>Aggiungi i blocchi qui sotto. </value></data>
-  <data name="Edit_HelpAfter" xml:space="preserve"><value> nei blocchi di testo e nei commenti dei link diventano automaticamente ricercabili.</value></data>
   <data name="Edit_AddText" xml:space="preserve"><value>＋ Testo</value></data>
   <data name="Edit_AddLink" xml:space="preserve"><value>↗ Link</value></data>
   <data name="Edit_AddImage" xml:space="preserve"><value>▧ Immagine</value></data>
