@@ -40,7 +40,7 @@ jobs:
               <Nullable>enable</Nullable>
             </PropertyGroup>
             <ItemGroup>
-              <ProjectReference Include="../../src/NoteKeeper/NoteKeeper.csproj" />
+              <ProjectReference Include="src/NoteKeeper/NoteKeeper.csproj" />
             </ItemGroup>
           </Project>
           XML
@@ -174,11 +174,11 @@ jobs:
           }
 
           var controller = File.ReadAllText(
-              "../../src/NoteKeeper/Controllers/NotesController.cs");
+              "src/NoteKeeper/Controllers/NotesController.cs");
           var editor = File.ReadAllText(
-              "../../src/NoteKeeper/wwwroot/js/editor.js");
+              "src/NoteKeeper/wwwroot/js/editor.js");
           var view = File.ReadAllText(
-              "../../src/NoteKeeper/Views/Notes/Edit.cshtml");
+              "src/NoteKeeper/Views/Notes/Edit.cshtml");
 
           if (!controller.Contains("BuildDesiredTags(note.Status, tags)") ||
               !controller.Contains("note.Status = NormalizeStatus(request.Status)") ||
