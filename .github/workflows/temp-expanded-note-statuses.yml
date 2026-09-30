@@ -1,0 +1,179 @@
+name: Temporary expanded note-status verification
+
+on:
+  push:
+    branches:
+      - ci/temp-expanded-note-statuses
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Verify status order and priority tags
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          view = Path("src/NoteKeeper/Views/Notes/Edit.cshtml").read_text()
+          priority = Path("src/NoteKeeper/priority-tags.txt").read_text().splitlines()
+
+          statuses = [
+              "Backlog",
+              "Selected",
+              "Active",
+              "Test",
+              "Done",
+              "Released",
+              "Rejected",
+              "Suspended",
+          ]
+
+          positions = [
+              view.index(f"NoteStatus.{status}")
+              for status in statuses
+          ]
+          assert positions == sorted(positions), positions
+
+          assert priority == [
+              "backlog",
+              "selected",
+              "active",
+              "test",
+              "done",
+              "released",
+              "rejected",
+              "suspended",
+          ], priority
+
+          print("Status combobox and priority-tag order passed.")
+          PY
+
+      - name: Verify status tag semantics and old enum values
+        shell: bash
+        run: |
+          mkdir -p .tmp/status-expanded
+          cat > .tmp/status-expanded/StatusExpanded.csproj <<'XML'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <ProjectReference Include="../../src/NoteKeeper/NoteKeeper.csproj" />
+            </ItemGroup>
+          </Project>
+          XML
+
+          cat > .tmp/status-expanded/Program.cs <<'CS'
+          using Microsoft.Data.Sqlite;
+          using Microsoft.EntityFrameworkCore;
+          using NoteKeeper.Data;
+          using NoteKeeper.Models;
+          using NoteKeeper.Services;
+
+          static void AssertTags(NoteStatus status, params string[] expected)
+          {
+              var actual = NoteStatusTags.GetImplicitTags(status).ToArray();
+              if (!actual.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
+              {
+                  throw new Exception(
+                      $"{status}: expected [{string.Join(",", expected)}], got [{string.Join(",", actual)}].");
+              }
+          }
+
+          if ((int)NoteStatus.Backlog != 0 ||
+              (int)NoteStatus.Active != 1 ||
+              (int)NoteStatus.Done != 2 ||
+              (int)NoteStatus.Released != 3)
+          {
+              throw new Exception("Existing status numeric values changed.");
+          }
+
+          AssertTags(NoteStatus.Backlog, "backlog");
+          AssertTags(NoteStatus.Selected, "selected");
+          AssertTags(NoteStatus.Active, "active");
+          AssertTags(NoteStatus.Test, "test");
+          AssertTags(NoteStatus.Done, "done");
+          AssertTags(NoteStatus.Released, "done", "released");
+          AssertTags(NoteStatus.Rejected, "done");
+          AssertTags(NoteStatus.Suspended, "suspended");
+
+          await using var connection = new SqliteConnection("Data Source=:memory:");
+          await connection.OpenAsync();
+
+          var options = new DbContextOptionsBuilder<AppDbContext>()
+              .UseSqlite(connection)
+              .Options;
+
+          await using (var db = new AppDbContext(options))
+          {
+              db.Database.EnsureCreated();
+
+              var project = new Project
+              {
+                  Name = "P",
+                  Notes = Enum.GetValues<NoteStatus>()
+                      .Select((status, index) => new Note
+                      {
+                          Title = status.ToString(),
+                          Status = status,
+                          CreatedAtUtc = DateTime.UtcNow,
+                          UpdatedAtUtc = DateTime.UtcNow
+                      })
+                      .ToList()
+              };
+
+              db.Projects.Add(project);
+              await db.SaveChangesAsync();
+
+              SqliteSchemaUpgrade.Apply(db);
+          }
+
+          await using (var db = new AppDbContext(options))
+          {
+              var notes = await db.Notes
+                  .AsNoTracking()
+                  .Include(x => x.Tags)
+                  .OrderBy(x => x.Id)
+                  .ToArrayAsync();
+
+              foreach (var note in notes)
+              {
+                  var expected = NoteStatusTags.GetImplicitTags(note.Status)
+                      .OrderBy(x => x)
+                      .ToArray();
+                  var actual = note.Tags
+                      .Select(x => x.Name)
+                      .OrderBy(x => x)
+                      .ToArray();
+
+                  if (!actual.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
+                  {
+                      throw new Exception(
+                          $"{note.Status}: persisted tags [{string.Join(",", actual)}], expected [{string.Join(",", expected)}].");
+                  }
+              }
+          }
+
+          Console.WriteLine("Expanded note-status semantics passed.");
+          CS
+
+          dotnet run --project .tmp/status-expanded/StatusExpanded.csproj --configuration Release
