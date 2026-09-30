@@ -965,6 +965,69 @@ html[data-theme="light"] .project-card-topline {
     font-size: 1.2rem;
 }
 
+.time-tracked-heading {
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.time-tracked-title-group {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.time-tracked-collapse-button {
+    appearance: none;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.time-tracked-collapse-button:hover {
+    background: rgba(124, 140, 255, 0.08);
+    color: var(--text);
+}
+
+.time-tracked-collapse-button:focus-visible {
+    outline: 2px solid rgba(124, 140, 255, 0.7);
+    outline-offset: 2px;
+}
+
+.time-tracked-content[hidden] {
+    display: none;
+}
+
+.time-tracked-content .time-note-search-form {
+    margin-left: auto;
+    margin-bottom: 16px;
+}
+
+.time-note-overtime {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    border-radius: 6px;
+    padding: 2px 6px;
+    background: rgba(255, 102, 125, 0.13);
+    color: #ff9bab;
+    font-weight: 800;
+}
+
+html[data-theme="light"] .time-note-overtime {
+    background: rgba(185, 32, 58, 0.09);
+    color: #b4233d;
+}
+
 .time-note-search-form {
     display: flex;
     align-items: end;

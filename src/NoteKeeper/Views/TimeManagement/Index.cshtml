@@ -22,12 +22,27 @@
     <div class="time-error" role="alert">@Model.ErrorMessage</div>
 }
 
-<section class="panel time-tracked-panel">
-    <div class="time-section-heading">
-        <div>
-            <p class="eyebrow">@Localizer["Time_TrackedEyebrow"]</p>
-            <h2>@Localizer["Time_TrackedNotes"]</h2>
+<section class="panel time-tracked-panel"
+         data-time-tracked-panel>
+    <div class="time-section-heading time-tracked-heading">
+        <div class="time-tracked-title-group">
+            <button class="time-tracked-collapse-button"
+                    type="button"
+                    aria-expanded="true"
+                    title="@Localizer["Time_CollapseTrackedNotes"]"
+                    aria-label="@Localizer["Time_CollapseTrackedNotes"]"
+                    data-time-tracked-toggle
+                    data-expand-label="@Localizer["Time_ExpandTrackedNotes"]"
+                    data-collapse-label="@Localizer["Time_CollapseTrackedNotes"]">▾</button>
+            <div>
+                <p class="eyebrow">@Localizer["Time_TrackedEyebrow"]</p>
+                <h2>@Localizer["Time_TrackedNotes"]</h2>
+            </div>
         </div>
+    </div>
+
+    <div class="time-tracked-content"
+         data-time-tracked-content>
         <form method="post"
               action="/projects/@Model.ProjectId/time/notes/add"
               class="time-note-search-form"
@@ -51,21 +66,33 @@
             </datalist>
             <button class="button button-secondary" type="submit">@Localizer["Time_Add"]</button>
         </form>
-    </div>
 
-    @if (Model.TrackedNotes.Count == 0)
-    {
-        <div class="time-empty-inline">@Localizer["Time_NoTrackedNotes"]</div>
-    }
-    else
-    {
-        <div class="time-note-table">
+        <div class="time-empty-inline"
+             data-time-tracked-empty
+             hidden="@(Model.TrackedNotes.Count > 0 ? "hidden" : null)">@Localizer["Time_NoTrackedNotes"]</div>
+
+        <div class="time-note-table"
+             data-time-tracked-table
+             hidden="@(Model.TrackedNotes.Count == 0 ? "hidden" : null)">
             <div class="time-note-row time-note-header">
                 <span>@Localizer["Time_Task"]</span>
                 <span>@Localizer["Time_Estimated"]</span>
                 <span>@Localizer["Time_Spent"]</span>
                 <span>@Localizer["Time_Remaining"]</span>
-                <span></span>
+                <form method="post"
+                      action="/projects/@Model.ProjectId/time/notes/remove-all"
+                      class="time-row-action"
+                      data-time-unpin-all-form
+                      data-confirm-title="@Localizer["Time_RemoveAllTrackedNotesTitle"]"
+                      data-confirm-message="@Localizer["Time_RemoveAllTrackedNotesMessage"]"
+                      data-confirm-label="@Localizer["Time_RemoveAllTrackedNotes"]">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="month" value="@Model.MonthKey" />
+                    <button class="icon-button"
+                            type="submit"
+                            title="@Localizer["Time_RemoveAllTrackedNotes"]"
+                            aria-label="@Localizer["Time_RemoveAllTrackedNotes"]">×</button>
+                </form>
             </div>
             @foreach (var note in Model.TrackedNotes)
             {
@@ -74,10 +101,15 @@
                     <a class="time-note-title" href="/notes/@note.Id">@note.Title</a>
                     <span>@(string.IsNullOrWhiteSpace(note.EstimatedTime) ? "—" : note.EstimatedTime)</span>
                     <span data-time-tracked-spent>@note.SpentTime</span>
-                    <span data-time-tracked-remaining>@(string.IsNullOrWhiteSpace(note.RemainingTime) ? "—" : note.RemainingTime)</span>
+                    <span class="@(note.IsOvertime ? "time-note-overtime" : "")"
+                          title="@(note.IsOvertime ? Localizer["Time_Overtime"].Value : null)"
+                          data-time-tracked-remaining
+                          data-is-overtime="@(note.IsOvertime ? "true" : "false")"
+                          data-overtime-label="@Localizer["Time_Overtime"]">@(string.IsNullOrWhiteSpace(note.RemainingTime) ? "—" : note.RemainingTime)</span>
                     <form method="post"
                           action="/projects/@Model.ProjectId/time/notes/@note.Id/remove"
-                          class="time-row-action">
+                          class="time-row-action"
+                          data-time-unpin-form>
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="month" value="@Model.MonthKey" />
                         <button class="icon-button"
@@ -88,7 +120,7 @@
                 </div>
             }
         </div>
-    }
+    </div>
 </section>
 
 @await Html.PartialAsync("_TimeMonthPagination", Model)

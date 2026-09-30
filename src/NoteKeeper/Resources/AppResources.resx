@@ -268,4 +268,12 @@
   <data name="Time_DateAlreadyExists" xml:space="preserve"><value>A container for this date already exists.</value></data>
 
   <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Could not delete the date container.</value></data>
+
+  <data name="Time_Overtime" xml:space="preserve"><value>Overtime</value></data>
+  <data name="Time_RemoveAllTrackedNotes" xml:space="preserve"><value>Remove all from Time management</value></data>
+  <data name="Time_RemoveAllTrackedNotesTitle" xml:space="preserve"><value>Remove all tracked notes?</value></data>
+  <data name="Time_RemoveAllTrackedNotesMessage" xml:space="preserve"><value>Turn off the Time management star for every tracked note in this project?</value></data>
+  <data name="Time_CollapseTrackedNotes" xml:space="preserve"><value>Collapse tracked notes</value></data>
+  <data name="Time_ExpandTrackedNotes" xml:space="preserve"><value>Expand tracked notes</value></data>
+
 </root>

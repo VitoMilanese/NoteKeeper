@@ -268,4 +268,12 @@
   <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Esiste già un contenitore per questa data.</value></data>
 
   <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Impossibile eliminare il contenitore della data.</value></data>
+
+  <data name="Time_Overtime" xml:space="preserve"><value>Tempo extra</value></data>
+  <data name="Time_RemoveAllTrackedNotes" xml:space="preserve"><value>Rimuovi tutte dalla gestione del tempo</value></data>
+  <data name="Time_RemoveAllTrackedNotesTitle" xml:space="preserve"><value>Rimuovere tutte le note monitorate?</value></data>
+  <data name="Time_RemoveAllTrackedNotesMessage" xml:space="preserve"><value>Disattivare la stella della gestione del tempo per tutte le note monitorate di questo progetto?</value></data>
+  <data name="Time_CollapseTrackedNotes" xml:space="preserve"><value>Comprimi note monitorate</value></data>
+  <data name="Time_ExpandTrackedNotes" xml:space="preserve"><value>Espandi note monitorate</value></data>
+
 </root>

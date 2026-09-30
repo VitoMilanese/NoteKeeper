@@ -268,4 +268,12 @@
   <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Контейнер для цієї дати вже існує.</value></data>
 
   <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Не вдалося видалити контейнер дати.</value></data>
+
+  <data name="Time_Overtime" xml:space="preserve"><value>Перевищення</value></data>
+  <data name="Time_RemoveAllTrackedNotes" xml:space="preserve"><value>Прибрати всі з Time management</value></data>
+  <data name="Time_RemoveAllTrackedNotesTitle" xml:space="preserve"><value>Прибрати всі вибрані нотатки?</value></data>
+  <data name="Time_RemoveAllTrackedNotesMessage" xml:space="preserve"><value>Вимкнути зірочку Time management для всіх вибраних нотаток цього проекту?</value></data>
+  <data name="Time_CollapseTrackedNotes" xml:space="preserve"><value>Згорнути вибрані нотатки</value></data>
+  <data name="Time_ExpandTrackedNotes" xml:space="preserve"><value>Розгорнути вибрані нотатки</value></data>
+
 </root>

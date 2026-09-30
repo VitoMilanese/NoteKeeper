@@ -27,6 +27,7 @@ public sealed class TimeTrackedNoteViewModel
     public string EstimatedTime { get; set; } = string.Empty;
     public string SpentTime { get; set; } = string.Empty;
     public string RemainingTime { get; set; } = string.Empty;
+    public bool IsOvertime { get; set; }
 }
 
 public sealed class TimeNoteOptionViewModel

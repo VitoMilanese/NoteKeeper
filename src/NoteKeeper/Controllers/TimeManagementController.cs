@@ -48,19 +48,28 @@ public sealed class TimeManagementController(
 
         var trackedNotes = notes
             .Where(x => x.IsTimeManagementPinned)
-            .Select(x => new TimeTrackedNoteViewModel
+            .Select(x =>
             {
-                Id = x.Id,
-                Title = x.Title,
-                EstimatedTime = JiraDuration.Format(x.EstimatedTimeMinutes),
-                SpentTime = JiraDuration.Format(x.SpentTimeMinutes ?? 0),
-                RemainingTime = x.EstimatedTimeMinutes.HasValue
-                    ? JiraDuration.Format(
-                        Math.Max(
-                            0,
-                            x.EstimatedTimeMinutes.Value -
-                            (x.SpentTimeMinutes ?? 0)))
-                    : string.Empty
+                var spentMinutes = x.SpentTimeMinutes ?? 0;
+                var remainingMinutes = x.EstimatedTimeMinutes.HasValue
+                    ? x.EstimatedTimeMinutes.Value - spentMinutes
+                    : (int?)null;
+                var isOvertime = remainingMinutes < 0;
+
+                return new TimeTrackedNoteViewModel
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    EstimatedTime = JiraDuration.Format(
+                        x.EstimatedTimeMinutes),
+                    SpentTime = JiraDuration.Format(spentMinutes),
+                    RemainingTime = remainingMinutes.HasValue
+                        ? isOvertime
+                            ? $"+{JiraDuration.Format(-remainingMinutes.Value)}"
+                            : JiraDuration.Format(remainingMinutes.Value)
+                        : string.Empty,
+                    IsOvertime = isOvertime
+                };
             })
             .ToList();
 
@@ -349,13 +358,12 @@ public sealed class TimeManagementController(
                     id = note.Id,
                     spentTime = JiraDuration.Format(
                         note.SpentTimeMinutes ?? 0),
-                    remainingTime = note.EstimatedTimeMinutes.HasValue
-                        ? JiraDuration.Format(
-                            Math.Max(
-                                0,
-                                note.EstimatedTimeMinutes.Value -
-                                (note.SpentTimeMinutes ?? 0)))
-                        : string.Empty
+                    remainingTime = GetRemainingTime(
+                        note.EstimatedTimeMinutes,
+                        note.SpentTimeMinutes),
+                    isOvertime = IsOvertime(
+                        note.EstimatedTimeMinutes,
+                        note.SpentTimeMinutes)
                 })
             });
         }
@@ -602,6 +610,49 @@ public sealed class TimeManagementController(
         note.IsTimeManagementPinned = false;
         await db.SaveChangesAsync(cancellationToken);
 
+        if (IsAjaxRequest())
+        {
+            return Ok(new
+            {
+                removedNoteId = note.Id
+            });
+        }
+
+        return RedirectToMonth(projectId, ParseMonth(month));
+    }
+
+    [HttpPost("/projects/{projectId:int}/time/notes/remove-all")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveAllTrackedNotes(
+        int projectId,
+        string? month,
+        CancellationToken cancellationToken)
+    {
+        var notes = await db.Notes
+            .Where(x =>
+                x.ProjectId == projectId &&
+                x.IsTimeManagementPinned)
+            .ToListAsync(cancellationToken);
+
+        var removedNoteIds = notes
+            .Select(x => x.Id)
+            .ToArray();
+
+        foreach (var note in notes)
+        {
+            note.IsTimeManagementPinned = false;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (IsAjaxRequest())
+        {
+            return Ok(new
+            {
+                removedNoteIds
+            });
+        }
+
         return RedirectToMonth(projectId, ParseMonth(month));
     }
 
@@ -630,6 +681,32 @@ public sealed class TimeManagementController(
         {
             isPinned = note.IsTimeManagementPinned
         });
+    }
+
+    private static string GetRemainingTime(
+        int? estimatedTimeMinutes,
+        int? spentTimeMinutes)
+    {
+        if (!estimatedTimeMinutes.HasValue)
+        {
+            return string.Empty;
+        }
+
+        var remaining =
+            estimatedTimeMinutes.Value -
+            (spentTimeMinutes ?? 0);
+
+        return remaining < 0
+            ? $"+{JiraDuration.Format(-remaining)}"
+            : JiraDuration.Format(remaining);
+    }
+
+    private static bool IsOvertime(
+        int? estimatedTimeMinutes,
+        int? spentTimeMinutes)
+    {
+        return estimatedTimeMinutes.HasValue &&
+            (spentTimeMinutes ?? 0) > estimatedTimeMinutes.Value;
     }
 
     private async Task RecalculateNoteSpentAsync(

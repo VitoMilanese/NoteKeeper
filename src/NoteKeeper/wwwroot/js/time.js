@@ -456,6 +456,15 @@
 
             if (remaining) {
                 remaining.textContent = summary.remainingTime || '—';
+                const isOvertime = Boolean(summary.isOvertime);
+                remaining.classList.toggle(
+                    'time-note-overtime',
+                    isOvertime);
+                remaining.dataset.isOvertime =
+                    isOvertime ? 'true' : 'false';
+                remaining.title = isOvertime
+                    ? remaining.dataset.overtimeLabel || ''
+                    : '';
             }
         }
     };
@@ -525,4 +534,192 @@
             }
         }
     });
+})();
+
+
+(() => {
+    const panel = document.querySelector('[data-time-tracked-panel]');
+    const toggle = panel?.querySelector('[data-time-tracked-toggle]');
+    const content = panel?.querySelector('[data-time-tracked-content]');
+
+    if (!panel || !toggle || !content) return;
+
+    const storageKey = 'notekeeper.time.trackedNotesCollapsed';
+
+    const applyState = (collapsed) => {
+        content.hidden = collapsed;
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        toggle.textContent = collapsed ? '▸' : '▾';
+
+        const label = collapsed
+            ? toggle.dataset.expandLabel
+            : toggle.dataset.collapseLabel;
+
+        if (label) {
+            toggle.title = label;
+            toggle.setAttribute('aria-label', label);
+        }
+
+        panel.classList.toggle('is-collapsed', collapsed);
+    };
+
+    let collapsed = false;
+
+    try {
+        collapsed = localStorage.getItem(storageKey) === '1';
+    } catch {
+        collapsed = false;
+    }
+
+    applyState(collapsed);
+
+    toggle.addEventListener('click', () => {
+        collapsed = toggle.getAttribute('aria-expanded') === 'true';
+        applyState(collapsed);
+
+        try {
+            localStorage.setItem(storageKey, collapsed ? '1' : '0');
+        } catch {
+            // Local storage may be unavailable; keep the state for this page.
+        }
+    });
+})();
+
+(() => {
+    const panel = document.querySelector('[data-time-tracked-panel]');
+    if (!panel) return;
+
+    const table = panel.querySelector('[data-time-tracked-table]');
+    const empty = panel.querySelector('[data-time-tracked-empty]');
+    const availableNotes = document.getElementById('timeAvailableNotes');
+    const taskOptions = document.getElementById('timeTaskOptions');
+
+    const refreshVisibility = () => {
+        const hasRows = Boolean(
+            table?.querySelector('[data-time-tracked-note-id]'));
+
+        if (table) {
+            table.hidden = !hasRows;
+        }
+
+        if (empty) {
+            empty.hidden = hasRows;
+        }
+    };
+
+    const addAvailableNote = (noteId, title) => {
+        if (!availableNotes || !noteId || !title) return;
+
+        const exists = Array.from(availableNotes.options).some(
+            (option) => option.dataset.noteId === String(noteId));
+
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = title;
+            option.dataset.noteId = String(noteId);
+            availableNotes.appendChild(option);
+        }
+    };
+
+    const markTaskOptionUnpinned = (noteId) => {
+        if (!taskOptions) return;
+
+        const option = Array.from(taskOptions.options).find(
+            (item) => item.dataset.noteId === String(noteId));
+
+        if (!option) return;
+
+        option.dataset.pinned = 'false';
+        option.label = option.value;
+
+        const sorted = Array.from(taskOptions.options).sort((left, right) => {
+            const leftPinned = left.dataset.pinned === 'true' ? 1 : 0;
+            const rightPinned = right.dataset.pinned === 'true' ? 1 : 0;
+
+            if (leftPinned !== rightPinned) {
+                return rightPinned - leftPinned;
+            }
+
+            return left.value.localeCompare(
+                right.value,
+                undefined,
+                { sensitivity: 'base' });
+        });
+
+        sorted.forEach((item) => taskOptions.appendChild(item));
+    };
+
+    const removeTrackedRow = (noteId) => {
+        const row = panel.querySelector(
+            `[data-time-tracked-note-id="${noteId}"]`);
+
+        if (!row) return;
+
+        const title =
+            row.querySelector('.time-note-title')?.textContent?.trim() || '';
+
+        addAvailableNote(noteId, title);
+        markTaskOptionUnpinned(noteId);
+        row.remove();
+    };
+
+    document.addEventListener('submit', async (event) => {
+        const singleForm = event.target.closest('[data-time-unpin-form]');
+        const allForm = event.target.closest('[data-time-unpin-all-form]');
+        const form = singleForm || allForm;
+
+        if (!form) return;
+
+        event.preventDefault();
+
+        if (allForm) {
+            const confirmed = typeof window.noteKeeperConfirm === 'function'
+                ? await window.noteKeeperConfirm({
+                    title: form.dataset.confirmTitle,
+                    message: form.dataset.confirmMessage,
+                    confirmLabel: form.dataset.confirmLabel,
+                    danger: true
+                })
+                : window.confirm(form.dataset.confirmMessage || '');
+
+            if (!confirmed) return;
+        }
+
+        const button = form.querySelector('button[type="submit"]');
+        if (button) {
+            button.disabled = true;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Could not update tracked notes.');
+            }
+
+            const result = await response.json();
+            const ids = allForm
+                ? result.removedNoteIds || []
+                : [result.removedNoteId];
+
+            ids
+                .filter((id) => id !== null && id !== undefined)
+                .forEach(removeTrackedRow);
+
+            refreshVisibility();
+        } catch {
+            if (button) {
+                button.disabled = false;
+            }
+        }
+    });
+
+    refreshVisibility();
 })();
