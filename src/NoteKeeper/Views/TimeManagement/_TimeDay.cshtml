@@ -7,24 +7,59 @@
          class="panel time-day-card"
          data-date="@Model.Day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">
     <header class="time-day-header">
-        <div class="time-day-heading">
+        <div class="time-day-heading" data-time-day-date-display>
             <h2>@Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)</h2>
             <span class="time-day-total">@Localizer["Time_Total"]: @Model.Day.TotalTimeSpent</span>
         </div>
+
         <form method="post"
-              action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/delete"
-              data-confirm-form
-              data-confirm-title="@Localizer["Time_DeleteDayTitle"]"
-              data-confirm-message="@Localizer["Time_DeleteDayMessage", Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)]"
-              data-confirm-label="@Localizer["Index_Delete"]"
-              data-confirm-danger="true">
+              action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/date"
+              class="time-day-date-edit-form"
+              data-time-day-date-form
+              data-current-month="@Model.MonthKey"
+              data-update-date-error="@Localizer["Time_UpdateDateFailed"]"
+              hidden>
             @Html.AntiForgeryToken()
             <input type="hidden" name="month" value="@Model.MonthKey" />
-            <button class="icon-button"
-                    type="submit"
-                    title="@Localizer["Time_DeleteDay"]"
-                    aria-label="@Localizer["Time_DeleteDay"]">×</button>
+            <input name="date"
+                   value="@Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)"
+                   maxlength="8"
+                   inputmode="numeric"
+                   autocomplete="off"
+                   title="@Localizer["Time_DateFormatHint"]"
+                   data-time-day-date-input />
+            <button class="button button-secondary button-small"
+                    type="submit">@Localizer["Time_SaveDate"]</button>
+            <button class="button button-ghost button-small"
+                    type="button"
+                    data-time-day-date-cancel>@Localizer["Time_CancelDate"]</button>
+            <span class="time-day-date-error"
+                  role="alert"
+                  data-time-day-date-error
+                  hidden></span>
         </form>
+
+        <div class="time-day-actions">
+            <button class="icon-button"
+                    type="button"
+                    title="@Localizer["Time_EditDate"]"
+                    aria-label="@Localizer["Time_EditDate"]"
+                    data-time-day-date-edit>✎</button>
+            <form method="post"
+                  action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/delete"
+                  data-confirm-form
+                  data-confirm-title="@Localizer["Time_DeleteDayTitle"]"
+                  data-confirm-message="@Localizer["Time_DeleteDayMessage", Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)]"
+                  data-confirm-label="@Localizer["Index_Delete"]"
+                  data-confirm-danger="true">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="month" value="@Model.MonthKey" />
+                <button class="icon-button"
+                        type="submit"
+                        title="@Localizer["Time_DeleteDay"]"
+                        aria-label="@Localizer["Time_DeleteDay"]">×</button>
+            </form>
+        </div>
     </header>
 
     <div class="time-entry-list">

@@ -148,7 +148,9 @@
     <p>@Localizer["Time_NoDaysCopy"]</p>
 </section>
 
-<section class="time-days" data-time-days>
+<section class="time-days"
+         data-time-days
+         data-project-id="@Model.ProjectId">
     @foreach (var day in Model.Days)
     {
         @await Html.PartialAsync(

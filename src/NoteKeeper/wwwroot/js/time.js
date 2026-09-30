@@ -254,3 +254,143 @@
         input.focus();
     });
 })();
+
+
+(() => {
+    const days = document.querySelector('[data-time-days]');
+    if (!days) return;
+
+    const positionDay = (day) => {
+        const date = day.dataset.date || '';
+        const otherDays = Array.from(
+            days.querySelectorAll('.time-day-card'))
+            .filter((item) => item !== day);
+
+        const insertBefore = otherDays.find((item) =>
+            (item.dataset.date || '') < date);
+
+        if (insertBefore) {
+            days.insertBefore(day, insertBefore);
+        } else {
+            days.appendChild(day);
+        }
+    };
+
+    const setEditMode = (card, enabled) => {
+        const display = card.querySelector('[data-time-day-date-display]');
+        const form = card.querySelector('[data-time-day-date-form]');
+        const editButton = card.querySelector('[data-time-day-date-edit]');
+        const error = card.querySelector('[data-time-day-date-error]');
+
+        if (!display || !form || !editButton) return;
+
+        display.hidden = enabled;
+        form.hidden = !enabled;
+        editButton.hidden = enabled;
+
+        if (error) {
+            error.hidden = true;
+            error.textContent = '';
+        }
+
+        if (enabled) {
+            const input = form.querySelector('[data-time-day-date-input]');
+            input?.focus();
+            input?.select();
+        }
+    };
+
+    document.addEventListener('click', (event) => {
+        const editButton = event.target.closest('[data-time-day-date-edit]');
+        if (editButton) {
+            const card = editButton.closest('.time-day-card');
+            if (card) {
+                setEditMode(card, true);
+            }
+            return;
+        }
+
+        const cancelButton = event.target.closest('[data-time-day-date-cancel]');
+        if (cancelButton) {
+            const card = cancelButton.closest('.time-day-card');
+            if (card) {
+                setEditMode(card, false);
+            }
+        }
+    });
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-time-day-date-form]');
+        if (!form) return;
+
+        event.preventDefault();
+
+        const card = form.closest('.time-day-card');
+        const error = form.querySelector('[data-time-day-date-error]');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        if (!card) return;
+
+        if (error) {
+            error.hidden = true;
+            error.textContent = '';
+        }
+
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'text/html'
+                }
+            });
+
+            if (!response.ok) {
+                const message = (await response.text()).trim();
+                throw new Error(
+                    message ||
+                    form.dataset.updateDateError ||
+                    '');
+            }
+
+            const targetMonth =
+                response.headers.get('X-Time-Day-Month') || '';
+            const currentMonth = form.dataset.currentMonth || '';
+
+            if (targetMonth &&
+                currentMonth &&
+                targetMonth !== currentMonth) {
+                window.location.href =
+                    `/projects/${days.dataset.projectId || ''}/time?month=${encodeURIComponent(targetMonth)}#${card.id}`;
+                return;
+            }
+
+            const html = await response.text();
+            const template = document.createElement('template');
+            template.innerHTML = html.trim();
+            const updatedDay = template.content.firstElementChild;
+
+            if (!updatedDay) return;
+
+            card.replaceWith(updatedDay);
+            positionDay(updatedDay);
+        } catch (caught) {
+            if (error) {
+                error.textContent =
+                    caught.message ||
+                    form.dataset.updateDateError ||
+                    '';
+                error.hidden = false;
+            }
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+        }
+    });
+})();

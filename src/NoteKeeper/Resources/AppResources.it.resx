@@ -260,4 +260,11 @@
 
   <data name="Time_AddDateFailed" xml:space="preserve"><value>Impossibile aggiungere la data.</value></data>
   <data name="Time_OpenTask" xml:space="preserve"><value>Apri attività in una nuova scheda</value></data>
+
+  <data name="Time_EditDate" xml:space="preserve"><value>Modifica data</value></data>
+  <data name="Time_SaveDate" xml:space="preserve"><value>Salva</value></data>
+  <data name="Time_CancelDate" xml:space="preserve"><value>Annulla</value></data>
+  <data name="Time_UpdateDateFailed" xml:space="preserve"><value>Impossibile modificare la data.</value></data>
+  <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Esiste già un contenitore per questa data.</value></data>
+
 </root>

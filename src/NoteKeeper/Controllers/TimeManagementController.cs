@@ -207,6 +207,95 @@ public sealed class TimeManagementController(
         return RedirectToMonth(projectId, normalizedDate);
     }
 
+    [HttpPost("/projects/{projectId:int}/time/days/{dayId:int}/date")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateDayDate(
+        int projectId,
+        int dayId,
+        string? date,
+        string? month,
+        CancellationToken cancellationToken)
+    {
+        var day = await db.TimeManagementDays
+            .FirstOrDefaultAsync(
+                x => x.Id == dayId && x.ProjectId == projectId,
+                cancellationToken);
+
+        if (day is null)
+        {
+            return NotFound();
+        }
+
+        if (!TryParseCalendarDate(date, out var normalizedDate))
+        {
+            if (IsAjaxRequest())
+            {
+                return BadRequest(localizer["Time_InvalidDate"].Value);
+            }
+
+            SetError("Time_InvalidDate");
+            return RedirectToMonth(
+                projectId,
+                ParseMonth(month),
+                dayId);
+        }
+
+        var duplicateExists = await db.TimeManagementDays
+            .AsNoTracking()
+            .AnyAsync(
+                x =>
+                    x.ProjectId == projectId &&
+                    x.Id != dayId &&
+                    x.Date == normalizedDate,
+                cancellationToken);
+
+        if (duplicateExists)
+        {
+            if (IsAjaxRequest())
+            {
+                return Conflict(
+                    localizer["Time_DateAlreadyExists"].Value);
+            }
+
+            SetError("Time_DateAlreadyExists");
+            return RedirectToMonth(
+                projectId,
+                ParseMonth(month),
+                dayId);
+        }
+
+        day.Date = normalizedDate;
+        await TouchProjectAsync(projectId, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (IsAjaxRequest())
+        {
+            var updatedDay = await db.TimeManagementDays
+                .AsNoTracking()
+                .Include(x => x.Entries)
+                    .ThenInclude(entry => entry.Note)
+                .AsSplitQuery()
+                .FirstAsync(x => x.Id == dayId, cancellationToken);
+
+            Response.Headers["X-Time-Day-Month"] =
+                MonthKey(normalizedDate);
+
+            return PartialView(
+                "_TimeDay",
+                new TimeDayPartialViewModel
+                {
+                    ProjectId = projectId,
+                    MonthKey = MonthKey(normalizedDate),
+                    Day = MapDay(updatedDay)
+                });
+        }
+
+        return RedirectToMonth(
+            projectId,
+            normalizedDate,
+            dayId);
+    }
+
     [HttpPost("/projects/{projectId:int}/time/days/{dayId:int}/delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteDay(

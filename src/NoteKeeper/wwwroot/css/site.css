@@ -1143,6 +1143,59 @@ html[data-theme="light"] .project-card-topline {
     gap: 14px;
 }
 
+.time-day-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.time-day-actions form {
+    margin: 0;
+}
+
+.time-day-date-edit-form {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+}
+
+.time-day-date-edit-form[hidden] {
+    display: none;
+}
+
+.time-day-date-edit-form input[name="date"] {
+    width: 112px;
+    min-height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    outline: none;
+    padding: 0 9px;
+    background: #111a2e;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.time-day-date-edit-form input[name="date"]:focus {
+    border-color: rgba(124, 140, 255, 0.62);
+    box-shadow: 0 0 0 4px rgba(124, 140, 255, 0.09);
+}
+
+html[data-theme="light"] .time-day-date-edit-form input[name="date"] {
+    background: #ffffff;
+}
+
+.time-day-date-error {
+    max-width: 260px;
+    color: #ff91a1;
+    font-size: 0.76rem;
+    font-weight: 650;
+}
+
 .time-day-heading h2 {
     margin: 0;
     font-size: 1.15rem;
@@ -1274,6 +1327,23 @@ html[data-theme="light"] .project-card-topline {
         align-items: flex-start;
         flex-direction: column;
         gap: 3px;
+    }
+
+    .time-day-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .time-day-date-edit-form {
+        order: 3;
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .time-day-date-error {
+        flex: 1 1 100%;
+        max-width: none;
     }
 
     .time-entry-row {
