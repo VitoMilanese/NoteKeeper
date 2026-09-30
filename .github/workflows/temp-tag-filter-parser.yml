@@ -1,0 +1,124 @@
+name: Temporary tag-filter parser verification
+
+on:
+  push:
+    branches:
+      - ci/temp-tag-filter-parser
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Verify tag-filter parser examples
+        shell: bash
+        run: |
+          mkdir -p .tmp/tag-filter-tests
+          cat > .tmp/tag-filter-tests/TagFilterTests.csproj <<'XML'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <Compile Include="../../src/NoteKeeper/Services/TagFilterParser.cs" Link="TagFilterParser.cs" />
+            </ItemGroup>
+          </Project>
+          XML
+
+          cat > .tmp/tag-filter-tests/Program.cs <<'CS'
+          using NoteKeeper.Services;
+
+          static void AssertTags(
+              string expression,
+              string[] expectedIncluded,
+              string[] expectedExcluded)
+          {
+              var parsed = TagFilterParser.Parse(expression);
+
+              if (!parsed.IncludedTags.SequenceEqual(expectedIncluded, StringComparer.OrdinalIgnoreCase))
+              {
+                  throw new Exception(
+                      $"Included mismatch for '{expression}': {string.Join(",", parsed.IncludedTags)}");
+              }
+
+              if (!parsed.ExcludedTags.SequenceEqual(expectedExcluded, StringComparer.OrdinalIgnoreCase))
+              {
+                  throw new Exception(
+                      $"Excluded mismatch for '{expression}': {string.Join(",", parsed.ExcludedTags)}");
+              }
+          }
+
+          AssertTags(
+              "atm, done, -tn",
+              ["atm", "done"],
+              ["tn"]);
+
+          AssertTags(
+              "atm, done, -(tn, dsde, released)",
+              ["atm", "done"],
+              ["tn", "dsde", "released"]);
+
+          AssertTags(
+              "(atm, done), -(tn, dsde, released)",
+              ["atm", "done"],
+              ["tn", "dsde", "released"]);
+
+          AssertTags(
+              "(#atm, #de.bug), -(#tn, #some-tag)",
+              ["atm", "de.bug"],
+              ["tn", "some-tag"]);
+
+          var notes = new[]
+          {
+              new { Id = 1, Tags = new[] { "atm", "done" } },
+              new { Id = 2, Tags = new[] { "atm", "done", "tn" } },
+              new { Id = 3, Tags = new[] { "atm", "done", "dsde" } },
+              new { Id = 4, Tags = new[] { "atm" } },
+              new { Id = 5, Tags = new[] { "atm", "done", "work" } }
+          };
+
+          static int[] Filter(
+              IEnumerable<dynamic> notes,
+              string expression)
+          {
+              var parsed = TagFilterParser.Parse(expression);
+
+              return notes
+                  .Where(note =>
+                      parsed.IncludedTags.All(required =>
+                          ((IEnumerable<string>)note.Tags).Contains(required, StringComparer.OrdinalIgnoreCase)) &&
+                      parsed.ExcludedTags.All(forbidden =>
+                          !((IEnumerable<string>)note.Tags).Contains(forbidden, StringComparer.OrdinalIgnoreCase)))
+                  .Select(note => (int)note.Id)
+                  .ToArray();
+          }
+
+          var first = Filter(notes, "atm, done, -tn");
+          if (!first.SequenceEqual(new[] { 1, 3, 5 }))
+              throw new Exception("Filtering semantics failed for single negative tag.");
+
+          var second = Filter(notes, "(atm, done), -(tn, dsde, released)");
+          if (!second.SequenceEqual(new[] { 1, 5 }))
+              throw new Exception("Filtering semantics failed for grouped negative tags.");
+
+          Console.WriteLine("Tag-filter parser examples passed.");
+          CS
+
+          dotnet run --project .tmp/tag-filter-tests/TagFilterTests.csproj --configuration Release
