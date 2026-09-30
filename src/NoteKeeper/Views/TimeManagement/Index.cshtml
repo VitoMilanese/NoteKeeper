@@ -99,7 +99,24 @@
                 <div class="time-note-row"
                      data-time-tracked-note-id="@note.Id">
                     <a class="time-note-title" href="/notes/@note.Id">@note.Title</a>
-                    <span>@(string.IsNullOrWhiteSpace(note.EstimatedTime) ? "—" : note.EstimatedTime)</span>
+                    <form method="post"
+                          action="/projects/@Model.ProjectId/time/notes/@note.Id/estimated"
+                          class="time-estimated-form"
+                          data-time-estimated-form>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="month" value="@Model.MonthKey" />
+                        <input type="text"
+                               name="estimatedTime"
+                               value="@note.EstimatedTime"
+                               placeholder="—"
+                               autocomplete="off"
+                               spellcheck="false"
+                               class="time-estimated-input"
+                               title="@Localizer["Edit_TimeFormatHint"]"
+                               aria-label="@Localizer["Time_Estimated"]"
+                               data-time-estimated-input
+                               data-invalid-message="@Localizer["Server_InvalidEstimatedTime"]" />
+                    </form>
                     <span data-time-tracked-spent>@note.SpentTime</span>
                     <span class="@(note.IsOvertime ? "time-note-overtime" : "")"
                           title="@(note.IsOvertime ? Localizer["Time_Overtime"].Value : null)"

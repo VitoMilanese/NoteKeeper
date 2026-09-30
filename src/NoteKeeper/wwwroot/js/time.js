@@ -539,6 +539,158 @@
 
 (() => {
     const panel = document.querySelector('[data-time-tracked-panel]');
+    if (!panel) return;
+
+    const durationPattern = /^(?:\\s*\\d+\\s*[wdhm])+\\s*$/i;
+
+    const isValidDuration = (value) => {
+        const text = String(value || '').trim();
+        return text.length === 0 || durationPattern.test(text);
+    };
+
+    const updateRemaining = (row, result) => {
+        const remaining =
+            row?.querySelector('[data-time-tracked-remaining]');
+
+        if (!remaining) return;
+
+        remaining.textContent = result.remainingTime || '—';
+
+        const isOvertime = Boolean(result.isOvertime);
+        remaining.classList.toggle(
+            'time-note-overtime',
+            isOvertime);
+        remaining.dataset.isOvertime =
+            isOvertime ? 'true' : 'false';
+        remaining.title = isOvertime
+            ? remaining.dataset.overtimeLabel || ''
+            : '';
+    };
+
+    panel.querySelectorAll('[data-time-estimated-input]')
+        .forEach((input) => {
+            input.dataset.savedValue = input.value;
+        });
+
+    panel.addEventListener('input', (event) => {
+        const input = event.target.closest(
+            '[data-time-estimated-input]');
+        if (!input) return;
+
+        input.setCustomValidity('');
+        input.classList.remove('is-invalid');
+    });
+
+    panel.addEventListener('change', (event) => {
+        const input = event.target.closest(
+            '[data-time-estimated-input]');
+        if (!input) return;
+
+        if (input.value === (input.dataset.savedValue || '')) {
+            return;
+        }
+
+        input.closest('[data-time-estimated-form]')?.requestSubmit();
+    });
+
+    panel.addEventListener('keydown', (event) => {
+        const input = event.target.closest(
+            '[data-time-estimated-input]');
+        if (!input) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            input.value = input.dataset.savedValue || '';
+            input.setCustomValidity('');
+            input.classList.remove('is-invalid');
+            input.blur();
+            return;
+        }
+
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            if (input.value === (input.dataset.savedValue || '')) {
+                input.blur();
+                return;
+            }
+
+            input.closest('[data-time-estimated-form]')?.requestSubmit();
+        }
+    });
+
+    panel.addEventListener('submit', async (event) => {
+        const form = event.target.closest(
+            '[data-time-estimated-form]');
+        if (!form) return;
+
+        event.preventDefault();
+
+        const input = form.querySelector(
+            '[data-time-estimated-input]');
+        if (!input || input.disabled) return;
+
+        input.setCustomValidity('');
+        input.classList.remove('is-invalid');
+
+        if (!isValidDuration(input.value)) {
+            input.setCustomValidity(
+                input.dataset.invalidMessage || 'Invalid time.');
+            input.classList.add('is-invalid');
+            input.reportValidity();
+            input.focus();
+            return;
+        }
+
+        input.disabled = true;
+        input.classList.add('is-saving');
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const message = (await response.text()).trim();
+                throw new Error(
+                    message ||
+                    input.dataset.invalidMessage ||
+                    'Could not update estimated time.');
+            }
+
+            const result = await response.json();
+            input.value = result.estimatedTime || '';
+            input.dataset.savedValue = input.value;
+
+            updateRemaining(
+                form.closest('[data-time-tracked-note-id]'),
+                result);
+        } catch (caught) {
+            input.setCustomValidity(
+                caught.message ||
+                input.dataset.invalidMessage ||
+                'Could not update estimated time.');
+            input.classList.add('is-invalid');
+        } finally {
+            input.disabled = false;
+            input.classList.remove('is-saving');
+
+            if (!input.checkValidity()) {
+                input.reportValidity();
+                input.focus();
+            }
+        }
+    });
+})();
+
+
+(() => {
+    const panel = document.querySelector('[data-time-tracked-panel]');
     const toggle = panel?.querySelector('[data-time-tracked-toggle]');
     const content = panel?.querySelector('[data-time-tracked-content]');
 

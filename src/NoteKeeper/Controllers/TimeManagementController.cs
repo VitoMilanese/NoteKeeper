@@ -656,6 +656,61 @@ public sealed class TimeManagementController(
         return RedirectToMonth(projectId, ParseMonth(month));
     }
 
+    [HttpPost("/projects/{projectId:int}/time/notes/{noteId:int}/estimated")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateEstimatedTime(
+        int projectId,
+        int noteId,
+        string? estimatedTime,
+        string? month,
+        CancellationToken cancellationToken)
+    {
+        var note = await db.Notes
+            .FirstOrDefaultAsync(
+                x => x.Id == noteId && x.ProjectId == projectId,
+                cancellationToken);
+
+        if (note is null)
+        {
+            return NotFound();
+        }
+
+        if (!JiraDuration.TryParse(estimatedTime, out var estimatedMinutes))
+        {
+            if (IsAjaxRequest())
+            {
+                return BadRequest(
+                    localizer["Server_InvalidEstimatedTime"].Value);
+            }
+
+            SetError("Server_InvalidEstimatedTime");
+            return RedirectToMonth(projectId, ParseMonth(month));
+        }
+
+        note.EstimatedTimeMinutes = estimatedMinutes;
+        note.UpdatedAtUtc = DateTime.UtcNow;
+
+        await TouchProjectAsync(projectId, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (IsAjaxRequest())
+        {
+            return Ok(new
+            {
+                estimatedTime = JiraDuration.Format(
+                    note.EstimatedTimeMinutes),
+                remainingTime = GetRemainingTime(
+                    note.EstimatedTimeMinutes,
+                    note.SpentTimeMinutes),
+                isOvertime = IsOvertime(
+                    note.EstimatedTimeMinutes,
+                    note.SpentTimeMinutes)
+            });
+        }
+
+        return RedirectToMonth(projectId, ParseMonth(month));
+    }
+
     [HttpPost("/notes/{noteId:int}/time-pin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetNotePin(
