@@ -40,7 +40,7 @@ jobs:
               <Nullable>enable</Nullable>
             </PropertyGroup>
             <ItemGroup>
-              <ProjectReference Include="src/NoteKeeper/NoteKeeper.csproj" />
+              <ProjectReference Include="../../src/NoteKeeper/NoteKeeper.csproj" />
             </ItemGroup>
           </Project>
           XML
