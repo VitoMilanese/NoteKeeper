@@ -94,7 +94,8 @@
         ["emojiCategoryActivities"] = Localizer["Editor_EmojiCategoryActivities"].Value,
         ["emojiCategoryObjects"] = Localizer["Editor_EmojiCategoryObjects"].Value,
         ["emojiCategorySymbols"] = Localizer["Editor_EmojiCategorySymbols"].Value,
-        ["emojiCategoryFlags"] = Localizer["Editor_EmojiCategoryFlags"].Value
+        ["emojiCategoryFlags"] = Localizer["Editor_EmojiCategoryFlags"].Value,
+        ["timePinFailed"] = Localizer["Editor_TimePinFailed"].Value
     };
     var editorStringsJson = JsonSerializer.Serialize(editorStrings);
 }
@@ -140,11 +141,12 @@
                            readonly />
                 </label>
                 <button id="timeManagementStarButton"
-                        class="icon-button editor-time-star"
+                        class="icon-button editor-time-star @(Model.IsTimeManagementPinned ? "is-active" : "")"
                         type="button"
                         title="@Localizer["Edit_TimeManagementStar"]"
                         aria-label="@Localizer["Edit_TimeManagementStar"]"
-                        aria-pressed="false">☆</button>
+                        aria-pressed="@(Model.IsTimeManagementPinned ? "true" : "false")"
+                        disabled="@(!Model.Id.HasValue ? "disabled" : null)">@(Model.IsTimeManagementPinned ? "★" : "☆")</button>
             </div>
             <form id="deleteNoteForm"
                   method="post"

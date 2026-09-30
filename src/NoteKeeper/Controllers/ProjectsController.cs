@@ -191,6 +191,8 @@ public sealed class ProjectsController(
             .AsNoTracking()
             .Include(x => x.Notes)
                 .ThenInclude(note => note.Blocks)
+            .Include(x => x.TimeManagementDays)
+                .ThenInclude(day => day.Entries)
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -204,7 +206,8 @@ public sealed class ProjectsController(
             Name = project.Name,
             CreatedAtUtc = project.CreatedAtUtc,
             UpdatedAtUtc = project.UpdatedAtUtc,
-            Notes = []
+            Notes = [],
+            TimeDays = []
         };
 
         foreach (var note in project.Notes
@@ -213,10 +216,12 @@ public sealed class ProjectsController(
         {
             var transferNote = new ProjectTransferNote
             {
+                Key = note.Id.ToString(),
                 Title = note.Title,
                 Status = note.Status,
                 EstimatedTimeMinutes = note.EstimatedTimeMinutes,
                 SpentTimeMinutes = note.SpentTimeMinutes,
+                IsTimeManagementPinned = note.IsTimeManagementPinned,
                 CreatedAtUtc = note.CreatedAtUtc,
                 UpdatedAtUtc = note.UpdatedAtUtc,
                 Blocks = []
@@ -259,6 +264,26 @@ public sealed class ProjectsController(
             document.Notes.Add(transferNote);
         }
 
+        foreach (var day in project.TimeManagementDays
+                     .OrderBy(day => day.Date)
+                     .ThenBy(day => day.Id))
+        {
+            document.TimeDays.Add(new ProjectTransferTimeDay
+            {
+                Date = day.Date,
+                Entries = day.Entries
+                    .OrderBy(entry => entry.Id)
+                    .Select(entry => new ProjectTransferTimeEntry
+                    {
+                        NoteKey = entry.NoteId?.ToString(),
+                        TimeSpentMinutes = entry.TimeSpentMinutes,
+                        TaskTitle = entry.TaskTitle,
+                        Comment = entry.Comment
+                    })
+                    .ToList()
+            });
+        }
+
         var json = JsonSerializer.SerializeToUtf8Bytes(
             document,
             CreateTransferJsonOptions());
@@ -299,15 +324,31 @@ public sealed class ProjectsController(
 
             if (document is null ||
                 document.Notes is null ||
+                document.TimeDays is null ||
                 !string.Equals(
                     document.Format,
                     ProjectTransferDocument.ExpectedFormat,
                     StringComparison.Ordinal) ||
                 document.Version != ProjectTransferDocument.CurrentVersion ||
                 document.Notes.Count > 5000 ||
+                document.TimeDays.Count > 5000 ||
                 document.Notes.Any(note =>
                     note.Blocks is null ||
-                    note.Blocks.Count > 500))
+                    note.Blocks.Count > 500) ||
+                document.Notes
+                    .Where(note => !string.IsNullOrWhiteSpace(note.Key))
+                    .GroupBy(note => note.Key, StringComparer.Ordinal)
+                    .Any(group => group.Count() > 1) ||
+                document.TimeDays
+                    .GroupBy(day => day.Date.Date)
+                    .Any(group => group.Count() > 1) ||
+                document.TimeDays.Any(day =>
+                    day.Entries is null ||
+                    day.Entries.Count > 2000 ||
+                    day.Entries.Any(entry =>
+                        entry.TimeSpentMinutes <= 0 ||
+                        (entry.TaskTitle?.Length ?? 0) > 240 ||
+                        (entry.Comment?.Length ?? 0) > 2000)))
             {
                 return BadRequest(
                     localizer["Server_ProjectImportInvalid"].Value);
@@ -319,8 +360,12 @@ public sealed class ProjectsController(
                 Name = NormalizeProjectName(document.Name),
                 CreatedAtUtc = document.CreatedAtUtc ?? now,
                 UpdatedAtUtc = document.UpdatedAtUtc ?? now,
-                Notes = []
+                Notes = [],
+                TimeManagementDays = []
             };
+
+            var noteByKey = new Dictionary<string, Note>(
+                StringComparer.Ordinal);
 
             foreach (var transferNote in document.Notes)
             {
@@ -333,6 +378,8 @@ public sealed class ProjectsController(
                         transferNote.EstimatedTimeMinutes),
                     SpentTimeMinutes = JiraDuration.NormalizeMinutes(
                         transferNote.SpentTimeMinutes),
+                    IsTimeManagementPinned =
+                        transferNote.IsTimeManagementPinned,
                     CreatedAtUtc = transferNote.CreatedAtUtc ?? now,
                     UpdatedAtUtc = transferNote.UpdatedAtUtc ?? now,
                     Blocks = []
@@ -418,6 +465,68 @@ public sealed class ProjectsController(
                     .ToList();
 
                 project.Notes.Add(note);
+
+                if (!string.IsNullOrWhiteSpace(transferNote.Key))
+                {
+                    noteByKey[transferNote.Key] = note;
+                }
+            }
+
+            if (document.TimeDays.Count > 0)
+            {
+                foreach (var transferDay in document.TimeDays
+                             .OrderBy(day => day.Date))
+                {
+                    var day = new TimeManagementDay
+                    {
+                        Project = project,
+                        Date = transferDay.Date.Date,
+                        Entries = []
+                    };
+
+                    foreach (var transferEntry in transferDay.Entries)
+                    {
+                        Note? linkedNote = null;
+                        if (!string.IsNullOrWhiteSpace(
+                                transferEntry.NoteKey))
+                        {
+                            noteByKey.TryGetValue(
+                                transferEntry.NoteKey,
+                                out linkedNote);
+                        }
+
+                        var taskTitle = linkedNote?.Title ??
+                            Limit(
+                                transferEntry.TaskTitle?.Trim(),
+                                240) ??
+                            localizer["Time_Task"].Value;
+
+                        day.Entries.Add(new TimeManagementEntry
+                        {
+                            Note = linkedNote,
+                            TimeSpentMinutes =
+                                transferEntry.TimeSpentMinutes,
+                            TaskTitle = taskTitle,
+                            Comment = Limit(
+                                transferEntry.Comment?.Trim(),
+                                2000)
+                        });
+                    }
+
+                    project.TimeManagementDays.Add(day);
+                }
+
+                foreach (var note in project.Notes)
+                {
+                    var total = project.TimeManagementDays
+                        .SelectMany(day => day.Entries)
+                        .Where(entry =>
+                            ReferenceEquals(entry.Note, note))
+                        .Sum(entry => entry.TimeSpentMinutes);
+
+                    note.SpentTimeMinutes =
+                        total > 0 ? total : null;
+                }
             }
 
             if (project.Notes.Count > 0)

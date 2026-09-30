@@ -33,6 +33,7 @@
     </div>
     <div class="hero-actions">
         <a class="button button-ghost" href="/">@Localizer["Index_BackToProjects"]</a>
+        <a class="button button-secondary" href="/projects/@Model.ProjectId/time">@Localizer["Index_Time"]</a>
         <form method="post" action="/projects/@Model.ProjectId/notes/import" enctype="multipart/form-data" class="import-note-form">
             @Html.AntiForgeryToken()
             <input id="noteImportInput"

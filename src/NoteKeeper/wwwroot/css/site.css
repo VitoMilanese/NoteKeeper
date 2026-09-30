@@ -932,6 +932,294 @@ html[data-theme="light"] .project-card-topline {
     }
 }
 
+/* Time management */
+.time-hero {
+    margin-bottom: 20px;
+}
+
+.time-error {
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 110, 129, 0.34);
+    border-radius: 12px;
+    padding: 11px 14px;
+    background: rgba(255, 110, 129, 0.08);
+    color: #ff9baa;
+    font-size: 0.9rem;
+}
+
+.time-tracked-panel,
+.time-add-day-panel {
+    padding: 18px;
+}
+
+.time-section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.time-section-heading h2 {
+    margin: 4px 0 0;
+    font-size: 1.2rem;
+}
+
+.time-note-search-form {
+    display: flex;
+    align-items: end;
+    gap: 9px;
+    min-width: min(520px, 100%);
+}
+
+.time-note-search-form .field {
+    flex: 1 1 auto;
+}
+
+.time-note-table {
+    overflow-x: auto;
+}
+
+.time-note-row {
+    min-width: 700px;
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) 120px 110px 120px 42px;
+    gap: 12px;
+    align-items: center;
+    min-height: 48px;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border);
+}
+
+.time-note-header {
+    min-height: 36px;
+    border-top: 0;
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 750;
+}
+
+.time-note-title {
+    min-width: 0;
+    color: var(--text);
+    font-weight: 720;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.time-row-action {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0;
+}
+
+.time-empty-inline {
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.time-month-pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+}
+
+.time-month-pagination > a:first-child {
+    justify-self: start;
+}
+
+.time-month-pagination > a:last-child {
+    justify-self: end;
+}
+
+.time-month-current {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    text-align: center;
+}
+
+.time-month-current strong {
+    font-size: 1rem;
+    text-transform: capitalize;
+}
+
+.time-month-current a {
+    color: var(--muted);
+    font-size: 0.74rem;
+}
+
+.time-add-day-form {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+}
+
+.time-add-day-form .field {
+    width: min(260px, 100%);
+}
+
+.time-days {
+    display: grid;
+    gap: 16px;
+}
+
+.time-day-card {
+    scroll-margin-top: 90px;
+    overflow: hidden;
+}
+
+.time-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.time-day-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+}
+
+.time-day-heading h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.time-day-total {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.time-entry-list {
+    display: grid;
+}
+
+.time-entry-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    align-items: end;
+    gap: 8px;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.time-entry-form {
+    display: grid;
+    grid-template-columns: 120px minmax(220px, 1.1fr) minmax(240px, 1.4fr) auto;
+    align-items: end;
+    gap: 10px;
+    min-width: 0;
+}
+
+.time-entry-new {
+    padding: 12px;
+    background: rgba(124, 140, 255, 0.035);
+}
+
+.time-entry-form .field {
+    min-width: 0;
+}
+
+.time-entry-form input,
+.time-entry-form select {
+    width: 100%;
+}
+
+.time-entry-comment input {
+    min-width: 0;
+}
+
+.time-empty-month {
+    margin-top: 16px;
+}
+
+.editor-time-star:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+@media (max-width: 1000px) {
+    .time-section-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .time-note-search-form {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .time-entry-form {
+        grid-template-columns: 110px minmax(190px, 1fr) minmax(180px, 1fr) auto;
+    }
+}
+
+@media (max-width: 720px) {
+    .time-note-search-form,
+    .time-add-day-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .time-note-search-form .button,
+    .time-add-day-form .button,
+    .time-add-day-form .field {
+        width: 100%;
+    }
+
+    .time-month-pagination {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .time-month-current {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .time-month-pagination > a:first-child {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .time-month-pagination > a:last-child {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .time-day-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .time-entry-row {
+        grid-template-columns: 1fr;
+    }
+
+    .time-entry-row > .time-row-action {
+        justify-content: flex-end;
+    }
+
+    .time-entry-form {
+        grid-template-columns: 1fr;
+    }
+
+    .time-entry-form .button {
+        width: 100%;
+    }
+}
+
 /* Editor */
 .editor-page {
     width: 100%;

@@ -13,4 +13,5 @@ public sealed class Project
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public List<Note> Notes { get; set; } = [];
+    public List<TimeManagementDay> TimeManagementDays { get; set; } = [];
 }

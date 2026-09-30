@@ -1932,7 +1932,6 @@
             title: titleInput.value,
             status: Number(statusSelect?.value || 0),
             estimatedTime: estimatedTimeInput?.value || '',
-            spentTime: spentTimeInput?.value || '',
             blocks: collectBlocks()
         };
 
@@ -1963,6 +1962,15 @@
             }
             if (spentTimeInput) {
                 spentTimeInput.value = result.spentTime || '';
+            }
+            if (timeManagementStarButton) {
+                timeManagementStarButton.disabled = false;
+                const isPinned = Boolean(result.isTimeManagementPinned);
+                timeManagementStarButton.setAttribute(
+                    'aria-pressed',
+                    isPinned ? 'true' : 'false');
+                timeManagementStarButton.classList.toggle('is-active', isPinned);
+                timeManagementStarButton.textContent = isPinned ? '★' : '☆';
             }
             dirty = false;
 
@@ -2021,14 +2029,42 @@
 
     statusSelect?.addEventListener('change', () => setDirty(true));
 
-    timeManagementStarButton?.addEventListener('click', () => {
-        const isActive = timeManagementStarButton.getAttribute('aria-pressed') !== 'true';
+    timeManagementStarButton?.addEventListener('click', async () => {
+        const noteId = Number(editor.dataset.noteId || 0);
+        if (!noteId || timeManagementStarButton.disabled) return;
 
-        timeManagementStarButton.setAttribute(
-            'aria-pressed',
-            isActive ? 'true' : 'false');
-        timeManagementStarButton.classList.toggle('is-active', isActive);
-        timeManagementStarButton.textContent = isActive ? '★' : '☆';
+        const nextPinned =
+            timeManagementStarButton.getAttribute('aria-pressed') !== 'true';
+
+        timeManagementStarButton.disabled = true;
+
+        try {
+            const response = await fetch(`/notes/${noteId}/time-pin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    RequestVerificationToken: antiForgeryToken
+                },
+                body: JSON.stringify({ isPinned: nextPinned })
+            });
+
+            if (!response.ok) {
+                throw new Error(strings.timePinFailed);
+            }
+
+            const result = await response.json();
+            const isPinned = Boolean(result.isPinned);
+
+            timeManagementStarButton.setAttribute(
+                'aria-pressed',
+                isPinned ? 'true' : 'false');
+            timeManagementStarButton.classList.toggle('is-active', isPinned);
+            timeManagementStarButton.textContent = isPinned ? '★' : '☆';
+        } catch (error) {
+            showToast(error.message || strings.timePinFailed, true);
+        } finally {
+            timeManagementStarButton.disabled = false;
+        }
     });
 
     blocksContainer.addEventListener('focusin', (event) => {

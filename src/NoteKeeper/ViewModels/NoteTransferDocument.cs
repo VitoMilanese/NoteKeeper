@@ -13,6 +13,7 @@ public sealed class NoteTransferDocument
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
     public int? EstimatedTimeMinutes { get; set; }
     public int? SpentTimeMinutes { get; set; }
+    public bool IsTimeManagementPinned { get; set; }
     public List<NoteTransferBlock> Blocks { get; set; } = [];
 }
 

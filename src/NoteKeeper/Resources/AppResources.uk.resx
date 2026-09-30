@@ -58,7 +58,7 @@
   <data name="Edit_EstimatedTime" xml:space="preserve"><value>Оцінений час</value></data>
   <data name="Edit_SpentTime" xml:space="preserve"><value>Витрачений час</value></data>
   <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Формат Jira: 1w 2d 3h 15m</value></data>
-  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Швидкий доступ до керування часом — незабаром</value></data>
+  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Додати або прибрати цю нотатку з Time management</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
@@ -209,5 +209,44 @@
   <data name="Server_ProjectImportTooLarge" xml:space="preserve"><value>Файл проекту порожній або завеликий.</value></data>
   <data name="Server_ProjectImportInvalid" xml:space="preserve"><value>Файл проекту некоректний або містить непідтримувані дані.</value></data>
   <data name="Server_UntitledProject" xml:space="preserve"><value>Проект без назви</value></data>
+
+
+  <data name="Index_Time" xml:space="preserve"><value>Час</value></data>
+  <data name="Editor_TimePinFailed" xml:space="preserve"><value>Не вдалося оновити список Time management.</value></data>
+  <data name="Time_Title" xml:space="preserve"><value>Керування часом</value></data>
+  <data name="Time_Eyebrow" xml:space="preserve"><value>Час проекту</value></data>
+  <data name="Time_BackToNotes" xml:space="preserve"><value>← Нотатки</value></data>
+  <data name="Time_TrackedEyebrow" xml:space="preserve"><value>Швидкий доступ</value></data>
+  <data name="Time_TrackedNotes" xml:space="preserve"><value>Вибрані нотатки</value></data>
+  <data name="Time_AddNote" xml:space="preserve"><value>Додати нотатку</value></data>
+  <data name="Time_SearchNotePlaceholder" xml:space="preserve"><value>Пошук за назвою нотатки</value></data>
+  <data name="Time_Add" xml:space="preserve"><value>Додати</value></data>
+  <data name="Time_NoTrackedNotes" xml:space="preserve"><value>У Time management ще не додано жодної нотатки.</value></data>
+  <data name="Time_Estimated" xml:space="preserve"><value>Оцінений час</value></data>
+  <data name="Time_Spent" xml:space="preserve"><value>Витрачено</value></data>
+  <data name="Time_Remaining" xml:space="preserve"><value>Залишилось</value></data>
+  <data name="Time_RemoveTrackedNote" xml:space="preserve"><value>Прибрати з Time management</value></data>
+  <data name="Time_NewDate" xml:space="preserve"><value>Дата</value></data>
+  <data name="Time_AddDate" xml:space="preserve"><value>+ Додати дату</value></data>
+  <data name="Time_NoDays" xml:space="preserve"><value>За цей місяць записів часу немає</value></data>
+  <data name="Time_NoDaysCopy" xml:space="preserve"><value>Додай дату календаря вище, а потім записуй витрачений на задачі час.</value></data>
+  <data name="Time_Total" xml:space="preserve"><value>Разом</value></data>
+  <data name="Time_DeleteDayTitle" xml:space="preserve"><value>Видалити цю дату?</value></data>
+  <data name="Time_DeleteDayMessage" xml:space="preserve"><value>Видалити {0} і всі записи часу всередині? Цю дію не можна скасувати.</value></data>
+  <data name="Time_DeleteDay" xml:space="preserve"><value>Видалити дату</value></data>
+  <data name="Time_TimeSpent" xml:space="preserve"><value>Витрачений час</value></data>
+  <data name="Time_Task" xml:space="preserve"><value>Задача</value></data>
+  <data name="Time_Comment" xml:space="preserve"><value>Коментар</value></data>
+  <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Необов’язковий коментар</value></data>
+  <data name="Time_SaveEntry" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="Time_DeleteEntry" xml:space="preserve"><value>Видалити запис часу</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>1h 30m</value></data>
+  <data name="Time_SelectTask" xml:space="preserve"><value>Оберіть задачу</value></data>
+  <data name="Time_AddEntry" xml:space="preserve"><value>+ Додати запис</value></data>
+  <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Місяці керування часом</value></data>
+  <data name="Time_CurrentMonth" xml:space="preserve"><value>Поточний місяць</value></data>
+  <data name="Time_TaskRequired" xml:space="preserve"><value>Оберіть коректну задачу.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Введи додатний час у форматі Jira, наприклад 15m, 1h 30m або 1d.</value></data>
+  <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Оберіть існуючу нотатку з результатів пошуку.</value></data>
 
 </root>

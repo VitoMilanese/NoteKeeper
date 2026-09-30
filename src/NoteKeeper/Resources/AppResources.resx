@@ -58,7 +58,7 @@
   <data name="Edit_EstimatedTime" xml:space="preserve"><value>Estimated time</value></data>
   <data name="Edit_SpentTime" xml:space="preserve"><value>Spent time</value></data>
   <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Jira format: 1w 2d 3h 15m</value></data>
-  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Time management shortcut — coming soon</value></data>
+  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Add or remove this note from Time management</value></data>
   <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
   <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
   <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
@@ -209,5 +209,44 @@
   <data name="Server_ProjectImportTooLarge" xml:space="preserve"><value>The project file is empty or too large.</value></data>
   <data name="Server_ProjectImportInvalid" xml:space="preserve"><value>The project file is invalid or contains unsupported data.</value></data>
   <data name="Server_UntitledProject" xml:space="preserve"><value>Untitled project</value></data>
+
+
+  <data name="Index_Time" xml:space="preserve"><value>Time</value></data>
+  <data name="Editor_TimePinFailed" xml:space="preserve"><value>Could not update the Time management shortcut.</value></data>
+  <data name="Time_Title" xml:space="preserve"><value>Time management</value></data>
+  <data name="Time_Eyebrow" xml:space="preserve"><value>Project time</value></data>
+  <data name="Time_BackToNotes" xml:space="preserve"><value>← Notes</value></data>
+  <data name="Time_TrackedEyebrow" xml:space="preserve"><value>Quick access</value></data>
+  <data name="Time_TrackedNotes" xml:space="preserve"><value>Tracked notes</value></data>
+  <data name="Time_AddNote" xml:space="preserve"><value>Add note</value></data>
+  <data name="Time_SearchNotePlaceholder" xml:space="preserve"><value>Search by note title</value></data>
+  <data name="Time_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Time_NoTrackedNotes" xml:space="preserve"><value>No notes are pinned for Time management yet.</value></data>
+  <data name="Time_Estimated" xml:space="preserve"><value>Estimated time</value></data>
+  <data name="Time_Spent" xml:space="preserve"><value>Spent</value></data>
+  <data name="Time_Remaining" xml:space="preserve"><value>Remaining</value></data>
+  <data name="Time_RemoveTrackedNote" xml:space="preserve"><value>Remove from Time management</value></data>
+  <data name="Time_NewDate" xml:space="preserve"><value>Date</value></data>
+  <data name="Time_AddDate" xml:space="preserve"><value>+ Add date</value></data>
+  <data name="Time_NoDays" xml:space="preserve"><value>No time records this month</value></data>
+  <data name="Time_NoDaysCopy" xml:space="preserve"><value>Add a calendar date above, then record time spent on tasks.</value></data>
+  <data name="Time_Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Time_DeleteDayTitle" xml:space="preserve"><value>Delete this date?</value></data>
+  <data name="Time_DeleteDayMessage" xml:space="preserve"><value>Delete {0} and all time records inside it? This cannot be undone.</value></data>
+  <data name="Time_DeleteDay" xml:space="preserve"><value>Delete date</value></data>
+  <data name="Time_TimeSpent" xml:space="preserve"><value>Time spent</value></data>
+  <data name="Time_Task" xml:space="preserve"><value>Task</value></data>
+  <data name="Time_Comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Optional comment</value></data>
+  <data name="Time_SaveEntry" xml:space="preserve"><value>Save</value></data>
+  <data name="Time_DeleteEntry" xml:space="preserve"><value>Delete time record</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>1h 30m</value></data>
+  <data name="Time_SelectTask" xml:space="preserve"><value>Select task</value></data>
+  <data name="Time_AddEntry" xml:space="preserve"><value>+ Add record</value></data>
+  <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Time management months</value></data>
+  <data name="Time_CurrentMonth" xml:space="preserve"><value>Current month</value></data>
+  <data name="Time_TaskRequired" xml:space="preserve"><value>Select a valid task.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Enter a positive time in Jira format, for example 15m, 1h 30m, or 1d.</value></data>
+  <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Select an existing note from the search results.</value></data>
 
 </root>

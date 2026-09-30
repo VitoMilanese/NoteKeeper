@@ -14,10 +14,12 @@ public sealed class Note
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
     public int? EstimatedTimeMinutes { get; set; }
     public int? SpentTimeMinutes { get; set; }
+    public bool IsTimeManagementPinned { get; set; }
 
     public int ProjectId { get; set; }
     public Project Project { get; set; } = null!;
 
     public List<NoteBlock> Blocks { get; set; } = [];
     public List<NoteTag> Tags { get; set; } = [];
+    public List<TimeManagementEntry> TimeEntries { get; set; } = [];
 }

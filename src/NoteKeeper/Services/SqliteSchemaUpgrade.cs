@@ -22,6 +22,7 @@ public static class SqliteSchemaUpgrade
         {
             EnsureProjectsSchema(connection);
             EnsureTimeTrackingColumns(connection);
+            EnsureTimeManagementSchema(connection);
 
             if (!HasColumn(connection, "Notes", "Status"))
             {
@@ -107,6 +108,71 @@ public static class SqliteSchemaUpgrade
         }
     }
 
+
+    private static void EnsureTimeManagementSchema(
+        System.Data.Common.DbConnection connection)
+    {
+        if (!HasColumn(connection, "Notes", "IsTimeManagementPinned"))
+        {
+            Execute(
+                connection,
+                """
+                ALTER TABLE "Notes"
+                ADD COLUMN "IsTimeManagementPinned" INTEGER NOT NULL DEFAULT 0;
+                """);
+        }
+
+        Execute(
+            connection,
+            """
+            CREATE INDEX IF NOT EXISTS "IX_Notes_ProjectId_IsTimeManagementPinned"
+                ON "Notes" ("ProjectId", "IsTimeManagementPinned");
+            """);
+
+        if (!HasTable(connection, "TimeManagementDays"))
+        {
+            Execute(
+                connection,
+                """
+                CREATE TABLE "TimeManagementDays" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_TimeManagementDays" PRIMARY KEY AUTOINCREMENT,
+                    "ProjectId" INTEGER NOT NULL,
+                    "Date" TEXT NOT NULL,
+                    CONSTRAINT "FK_TimeManagementDays_Projects_ProjectId"
+                        FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE
+                );
+
+                CREATE UNIQUE INDEX "IX_TimeManagementDays_ProjectId_Date"
+                    ON "TimeManagementDays" ("ProjectId", "Date");
+                """);
+        }
+
+        if (!HasTable(connection, "TimeManagementEntries"))
+        {
+            Execute(
+                connection,
+                """
+                CREATE TABLE "TimeManagementEntries" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_TimeManagementEntries" PRIMARY KEY AUTOINCREMENT,
+                    "TimeManagementDayId" INTEGER NOT NULL,
+                    "NoteId" INTEGER NULL,
+                    "TimeSpentMinutes" INTEGER NOT NULL,
+                    "TaskTitle" TEXT NOT NULL,
+                    "Comment" TEXT NULL,
+                    CONSTRAINT "FK_TimeManagementEntries_TimeManagementDays_TimeManagementDayId"
+                        FOREIGN KEY ("TimeManagementDayId") REFERENCES "TimeManagementDays" ("Id") ON DELETE CASCADE,
+                    CONSTRAINT "FK_TimeManagementEntries_Notes_NoteId"
+                        FOREIGN KEY ("NoteId") REFERENCES "Notes" ("Id") ON DELETE SET NULL
+                );
+
+                CREATE INDEX "IX_TimeManagementEntries_TimeManagementDayId"
+                    ON "TimeManagementEntries" ("TimeManagementDayId");
+
+                CREATE INDEX "IX_TimeManagementEntries_NoteId"
+                    ON "TimeManagementEntries" ("NoteId");
+                """);
+        }
+    }
 
     private static void EnsureTimeTrackingColumns(
         System.Data.Common.DbConnection connection)

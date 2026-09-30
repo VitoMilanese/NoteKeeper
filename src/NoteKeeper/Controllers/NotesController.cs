@@ -273,6 +273,7 @@ public sealed class NotesController(
             Status = note.Status,
             EstimatedTime = JiraDuration.Format(note.EstimatedTimeMinutes),
             SpentTime = JiraDuration.Format(note.SpentTimeMinutes),
+            IsTimeManagementPinned = note.IsTimeManagementPinned,
             Blocks = note.Blocks
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new NoteBlockViewModel
@@ -307,6 +308,7 @@ public sealed class NotesController(
             Status = note.Status,
             EstimatedTimeMinutes = note.EstimatedTimeMinutes,
             SpentTimeMinutes = note.SpentTimeMinutes,
+            IsTimeManagementPinned = note.IsTimeManagementPinned,
             Blocks = []
         };
 
@@ -389,6 +391,7 @@ public sealed class NotesController(
                 Status = NormalizeStatus(document.Status),
                 EstimatedTimeMinutes = JiraDuration.NormalizeMinutes(document.EstimatedTimeMinutes),
                 SpentTimeMinutes = JiraDuration.NormalizeMinutes(document.SpentTimeMinutes),
+                IsTimeManagementPinned = document.IsTimeManagementPinned,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
                 Blocks = []
@@ -498,16 +501,6 @@ public sealed class NotesController(
             });
         }
 
-        if (!JiraDuration.TryParse(
-                request.SpentTime,
-                out var spentTimeMinutes))
-        {
-            return BadRequest(new
-            {
-                message = localizer["Server_InvalidSpentTime"].Value
-            });
-        }
-
         Note note;
         if (request.Id is > 0)
         {
@@ -549,7 +542,6 @@ public sealed class NotesController(
         note.Title = NormalizeTitle(request.Title);
         note.Status = NormalizeStatus(request.Status);
         note.EstimatedTimeMinutes = estimatedTimeMinutes;
-        note.SpentTimeMinutes = spentTimeMinutes;
         note.UpdatedAtUtc = DateTime.UtcNow;
         project.UpdatedAtUtc = note.UpdatedAtUtc;
 
@@ -606,6 +598,7 @@ public sealed class NotesController(
             status = note.Status,
             estimatedTime = JiraDuration.Format(note.EstimatedTimeMinutes),
             spentTime = JiraDuration.Format(note.SpentTimeMinutes),
+            isTimeManagementPinned = note.IsTimeManagementPinned,
             tags = desiredTags.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
         });
     }
