@@ -989,11 +989,17 @@ html[data-theme="light"] .editor-topbar {
 }
 
 .editor-heading {
+    min-width: 0;
+    max-width: 100%;
     margin-bottom: 24px;
+    overflow: hidden;
 }
 
 .title-input {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     border: 0;
     border-bottom: 1px solid transparent;
     outline: none;

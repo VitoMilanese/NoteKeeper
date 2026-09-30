@@ -28,6 +28,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - upload PNG, JPEG, WEBP, and GIF images up to 12 MB;
 - reorder blocks with drag and drop or the ↑ / ↓ buttons;
 - new text, link, and image blocks are always appended to the end of the note before any manual reordering;
+- automatically shrink long note titles just enough to keep the full title on one line within the editor viewport, recalculating while typing and on resize;
 - save notes with `Ctrl+S`;
 - return to the note list with `Esc`;
 - styled in-app confirmation dialogs for destructive actions and unsaved internal navigation;

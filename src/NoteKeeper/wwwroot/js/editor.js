@@ -37,6 +37,51 @@
     let draggedBlock = null;
     let imageReplaceTarget = null;
     let floatingToolbarFrame = null;
+    let titleFitFrame = null;
+
+    function fitTitleInput() {
+        if (!titleInput) return;
+
+        titleInput.style.fontSize = '';
+        const baseFontSize = Number.parseFloat(
+            window.getComputedStyle(titleInput).fontSize) || 32;
+        const minimumFontSize = Math.min(18, baseFontSize);
+
+        if (titleInput.scrollWidth <= titleInput.clientWidth + 1) {
+            titleInput.scrollLeft = 0;
+            return;
+        }
+
+        let low = minimumFontSize;
+        let high = baseFontSize;
+        let best = minimumFontSize;
+
+        titleInput.style.fontSize = `${minimumFontSize}px`;
+
+        for (let index = 0; index < 10; index++) {
+            const candidate = (low + high) / 2;
+            titleInput.style.fontSize = `${candidate}px`;
+
+            if (titleInput.scrollWidth <= titleInput.clientWidth + 1) {
+                best = candidate;
+                low = candidate;
+            } else {
+                high = candidate;
+            }
+        }
+
+        titleInput.style.fontSize = `${best.toFixed(2)}px`;
+        titleInput.scrollLeft = 0;
+    }
+
+    function scheduleTitleFit() {
+        if (titleFitFrame !== null) return;
+
+        titleFitFrame = window.requestAnimationFrame(() => {
+            titleFitFrame = null;
+            fitTitleInput();
+        });
+    }
 
     const typeNames = {
         text: strings.typeText,
@@ -1951,7 +1996,13 @@
     });
     dirty = false;
 
+    scheduleTitleFit();
+    document.fonts?.ready?.then(scheduleTitleFit);
+
     editor.addEventListener('input', (event) => {
+        if (event.target === titleInput) {
+            scheduleTitleFit();
+        }
         if (event.target.matches('input, textarea, select, [contenteditable="true"]')) {
             setDirty(true);
         }
@@ -2137,6 +2188,7 @@
     window.addEventListener('resize', () => {
         positionEmojiPicker();
         scheduleFloatingFormattingToolbarUpdate();
+        scheduleTitleFit();
     });
     document.addEventListener('scroll', () => {
         positionEmojiPicker();
