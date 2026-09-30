@@ -66,6 +66,10 @@ public sealed class NotesController(
             .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        var autocompleteTags = allTagCounts
+            .Select(x => x.Name)
+            .ToList();
+
         var requestedGroupBy = groupBy?
             .Trim()
             .TrimStart('#')
@@ -169,6 +173,7 @@ public sealed class NotesController(
             Direction = dir,
             GroupBy = groupBy,
             AvailableTags = availableTags,
+            AutocompleteTags = autocompleteTags,
             Page = page,
             PageSize = pageSize,
             TotalCount = totalCount,

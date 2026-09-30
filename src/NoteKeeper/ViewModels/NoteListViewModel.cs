@@ -10,6 +10,7 @@ public sealed class NoteListViewModel
     public string Direction { get; set; } = "desc";
     public string GroupBy { get; set; } = string.Empty;
     public List<string> AvailableTags { get; set; } = [];
+    public List<string> AutocompleteTags { get; set; } = [];
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 30;
     public int TotalCount { get; set; }

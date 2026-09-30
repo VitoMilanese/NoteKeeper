@@ -77,7 +77,7 @@
                  aria-label="@Localizer["Index_TagSuggestionsAria"]"
                  hidden></div>
             <template data-tag-suggestion-source>
-                @foreach (var availableTag in Model.AvailableTags)
+                @foreach (var availableTag in Model.AutocompleteTags)
                 {
                     <span data-tag-value="@availableTag"></span>
                 }
