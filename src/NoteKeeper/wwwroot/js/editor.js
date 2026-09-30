@@ -4,6 +4,10 @@
 
     const titleInput = document.getElementById('titleInput');
     const statusSelect = document.getElementById('statusSelect');
+    const projectId = Number(editor.dataset.projectId || 0);
+    const projectListUrl = projectId > 0
+        ? `/projects/${projectId}`
+        : '/';
     const blocksContainer = document.getElementById('blocksContainer');
     const saveButton = document.getElementById('saveButton');
     const saveButtonBottom = document.getElementById('saveButtonBottom');
@@ -1874,7 +1878,6 @@
         setStatus(strings.saving, 'is-saving');
 
         const idText = editor.dataset.noteId;
-        const projectId = Number(editor.dataset.projectId || 0);
         const payload = {
             id: idText ? Number(idText) : null,
             projectId,
@@ -2206,7 +2209,7 @@
 
             if (document.querySelector('dialog[open]')) return;
             event.preventDefault();
-            navigateAway('/');
+            navigateAway(projectListUrl);
         }
     }, true);
 
