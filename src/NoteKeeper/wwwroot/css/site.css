@@ -432,8 +432,8 @@ html[data-theme="light"] .image-caption {
     color: #7785a3;
 }
 
-.tag-chip.is-status-tag,
-.note-tags span.is-status-tag {
+.tag-chip.is-priority-tag,
+.note-tags span.is-priority-tag {
     font-weight: 800;
 }
 
@@ -621,6 +621,15 @@ html[data-theme="light"] .note-card {
 .note-tags span {
     padding: 5px 8px;
     font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.note-tags span[hidden] {
+    display: none;
+}
+
+.note-tags .note-tag-overflow {
+    font-weight: 750;
 }
 
 .note-card-actions {

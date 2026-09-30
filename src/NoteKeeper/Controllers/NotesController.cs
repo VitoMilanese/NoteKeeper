@@ -17,7 +17,8 @@ namespace NoteKeeper.Controllers;
 public sealed class NotesController(
     AppDbContext db,
     IWebHostEnvironment environment,
-    IStringLocalizer<AppResources> localizer) : Controller
+    IStringLocalizer<AppResources> localizer,
+    PriorityTagService priorityTagService) : Controller
 {
     [HttpGet("/")]
     public async Task<IActionResult> Index(
@@ -31,6 +32,10 @@ public sealed class NotesController(
     {
         q = q?.Trim();
         var selectedTags = NormalizeTags(tag);
+        var priorityTags = priorityTagService.GetTags();
+        var priorityRanks = priorityTags
+            .Select((name, index) => new { name, index })
+            .ToDictionary(x => x.name, x => x.index, StringComparer.OrdinalIgnoreCase);
         sort = sort is "title" or "created" or "updated" ? sort : "updated";
         dir = dir == "asc" ? "asc" : "desc";
         pageSize = Math.Clamp(pageSize, 30, 60);
@@ -79,7 +84,7 @@ public sealed class NotesController(
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-        var tagCounts = await db.NoteTags
+        var tagCounts = (await db.NoteTags
             .AsNoTracking()
             .GroupBy(x => x.Name)
             .Select(group => new TagCountViewModel
@@ -87,10 +92,13 @@ public sealed class NotesController(
                 Name = group.Key,
                 Count = group.Count()
             })
-            .OrderByDescending(x => x.Count)
-            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken))
+            .OrderBy(x => priorityRanks.ContainsKey(x.Name) ? 0 : 1)
+            .ThenBy(x => priorityRanks.TryGetValue(x.Name, out var rank) ? rank : int.MaxValue)
+            .ThenByDescending(x => x.Count)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
             .Take(40)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var model = new NoteListViewModel
         {
@@ -102,6 +110,7 @@ public sealed class NotesController(
             PageSize = pageSize,
             TotalCount = totalCount,
             TotalPages = totalPages,
+            PriorityTags = priorityTags.ToList(),
             Tags = tagCounts,
             Notes = notes.Select(note => new NoteListItemViewModel
             {
@@ -111,7 +120,12 @@ public sealed class NotesController(
                 CreatedAtUtc = note.CreatedAtUtc,
                 UpdatedAtUtc = note.UpdatedAtUtc,
                 BlockCount = note.Blocks.Count,
-                Tags = note.Tags.Select(x => x.Name).OrderBy(x => x).ToList()
+                Tags = note.Tags
+                    .Select(x => x.Name)
+                    .OrderBy(x => priorityRanks.ContainsKey(x) ? 0 : 1)
+                    .ThenBy(x => priorityRanks.TryGetValue(x, out var rank) ? rank : int.MaxValue)
+                    .ThenBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList()
             }).ToList()
         };
 

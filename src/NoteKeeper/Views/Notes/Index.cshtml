@@ -7,6 +7,7 @@
     var selectedTags = Model.Tag
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var priorityTags = Model.PriorityTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
 }
 
 <section class="hero-row">
@@ -72,10 +73,8 @@
         <div class="tag-cloud" aria-label="@Localizer["Index_PopularTagsAria"]">
             @foreach (var item in Model.Tags)
             {
-                var isStatusTag =
-                    item.Name.Equals("active", StringComparison.OrdinalIgnoreCase) ||
-                    item.Name.Equals("done", StringComparison.OrdinalIgnoreCase);
-                <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "") @(isStatusTag ? "is-status-tag" : "")"
+                var isPriorityTag = priorityTags.Contains(item.Name);
+                <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "") @(isPriorityTag ? "is-priority-tag" : "")"
                    href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction&pageSize=@Model.PageSize">
                     #@item.Name <span>@item.Count</span>
                 </a>
@@ -118,14 +117,13 @@ else
                     <p>@note.Preview</p>
                     @if (note.Tags.Count > 0)
                     {
-                        <div class="note-tags">
-                            @foreach (var noteTag in note.Tags.Take(6))
+                        <div class="note-tags" data-note-tags>
+                            @foreach (var noteTag in note.Tags)
                             {
-                                var isStatusTag =
-                                    noteTag.Equals("active", StringComparison.OrdinalIgnoreCase) ||
-                                    noteTag.Equals("done", StringComparison.OrdinalIgnoreCase);
-                                <span class="@(isStatusTag ? "is-status-tag" : "")">#@noteTag</span>
+                                var isPriorityTag = priorityTags.Contains(noteTag);
+                                <span class="@(isPriorityTag ? "is-priority-tag" : "")" data-note-tag>#@noteTag</span>
                             }
+                            <span class="note-tag-overflow" data-note-tag-overflow hidden></span>
                         </div>
                     }
                 </a>

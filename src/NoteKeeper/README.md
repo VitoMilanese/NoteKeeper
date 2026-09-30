@@ -7,12 +7,13 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - home page with a note list and server-side pagination shown only when more than one page is needed, with the top pagination aligned in the notes heading row and the second pager below the grid;
 - search by title, text, comments, links, and image captions;
 - filtering by one or more comma-separated `#tags` extracted automatically from text blocks and link comments;
-- highlight `#active` and `#done` tags with stronger emphasis, with higher-contrast tag chips in the light theme;
+- show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;
+- fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
 - clear the search and tag filter fields from a dedicated button while preserving the selected sort and direction;
 - sorting by title, creation date, or last update;
 - rich text blocks with bold, italic, underline, strikethrough, inline code, hyperlinks on selected rich text, quotes, expandable containers, dividers, text sizing, custom text colors, numbered lists, bullet lists, dash lists, and a quick symbol palette;
 - show a duplicate floating rich-text toolbar near the bottom of the viewport while editing long text blocks after the original toolbar scrolls out of view;
-- add a toolbar action that inserts an empty normal line directly below the line containing the caret, including when the current line ends in inline code;
+- add a toolbar action that inserts an unformatted empty line directly below the line containing the caret, escaping quote/code/size/color formatting;
 - rich-text keyboard shortcuts for `Ctrl+B`, `Ctrl+I`, `Ctrl+U`, and `Ctrl+K` for hyperlinks;
 - link blocks with a title, URL, and optional comment;
 - image blocks with captions, compact thumbnails, and click-to-open full-size previews;

@@ -10,6 +10,7 @@ public sealed class NoteListViewModel
     public int PageSize { get; set; } = 30;
     public int TotalCount { get; set; }
     public int TotalPages { get; set; }
+    public List<string> PriorityTags { get; set; } = [];
     public List<NoteListItemViewModel> Notes { get; set; } = [];
     public List<TagCountViewModel> Tags { get; set; } = [];
 }

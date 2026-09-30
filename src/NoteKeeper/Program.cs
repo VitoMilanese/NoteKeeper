@@ -75,6 +75,7 @@ if (!string.IsNullOrWhiteSpace(sqliteConnection.DataSource) &&
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(sqliteConnection.ConnectionString));
 
+builder.Services.AddSingleton<PriorityTagService>();
 builder.Services.AddHostedService<WindowsTrayIconService>();
 
 var app = builder.Build();
