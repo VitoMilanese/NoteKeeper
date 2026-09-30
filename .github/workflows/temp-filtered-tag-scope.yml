@@ -1,0 +1,179 @@
+name: Temporary filtered tag-scope verification
+
+on:
+  push:
+    branches:
+      - ci/temp-filtered-tag-scope
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Verify filtered tag scope with SQLite
+        shell: bash
+        run: |
+          mkdir -p .tmp/filtered-tag-scope
+          cat > .tmp/filtered-tag-scope/FilteredTagScope.csproj <<'XML'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <ProjectReference Include="../../src/NoteKeeper/NoteKeeper.csproj" />
+            </ItemGroup>
+          </Project>
+          XML
+
+          cat > .tmp/filtered-tag-scope/Program.cs <<'CS'
+          using System.Reflection;
+          using Microsoft.Data.Sqlite;
+          using Microsoft.EntityFrameworkCore;
+          using NoteKeeper.Controllers;
+          using NoteKeeper.Data;
+          using NoteKeeper.Models;
+          using NoteKeeper.Services;
+
+          await using var connection = new SqliteConnection("Data Source=:memory:");
+          await connection.OpenAsync();
+
+          var options = new DbContextOptionsBuilder<AppDbContext>()
+              .UseSqlite(connection)
+              .Options;
+
+          await using var db = new AppDbContext(options);
+          await db.Database.EnsureCreatedAsync();
+
+          Note Make(int id, string title, params string[] tags) =>
+              new()
+              {
+                  Id = id,
+                  Title = title,
+                  Tags = tags.Select(name => new NoteTag { Name = name }).ToList()
+              };
+
+          db.Notes.AddRange(
+              Make(1, "Chosen", "atm", "done", "active"),
+              Make(2, "Excluded by tn", "atm", "done", "tn", "misc"),
+              Make(3, "Missing done", "atm", "work", "groupx"),
+              Make(4, "Unrelated", "other", "released"));
+          await db.SaveChangesAsync();
+
+          var applyMethod = typeof(NotesController).GetMethod(
+              "ApplyTagFilter",
+              BindingFlags.Static | BindingFlags.NonPublic)
+              ?? throw new Exception("ApplyTagFilter not found.");
+
+          IQueryable<Note> Apply(string expression)
+          {
+              var parsed = TagFilterParser.Parse(expression);
+              if (parsed.Error != TagFilterError.None)
+              {
+                  throw new Exception($"Parse error: {parsed.Error}");
+              }
+
+              return applyMethod.Invoke(
+                  null,
+                  new object?[] { db.Notes.AsNoTracking(), parsed.Expression })
+                  as IQueryable<Note>
+                  ?? throw new Exception("ApplyTagFilter returned no query.");
+          }
+
+          var filtered = Apply("atm, done, -tn");
+
+          var available = await filtered
+              .SelectMany(note => note.Tags)
+              .GroupBy(tag => tag.Name)
+              .Select(group => new { Name = group.Key, Count = group.Count() })
+              .OrderBy(x => x.Name)
+              .ToArrayAsync();
+
+          var names = available.Select(x => x.Name).ToArray();
+          var expected = new[] { "active", "atm", "done" };
+
+          if (!names.SequenceEqual(expected, StringComparer.OrdinalIgnoreCase))
+          {
+              throw new Exception(
+                  $"Expected filtered tags [{string.Join(",", expected)}], got [{string.Join(",", names)}].");
+          }
+
+          if (available.Any(x => x.Count != 1))
+          {
+              throw new Exception("Filtered tag counts should reflect only matching notes.");
+          }
+
+          var globalNames = await db.NoteTags
+              .AsNoTracking()
+              .Select(x => x.Name)
+              .Distinct()
+              .OrderBy(x => x)
+              .ToArrayAsync();
+
+          if (!globalNames.Contains("tn") ||
+              !globalNames.Contains("misc") ||
+              !globalNames.Contains("groupx") ||
+              !globalNames.Contains("released"))
+          {
+              throw new Exception("Global control set is incomplete.");
+          }
+
+          var requestedValid = "active";
+          var validGroupBy = names.FirstOrDefault(x =>
+              x.Equals(requestedValid, StringComparison.OrdinalIgnoreCase))
+              ?? string.Empty;
+          if (validGroupBy != "active")
+          {
+              throw new Exception("Valid group-by tag should remain available.");
+          }
+
+          var requestedInvalid = "misc";
+          var invalidGroupBy = names.FirstOrDefault(x =>
+              x.Equals(requestedInvalid, StringComparison.OrdinalIgnoreCase))
+              ?? string.Empty;
+          if (invalidGroupBy.Length != 0)
+          {
+              throw new Exception("Group-by tag absent from filtered results should reset.");
+          }
+
+          var logical = Apply("(atm | other) & !tn");
+          var logicalNames = await logical
+              .SelectMany(note => note.Tags)
+              .Select(tag => tag.Name)
+              .Distinct()
+              .OrderBy(x => x)
+              .ToArrayAsync();
+
+          var logicalExpected = new[]
+          {
+              "active", "atm", "done", "groupx", "other", "released", "work"
+          };
+
+          if (!logicalNames.SequenceEqual(
+                  logicalExpected,
+                  StringComparer.OrdinalIgnoreCase))
+          {
+              throw new Exception(
+                  $"Logical filtered tags mismatch: [{string.Join(",", logicalNames)}].");
+          }
+
+          Console.WriteLine("Filtered tag scope passed.");
+          CS
+
+          dotnet run --project .tmp/filtered-tag-scope/FilteredTagScope.csproj --configuration Release
