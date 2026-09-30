@@ -885,12 +885,37 @@ html[data-theme="light"] .project-card-topline {
     margin: 0;
 }
 
+.projects-hero .hero-copy {
+    max-width: none;
+}
+
+.project-rename-dialog {
+    width: min(560px, calc(100vw - 28px));
+    max-width: none;
+}
+
 .project-rename-dialog-card {
-    width: min(520px, calc(100vw - 34px));
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 24px;
+}
+
+.project-rename-dialog-card .app-dialog-copy {
+    min-width: 0;
 }
 
 .project-rename-dialog-card .field {
     margin-top: 18px;
+}
+
+.project-rename-dialog-card .app-dialog-actions {
+    grid-column: 1;
+    margin-top: 0;
+}
+
+.project-rename-dialog-card .app-dialog-actions .button {
+    white-space: nowrap;
 }
 
 @media (max-width: 850px) {
