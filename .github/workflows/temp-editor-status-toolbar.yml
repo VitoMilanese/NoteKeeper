@@ -1,0 +1,48 @@
+name: Temporary editor status toolbar verification
+
+on:
+  push:
+    branches:
+      - ci/temp-editor-status-toolbar
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Verify editor toolbar markup
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          view = Path("src/NoteKeeper/Views/Notes/Edit.cshtml").read_text()
+          css = Path("src/NoteKeeper/wwwroot/css/site.css").read_text()
+
+          toolbar = view.index('<div class="editor-topbar">')
+          status = view.index('id="statusSelect"')
+          heading = view.index('<div class="editor-heading">')
+
+          assert toolbar < status < heading
+          assert 'Edit_HelpBefore' not in view
+          assert 'Edit_HelpAfter' not in view
+          assert 'editor-meta-row' not in view
+          assert '.editor-meta-row' not in css
+          assert '.editor-status-field' in css
+
+          print("Editor status toolbar placement passed.")
+          PY
