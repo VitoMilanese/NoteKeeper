@@ -1065,6 +1065,59 @@ html[data-theme="light"] .project-card-topline {
     width: min(260px, 100%);
 }
 
+.time-date-control {
+    position: relative;
+}
+
+.time-date-control > input[type="text"] {
+    width: 100%;
+    padding-right: 46px;
+    font-variant-numeric: tabular-nums;
+}
+
+.time-date-picker-shell {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    width: 36px;
+    height: 36px;
+    transform: translateY(-50%);
+}
+
+.time-date-picker-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.time-date-picker-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.time-date-picker-shell > input[type="date"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.time-date-picker-shell:focus-within .time-date-picker-icon,
+.time-date-picker-shell:hover .time-date-picker-icon {
+    color: var(--text);
+}
+
 .time-days {
     display: grid;
     gap: 16px;
@@ -1383,22 +1436,57 @@ html[data-theme="light"] .editor-time-field input[readonly] {
 }
 
 .editor-time-star {
-    width: 36px;
+    appearance: none;
+    width: 34px;
     height: 36px;
-    flex: 0 0 36px;
-    font-size: 1.15rem;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    outline: none;
+    background: transparent;
+    color: #8d9ab1;
+    font: inherit;
+    font-size: 1.72rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        color 120ms ease,
+        transform 120ms ease,
+        text-shadow 120ms ease;
+}
+
+.editor-time-star:hover:not(:disabled) {
+    color: #c4cde0;
+    transform: scale(1.12);
+}
+
+.editor-time-star:focus-visible {
+    outline: 2px solid rgba(124, 140, 255, 0.72);
+    outline-offset: 2px;
 }
 
 .editor-time-star.is-active {
     color: #f5c451;
-    border-color: rgba(245, 196, 81, 0.42);
-    background: rgba(245, 196, 81, 0.1);
+    background: transparent;
+    text-shadow: 0 0 12px rgba(245, 196, 81, 0.32);
 }
 
-.editor-time-star.is-active:hover {
+.editor-time-star.is-active:hover:not(:disabled) {
     color: #ffd778;
-    border-color: rgba(245, 196, 81, 0.58);
-    background: rgba(245, 196, 81, 0.14);
+    transform: scale(1.12);
+    text-shadow: 0 0 15px rgba(245, 196, 81, 0.42);
+}
+
+html[data-theme="light"] .editor-time-star {
+    color: #77839a;
+}
+
+html[data-theme="light"] .editor-time-star.is-active {
+    color: #d49a13;
 }
 
 .add-block-bar {

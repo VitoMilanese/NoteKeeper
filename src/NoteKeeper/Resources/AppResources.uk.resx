@@ -249,4 +249,9 @@
   <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Введи додатний час у форматі Jira, наприклад 15m, 1h 30m або 1d.</value></data>
   <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Оберіть існуючу нотатку з результатів пошуку.</value></data>
 
+
+  <data name="Time_DatePlaceholder" xml:space="preserve"><value>дд/мм/рр</value></data>
+  <data name="Time_DateFormatHint" xml:space="preserve"><value>Формат дати: дд/мм/рр</value></data>
+  <data name="Time_DatePickerAria" xml:space="preserve"><value>Відкрити календар</value></data>
+  <data name="Time_InvalidDate" xml:space="preserve"><value>Некоректна дата. Використовуй дд/мм/рр, наприклад 30/09/26.</value></data>
 </root>

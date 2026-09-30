@@ -249,4 +249,9 @@
   <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Enter a positive time in Jira format, for example 15m, 1h 30m, or 1d.</value></data>
   <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Select an existing note from the search results.</value></data>
 
+
+  <data name="Time_DatePlaceholder" xml:space="preserve"><value>dd/mm/yy</value></data>
+  <data name="Time_DateFormatHint" xml:space="preserve"><value>Date format: dd/mm/yy</value></data>
+  <data name="Time_DatePickerAria" xml:space="preserve"><value>Open calendar</value></data>
+  <data name="Time_InvalidDate" xml:space="preserve"><value>Invalid date. Use dd/mm/yy, for example 30/09/26.</value></data>
 </root>

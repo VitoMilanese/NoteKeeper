@@ -148,7 +148,8 @@ public sealed class TimeManagementController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateDay(
         int projectId,
-        DateTime date,
+        string? date,
+        string? month,
         CancellationToken cancellationToken)
     {
         var projectExists = await db.Projects
@@ -160,7 +161,12 @@ public sealed class TimeManagementController(
             return NotFound();
         }
 
-        var normalizedDate = date.Date;
+        if (!TryParseCalendarDate(date, out var normalizedDate))
+        {
+            SetError("Time_InvalidDate");
+            return RedirectToMonth(projectId, ParseMonth(month));
+        }
+
         var existingId = await db.TimeManagementDays
             .AsNoTracking()
             .Where(day =>
@@ -544,6 +550,28 @@ public sealed class TimeManagementController(
     private void SetError(string resourceKey)
     {
         TempData["TimeError"] = localizer[resourceKey].Value;
+    }
+
+    private static bool TryParseCalendarDate(
+        string? value,
+        out DateTime date)
+    {
+        if (!DateTime.TryParseExact(
+                value?.Trim(),
+                "dd/MM/yy",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out date))
+        {
+            return false;
+        }
+
+        if (date.Year < 2000)
+        {
+            date = date.AddYears(100);
+        }
+
+        return true;
     }
 
     private static DateTime ParseMonth(string? value)
