@@ -21,13 +21,29 @@
               hidden>
             @Html.AntiForgeryToken()
             <input type="hidden" name="month" value="@Model.MonthKey" />
-            <input name="date"
-                   value="@Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)"
-                   maxlength="8"
-                   inputmode="numeric"
-                   autocomplete="off"
-                   title="@Localizer["Time_DateFormatHint"]"
-                   data-time-day-date-input />
+            <div class="time-date-control time-day-date-control"
+                 data-time-date-control>
+                <input type="text"
+                       name="date"
+                       value="@Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)"
+                       maxlength="8"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       title="@Localizer["Time_DateFormatHint"]"
+                       data-time-date-text
+                       data-time-day-date-input />
+                <span class="time-date-picker-shell">
+                    <span class="time-date-picker-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M7 2v3M17 2v3M3.5 9h17M5.5 4h13a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+                        </svg>
+                    </span>
+                    <input type="date"
+                           value="@Model.Day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                           aria-label="@Localizer["Time_DatePickerAria"]"
+                           data-time-date-picker />
+                </span>
+            </div>
             <button class="button button-secondary button-small"
                     type="submit">@Localizer["Time_SaveDate"]</button>
             <button class="button button-ghost button-small"

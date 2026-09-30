@@ -102,7 +102,8 @@
         <input type="hidden" name="month" value="@Model.MonthKey" />
         <label class="field time-date-field">
             <span>@Localizer["Time_NewDate"]</span>
-            <div class="time-date-control">
+            <div class="time-date-control"
+                 data-time-date-control>
                 <input type="text"
                        name="date"
                        value="@Model.DefaultNewDayDate.ToString("dd/MM/yy", CultureInfo.InvariantCulture)"

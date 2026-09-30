@@ -26,11 +26,6 @@
 })();
 
 (() => {
-    const textInput = document.querySelector('[data-time-date-text]');
-    const pickerInput = document.querySelector('[data-time-date-picker]');
-
-    if (!textInput || !pickerInput) return;
-
     const formatPickerValue = (value) => {
         const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
         if (!match) return null;
@@ -57,17 +52,32 @@
         return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     };
 
-    pickerInput.addEventListener('change', () => {
-        const formatted = formatPickerValue(pickerInput.value);
-        if (formatted) {
-            textInput.value = formatted;
-        }
-    });
+    document.addEventListener('change', (event) => {
+        const pickerInput = event.target.closest('[data-time-date-picker]');
+        if (pickerInput) {
+            const control = pickerInput.closest('[data-time-date-control]') ||
+                pickerInput.closest('.time-date-control');
+            const textInput = control?.querySelector('[data-time-date-text]');
+            const formatted = formatPickerValue(pickerInput.value);
 
-    textInput.addEventListener('change', () => {
+            if (textInput && formatted) {
+                textInput.value = formatted;
+                textInput.dispatchEvent(
+                    new Event('change', { bubbles: true }));
+            }
+            return;
+        }
+
+        const textInput = event.target.closest('[data-time-date-text]');
+        if (!textInput) return;
+
+        const control = textInput.closest('[data-time-date-control]') ||
+            textInput.closest('.time-date-control');
+        const picker = control?.querySelector('[data-time-date-picker]');
         const pickerValue = parseDisplayValue(textInput.value);
-        if (pickerValue) {
-            pickerInput.value = pickerValue;
+
+        if (picker && pickerValue) {
+            picker.value = pickerValue;
         }
     });
 })();
