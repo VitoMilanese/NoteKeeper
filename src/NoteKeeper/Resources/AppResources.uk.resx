@@ -163,4 +163,42 @@
   <data name="Editor_EmojiCategoryObjects" xml:space="preserve"><value>Об’єкти</value></data>
   <data name="Editor_EmojiCategorySymbols" xml:space="preserve"><value>Символи</value></data>
   <data name="Editor_EmojiCategoryFlags" xml:space="preserve"><value>Прапори</value></data>
+
+  <data name="Common_Projects" xml:space="preserve"><value>Проекти</value></data>
+  <data name="Index_ProjectEyebrow" xml:space="preserve"><value>Проект</value></data>
+  <data name="Index_BackToProjects" xml:space="preserve"><value>← Проекти</value></data>
+  <data name="Projects_PageTitle" xml:space="preserve"><value>Проекти — NoteKeeper</value></data>
+  <data name="Projects_Eyebrow" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Projects_HeroTitle" xml:space="preserve"><value>Проекти</value></data>
+  <data name="Projects_HeroCopy" xml:space="preserve"><value>Зберігай окремі списки нотаток для різних напрямків і відкривай кожен проект як окремий робочий простір.</value></data>
+  <data name="Projects_Import" xml:space="preserve"><value>⇩ Імпортувати проект</value></data>
+  <data name="Projects_NewName" xml:space="preserve"><value>Новий проект</value></data>
+  <data name="Projects_NewNamePlaceholder" xml:space="preserve"><value>Назва проекту</value></data>
+  <data name="Projects_Create" xml:space="preserve"><value>+ Створити проект</value></data>
+  <data name="Projects_Search" xml:space="preserve"><value>Пошук проектів</value></data>
+  <data name="Projects_SearchPlaceholder" xml:space="preserve"><value>Пошук за назвою проекту</value></data>
+  <data name="Projects_SortUpdated" xml:space="preserve"><value>Останнє оновлення</value></data>
+  <data name="Projects_SortCreated" xml:space="preserve"><value>Створення</value></data>
+  <data name="Projects_SortName" xml:space="preserve"><value>Назва</value></data>
+  <data name="Projects_SortNotes" xml:space="preserve"><value>Кількість нотаток</value></data>
+  <data name="Projects_Results" xml:space="preserve"><value>Результати</value></data>
+  <data name="Projects_All" xml:space="preserve"><value>Усі проекти</value></data>
+  <data name="Projects_NoResults" xml:space="preserve"><value>Проектів не знайдено</value></data>
+  <data name="Projects_NoProjects" xml:space="preserve"><value>Проектів ще немає</value></data>
+  <data name="Projects_NoResultsCopy" xml:space="preserve"><value>Спробуй іншу назву проекту.</value></data>
+  <data name="Projects_NoProjectsCopy" xml:space="preserve"><value>Створи проект вище або імпортуй готовий проект NoteKeeper.</value></data>
+  <data name="Projects_NoteCount" xml:space="preserve"><value>Нотаток: {0}</value></data>
+  <data name="Projects_OpenProject" xml:space="preserve"><value>Відкрити список нотаток →</value></data>
+  <data name="Projects_Rename" xml:space="preserve"><value>Перейменувати</value></data>
+  <data name="Projects_Export" xml:space="preserve"><value>Експорт</value></data>
+  <data name="Projects_DeleteDialogTitle" xml:space="preserve"><value>Видалити проект?</value></data>
+  <data name="Projects_DeleteDialogMessage" xml:space="preserve"><value>Видалити «{0}» і всі нотатки в ньому ({1})? Цю дію не можна скасувати.</value></data>
+  <data name="Projects_RenameTitle" xml:space="preserve"><value>Перейменувати проект</value></data>
+  <data name="Projects_Name" xml:space="preserve"><value>Назва проекту</value></data>
+  <data name="Projects_RenameSave" xml:space="preserve"><value>Зберегти назву</value></data>
+  <data name="Server_ProjectNotFound" xml:space="preserve"><value>Проект не знайдено.</value></data>
+  <data name="Server_ProjectImportTooLarge" xml:space="preserve"><value>Файл проекту порожній або завеликий.</value></data>
+  <data name="Server_ProjectImportInvalid" xml:space="preserve"><value>Файл проекту некоректний або містить непідтримувані дані.</value></data>
+  <data name="Server_UntitledProject" xml:space="preserve"><value>Проект без назви</value></data>
+
 </root>

@@ -16,7 +16,7 @@
         @if (Model.Page > 1)
         {
             <a class="pagination-link pagination-arrow"
-               href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&page=@(Model.Page - 1)&pageSize=@Model.PageSize"
+               href="/projects/@Model.ProjectId?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&page=@(Model.Page - 1)&pageSize=@Model.PageSize"
                aria-label="@Localizer["Index_PreviousPage"]"
                title="@Localizer["Index_PreviousPage"]">←</a>
         }
@@ -37,7 +37,7 @@
             else
             {
                 <a class="pagination-link"
-                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&page=@pageNumber&pageSize=@Model.PageSize"
+                   href="/projects/@Model.ProjectId?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&page=@pageNumber&pageSize=@Model.PageSize"
                    aria-label="@Localizer["Index_PageNumber", pageNumber]">@pageNumber</a>
             }
 
@@ -47,7 +47,7 @@
         @if (Model.Page < Model.TotalPages)
         {
             <a class="pagination-link pagination-arrow"
-               href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&page=@(Model.Page + 1)&pageSize=@Model.PageSize"
+               href="/projects/@Model.ProjectId?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(Model.Tag)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&page=@(Model.Page + 1)&pageSize=@Model.PageSize"
                aria-label="@Localizer["Index_NextPage"]"
                title="@Localizer["Index_NextPage"]">→</a>
         }

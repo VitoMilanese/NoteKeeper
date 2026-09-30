@@ -2,7 +2,7 @@
 @inject IStringLocalizer<AppResources> Localizer
 @model NoteListViewModel
 @{
-    ViewData["Title"] = Localizer["Index_PageTitle"].Value;
+    ViewData["Title"] = $"{Model.ProjectName} — NoteKeeper";
     var hasFilters = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
     var selectedTags = Model.IncludedTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
     var priorityTags = Model.PriorityTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -28,12 +28,13 @@
 
 <section class="hero-row">
     <div>
-        <p class="eyebrow">@Localizer["Index_Eyebrow"]</p>
-        <h1>@Localizer["Index_HeroTitle"]</h1>
+        <p class="eyebrow">@Localizer["Index_ProjectEyebrow"]</p>
+        <h1>@Model.ProjectName</h1>
         <p class="hero-copy">@Localizer["Index_HeroCopy"]</p>
     </div>
     <div class="hero-actions">
-        <form method="post" action="/notes/import" enctype="multipart/form-data" class="import-note-form">
+        <a class="button button-ghost" href="/">@Localizer["Index_BackToProjects"]</a>
+        <form method="post" action="/projects/@Model.ProjectId/notes/import" enctype="multipart/form-data" class="import-note-form">
             @Html.AntiForgeryToken()
             <input id="noteImportInput"
                    type="file"
@@ -45,12 +46,12 @@
                 @Localizer["Index_ImportNote"]
             </button>
         </form>
-        <a class="button button-primary hero-action" href="/notes/new">@Localizer["Index_CreateNote"]</a>
+        <a class="button button-primary hero-action" href="/projects/@Model.ProjectId/notes/new">@Localizer["Index_CreateNote"]</a>
     </div>
 </section>
 
 <section class="panel filter-panel">
-    <form method="get" action="/" class="filter-grid">
+    <form method="get" action="/projects/@Model.ProjectId" class="filter-grid">
         <input type="hidden" name="pageSize" value="@Model.PageSize" />
         <label class="field search-field">
             <span>@Localizer["Index_Search"]</span>
@@ -121,7 +122,7 @@
 
         <button class="button button-secondary filter-submit" type="submit">@Localizer["Index_Apply"]</button>
         <a class="button button-ghost filter-reset"
-           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
+           href="/projects/@Model.ProjectId?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
     </form>
 
     @if (Model.Tags.Count > 0)
@@ -131,7 +132,7 @@
             {
                 var isPriorityTag = priorityTags.Contains(item.Name);
                 <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "") @(isPriorityTag ? "is-priority-tag" : "")"
-                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&pageSize=@Model.PageSize">
+                   href="/projects/@Model.ProjectId?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&pageSize=@Model.PageSize">
                     #@item.Name <span>@item.Count</span>
                 </a>
             }
@@ -151,7 +152,7 @@
         <div class="empty-icon">✦</div>
         <h2>@(hasFilters ? Localizer["Index_NoResults"] : Localizer["Index_NoNotes"])</h2>
         <p>@(hasFilters ? Localizer["Index_NoResultsCopy"] : Localizer["Index_NoNotesCopy"])</p>
-        <a class="button button-primary" href="/notes/new">@Localizer["Common_NewNote"]</a>
+        <a class="button button-primary" href="/projects/@Model.ProjectId/notes/new">@Localizer["Common_NewNote"]</a>
     </section>
 }
 else

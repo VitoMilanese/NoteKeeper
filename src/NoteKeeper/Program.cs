@@ -103,7 +103,7 @@ app.UseRouting();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Notes}/{action=Index}/{id?}");
+    pattern: "{controller=Projects}/{action=Index}/{id?}");
 
 using (var scope = app.Services.CreateScope())
 {

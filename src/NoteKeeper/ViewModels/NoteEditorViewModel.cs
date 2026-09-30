@@ -5,6 +5,8 @@ namespace NoteKeeper.ViewModels;
 public sealed class NoteEditorViewModel
 {
     public int? Id { get; set; }
+    public int ProjectId { get; set; }
+    public string ProjectName { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public DateTime? UpdatedAtUtc { get; set; }
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
@@ -24,6 +26,7 @@ public sealed class NoteBlockViewModel
 public sealed class SaveNoteRequest
 {
     public int? Id { get; set; }
+    public int ProjectId { get; set; }
     public string? Title { get; set; }
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
     public List<SaveBlockRequest> Blocks { get; set; } = [];

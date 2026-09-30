@@ -2,6 +2,8 @@ namespace NoteKeeper.ViewModels;
 
 public sealed class NoteListViewModel
 {
+    public int ProjectId { get; set; }
+    public string ProjectName { get; set; } = string.Empty;
     public string Query { get; set; } = string.Empty;
     public string Tag { get; set; } = string.Empty;
     public List<string> IncludedTags { get; set; } = [];

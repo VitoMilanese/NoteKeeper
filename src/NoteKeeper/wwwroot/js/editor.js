@@ -1874,8 +1874,10 @@
         setStatus(strings.saving, 'is-saving');
 
         const idText = editor.dataset.noteId;
+        const projectId = Number(editor.dataset.projectId || 0);
         const payload = {
             id: idText ? Number(idText) : null,
+            projectId,
             title: titleInput.value,
             status: Number(statusSelect?.value || 0),
             blocks: collectBlocks()

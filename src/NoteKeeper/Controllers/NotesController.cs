@@ -21,8 +21,9 @@ public sealed class NotesController(
     IStringLocalizer<AppResources> localizer,
     PriorityTagService priorityTagService) : Controller
 {
-    [HttpGet("/")]
+    [HttpGet("/projects/{projectId:int}")]
     public async Task<IActionResult> Index(
+        int projectId,
         string? q,
         string? tag,
         string sort = "updated",
@@ -32,6 +33,15 @@ public sealed class NotesController(
         int pageSize = 30,
         CancellationToken cancellationToken = default)
     {
+        var project = await db.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound();
+        }
+
         q = q?.Trim();
         var tagFilter = TagFilterParser.Parse(tag);
         var includedTags = tagFilter.IncludedTags;
@@ -53,6 +63,7 @@ public sealed class NotesController(
 
         var allTagCounts = (await db.NoteTags
             .AsNoTracking()
+            .Where(x => x.Note.ProjectId == projectId)
             .GroupBy(x => x.Name)
             .Select(group => new TagCountViewModel
             {
@@ -75,7 +86,9 @@ public sealed class NotesController(
             .TrimStart('#')
             .Trim();
 
-        IQueryable<Note> query = db.Notes.AsNoTracking();
+        IQueryable<Note> query = db.Notes
+            .AsNoTracking()
+            .Where(note => note.ProjectId == projectId);
 
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -171,6 +184,8 @@ public sealed class NotesController(
             .ToListAsync(cancellationToken);
         var model = new NoteListViewModel
         {
+            ProjectId = project.Id,
+            ProjectName = project.Name,
             Query = q ?? string.Empty,
             Tag = tag?.Trim() ?? string.Empty,
             IncludedTags = includedTags.ToList(),
@@ -206,11 +221,24 @@ public sealed class NotesController(
         return View(model);
     }
 
-    [HttpGet("/notes/new")]
-    public IActionResult New()
+    [HttpGet("/projects/{projectId:int}/notes/new")]
+    public async Task<IActionResult> New(
+        int projectId,
+        CancellationToken cancellationToken)
     {
+        var project = await db.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound();
+        }
+
         return View("Edit", new NoteEditorViewModel
         {
+            ProjectId = project.Id,
+            ProjectName = project.Name,
             Title = string.Empty,
             Status = NoteStatus.Backlog,
             Blocks =
@@ -225,6 +253,7 @@ public sealed class NotesController(
     {
         var note = await db.Notes
             .AsNoTracking()
+            .Include(x => x.Project)
             .Include(x => x.Blocks)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -236,6 +265,8 @@ public sealed class NotesController(
         return View(new NoteEditorViewModel
         {
             Id = note.Id,
+            ProjectId = note.ProjectId,
+            ProjectName = note.Project.Name,
             Title = note.Title,
             UpdatedAtUtc = note.UpdatedAtUtc,
             Status = note.Status,
@@ -306,11 +337,22 @@ public sealed class NotesController(
         return File(json, "application/json; charset=utf-8", downloadName);
     }
 
-    [HttpPost("/notes/import")]
+    [HttpPost("/projects/{projectId:int}/notes/import")]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(80_000_000)]
-    public async Task<IActionResult> Import(IFormFile? noteFile, CancellationToken cancellationToken)
+    public async Task<IActionResult> Import(
+        int projectId,
+        IFormFile? noteFile,
+        CancellationToken cancellationToken)
     {
+        var project = await db.Projects
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound();
+        }
+
         if (noteFile is null || noteFile.Length == 0 || noteFile.Length > 70_000_000)
         {
             return BadRequest(localizer["Server_ImportTooLarge"].Value);
@@ -337,6 +379,7 @@ public sealed class NotesController(
 
             var note = new Note
             {
+                ProjectId = project.Id,
                 Title = NormalizeTitle(document.Title),
                 Status = NormalizeStatus(document.Status),
                 CreatedAtUtc = DateTime.UtcNow,
@@ -404,6 +447,7 @@ public sealed class NotesController(
                 .ToList();
 
             db.Notes.Add(note);
+            project.UpdatedAtUtc = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
 
             return RedirectToAction(nameof(Edit), new { id = note.Id });
@@ -456,9 +500,18 @@ public sealed class NotesController(
         {
             note = new Note
             {
+                ProjectId = request.ProjectId,
                 CreatedAtUtc = DateTime.UtcNow
             };
             db.Notes.Add(note);
+        }
+
+        var project = await db.Projects
+            .FirstOrDefaultAsync(x => x.Id == note.ProjectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound(new { message = localizer["Server_ProjectNotFound"].Value });
         }
 
         var oldImagePaths = note.Blocks
@@ -469,6 +522,7 @@ public sealed class NotesController(
         note.Title = NormalizeTitle(request.Title);
         note.Status = NormalizeStatus(request.Status);
         note.UpdatedAtUtc = DateTime.UtcNow;
+        project.UpdatedAtUtc = note.UpdatedAtUtc;
 
         if (note.Blocks.Count > 0)
         {
@@ -517,6 +571,7 @@ public sealed class NotesController(
         return Ok(new
         {
             id = note.Id,
+            projectId = note.ProjectId,
             updatedAtUtc = note.UpdatedAtUtc,
             title = note.Title,
             status = note.Status,
@@ -534,8 +589,12 @@ public sealed class NotesController(
 
         if (note is null)
         {
-            return RedirectToAction(nameof(Index));
+            return Redirect("/");
         }
+
+        var projectId = note.ProjectId;
+        var project = await db.Projects
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
 
         var imagePaths = note.Blocks
             .Where(x => x.Type == BlockType.Image && !string.IsNullOrWhiteSpace(x.ImagePath))
@@ -544,6 +603,10 @@ public sealed class NotesController(
             .ToArray();
 
         db.Notes.Remove(note);
+        if (project is not null)
+        {
+            project.UpdatedAtUtc = DateTime.UtcNow;
+        }
         await db.SaveChangesAsync(cancellationToken);
 
         foreach (var imagePath in imagePaths)
@@ -551,7 +614,7 @@ public sealed class NotesController(
             await DeleteImageIfUnusedAsync(imagePath, id, cancellationToken);
         }
 
-        return RedirectToAction(nameof(Index));
+        return Redirect($"/projects/{projectId}");
     }
 
     [HttpPost("/notes/upload-image")]

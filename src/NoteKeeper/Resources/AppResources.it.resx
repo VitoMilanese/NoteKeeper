@@ -163,4 +163,42 @@
   <data name="Editor_EmojiCategoryObjects" xml:space="preserve"><value>Oggetti</value></data>
   <data name="Editor_EmojiCategorySymbols" xml:space="preserve"><value>Simboli</value></data>
   <data name="Editor_EmojiCategoryFlags" xml:space="preserve"><value>Bandiere</value></data>
+
+  <data name="Common_Projects" xml:space="preserve"><value>Progetti</value></data>
+  <data name="Index_ProjectEyebrow" xml:space="preserve"><value>Progetto</value></data>
+  <data name="Index_BackToProjects" xml:space="preserve"><value>← Progetti</value></data>
+  <data name="Projects_PageTitle" xml:space="preserve"><value>Progetti — NoteKeeper</value></data>
+  <data name="Projects_Eyebrow" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Projects_HeroTitle" xml:space="preserve"><value>Progetti</value></data>
+  <data name="Projects_HeroCopy" xml:space="preserve"><value>Organizza raccolte separate di note per aree di lavoro diverse e apri ogni progetto come spazio indipendente.</value></data>
+  <data name="Projects_Import" xml:space="preserve"><value>⇩ Importa progetto</value></data>
+  <data name="Projects_NewName" xml:space="preserve"><value>Nuovo progetto</value></data>
+  <data name="Projects_NewNamePlaceholder" xml:space="preserve"><value>Nome progetto</value></data>
+  <data name="Projects_Create" xml:space="preserve"><value>+ Crea progetto</value></data>
+  <data name="Projects_Search" xml:space="preserve"><value>Cerca progetti</value></data>
+  <data name="Projects_SearchPlaceholder" xml:space="preserve"><value>Cerca per nome del progetto</value></data>
+  <data name="Projects_SortUpdated" xml:space="preserve"><value>Ultimo aggiornamento</value></data>
+  <data name="Projects_SortCreated" xml:space="preserve"><value>Creazione</value></data>
+  <data name="Projects_SortName" xml:space="preserve"><value>Nome</value></data>
+  <data name="Projects_SortNotes" xml:space="preserve"><value>Numero di note</value></data>
+  <data name="Projects_Results" xml:space="preserve"><value>Risultati</value></data>
+  <data name="Projects_All" xml:space="preserve"><value>Tutti i progetti</value></data>
+  <data name="Projects_NoResults" xml:space="preserve"><value>Nessun progetto trovato</value></data>
+  <data name="Projects_NoProjects" xml:space="preserve"><value>Nessun progetto</value></data>
+  <data name="Projects_NoResultsCopy" xml:space="preserve"><value>Prova con un altro nome di progetto.</value></data>
+  <data name="Projects_NoProjectsCopy" xml:space="preserve"><value>Crea un progetto qui sopra oppure importa un progetto NoteKeeper.</value></data>
+  <data name="Projects_NoteCount" xml:space="preserve"><value>{0} note</value></data>
+  <data name="Projects_OpenProject" xml:space="preserve"><value>Apri elenco note →</value></data>
+  <data name="Projects_Rename" xml:space="preserve"><value>Rinomina</value></data>
+  <data name="Projects_Export" xml:space="preserve"><value>Esporta</value></data>
+  <data name="Projects_DeleteDialogTitle" xml:space="preserve"><value>Eliminare il progetto?</value></data>
+  <data name="Projects_DeleteDialogMessage" xml:space="preserve"><value>Eliminare “{0}” e tutte le {1} note contenute? L&apos;operazione non può essere annullata.</value></data>
+  <data name="Projects_RenameTitle" xml:space="preserve"><value>Rinomina progetto</value></data>
+  <data name="Projects_Name" xml:space="preserve"><value>Nome progetto</value></data>
+  <data name="Projects_RenameSave" xml:space="preserve"><value>Salva nome</value></data>
+  <data name="Server_ProjectNotFound" xml:space="preserve"><value>Progetto non trovato.</value></data>
+  <data name="Server_ProjectImportTooLarge" xml:space="preserve"><value>Il file del progetto è vuoto o troppo grande.</value></data>
+  <data name="Server_ProjectImportInvalid" xml:space="preserve"><value>Il file del progetto non è valido o contiene dati non supportati.</value></data>
+  <data name="Server_UntitledProject" xml:space="preserve"><value>Progetto senza titolo</value></data>
+
 </root>

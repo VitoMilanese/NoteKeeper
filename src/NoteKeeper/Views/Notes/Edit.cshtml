@@ -99,11 +99,14 @@
     var editorStringsJson = JsonSerializer.Serialize(editorStrings);
 }
 
-<section id="noteEditor" class="editor-page" data-note-id="@(Model.Id?.ToString() ?? "")">
+<section id="noteEditor"
+         class="editor-page"
+         data-note-id="@(Model.Id?.ToString() ?? "")"
+         data-project-id="@Model.ProjectId">
     @Html.AntiForgeryToken()
 
     <div class="editor-topbar">
-        <a class="button button-ghost button-small" href="/">@Localizer["Edit_BackToList"]</a>
+        <a class="button button-ghost button-small" href="/projects/@Model.ProjectId">@Localizer["Edit_BackToList"]</a>
         <div class="save-cluster">
             <label class="editor-status-field" for="statusSelect">
                 <span>@Localizer["Edit_Status"]</span>

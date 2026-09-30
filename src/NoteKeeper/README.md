@@ -6,6 +6,9 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 
 - home page with a note list and server-side pagination shown only when more than one page is needed, with the top pagination aligned in the notes heading row and the second pager below the grid;
 - search by title, text, comments, links, and image captions;
+- project dashboard as the application home page, with project creation, rename, delete, search, sorting, and per-project note workspaces;
+- automatic migration of the existing global note list into a first `Default project`, preserving all existing notes;
+- whole-project export/import with note content, statuses, dates, and embedded images;
 - note status selection in the editor with Backlog, Active, Done, and Released states; Active implies `#active`, Done implies `#done`, and Released implies both `#done` and `#released`;
 - filtering by `#tags` extracted automatically from text blocks and link comments plus status-implied tags, with both the legacy comma/parenthesis syntax and an explicit logical-operator syntax;
 - show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;

@@ -13,6 +13,9 @@ public sealed class Note
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
 
+    public int ProjectId { get; set; }
+    public Project Project { get; set; } = null!;
+
     public List<NoteBlock> Blocks { get; set; } = [];
     public List<NoteTag> Tags { get; set; } = [];
 }
