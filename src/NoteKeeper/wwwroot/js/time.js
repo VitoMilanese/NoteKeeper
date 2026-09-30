@@ -361,16 +361,23 @@
             const targetMonth =
                 response.headers.get('X-Time-Day-Month') || '';
             const currentMonth = form.dataset.currentMonth || '';
+            const html = await response.text();
 
             if (targetMonth &&
                 currentMonth &&
                 targetMonth !== currentMonth) {
-                window.location.href =
-                    `/projects/${days.dataset.projectId || ''}/time?month=${encodeURIComponent(targetMonth)}#${card.id}`;
+                card.remove();
+
+                const emptyState =
+                    document.querySelector('[data-time-empty-month]');
+                if (emptyState &&
+                    !days.querySelector('.time-day-card')) {
+                    emptyState.hidden = false;
+                }
+
                 return;
             }
 
-            const html = await response.text();
             const template = document.createElement('template');
             template.innerHTML = html.trim();
             const updatedDay = template.content.firstElementChild;
