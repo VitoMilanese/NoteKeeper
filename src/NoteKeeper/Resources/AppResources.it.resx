@@ -240,13 +240,13 @@
   <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Commento facoltativo</value></data>
   <data name="Time_SaveEntry" xml:space="preserve"><value>Salva</value></data>
   <data name="Time_DeleteEntry" xml:space="preserve"><value>Elimina registrazione</value></data>
-  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>1h 30m</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>0h</value></data>
   <data name="Time_SelectTask" xml:space="preserve"><value>Seleziona attività</value></data>
   <data name="Time_AddEntry" xml:space="preserve"><value>+ Aggiungi registrazione</value></data>
   <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Mesi della gestione del tempo</value></data>
   <data name="Time_CurrentMonth" xml:space="preserve"><value>Mese corrente</value></data>
   <data name="Time_TaskRequired" xml:space="preserve"><value>Seleziona un&apos;attività valida.</value></data>
-  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Inserisci un tempo positivo nel formato Jira, ad esempio 15m, 1h 30m oppure 1d.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Usa il formato tempo Jira, ad esempio 0h, 15m, 1h 30m oppure 1d. Un valore vuoto viene considerato 0h.</value></data>
   <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Seleziona una nota esistente dai risultati di ricerca.</value></data>
 
 
@@ -259,4 +259,5 @@
 
 
   <data name="Time_AddDateFailed" xml:space="preserve"><value>Impossibile aggiungere la data.</value></data>
+  <data name="Time_OpenTask" xml:space="preserve"><value>Apri attività in una nuova scheda</value></data>
 </root>

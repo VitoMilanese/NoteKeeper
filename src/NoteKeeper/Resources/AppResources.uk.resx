@@ -240,13 +240,13 @@
   <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Необов’язковий коментар</value></data>
   <data name="Time_SaveEntry" xml:space="preserve"><value>Зберегти</value></data>
   <data name="Time_DeleteEntry" xml:space="preserve"><value>Видалити запис часу</value></data>
-  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>1h 30m</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>0h</value></data>
   <data name="Time_SelectTask" xml:space="preserve"><value>Оберіть задачу</value></data>
   <data name="Time_AddEntry" xml:space="preserve"><value>+ Додати запис</value></data>
   <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Місяці керування часом</value></data>
   <data name="Time_CurrentMonth" xml:space="preserve"><value>Поточний місяць</value></data>
   <data name="Time_TaskRequired" xml:space="preserve"><value>Оберіть коректну задачу.</value></data>
-  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Введи додатний час у форматі Jira, наприклад 15m, 1h 30m або 1d.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Використовуй формат часу Jira, наприклад 0h, 15m, 1h 30m або 1d. Порожнє значення вважається 0h.</value></data>
   <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Оберіть існуючу нотатку з результатів пошуку.</value></data>
 
 
@@ -259,4 +259,5 @@
 
 
   <data name="Time_AddDateFailed" xml:space="preserve"><value>Не вдалося додати дату.</value></data>
+  <data name="Time_OpenTask" xml:space="preserve"><value>Відкрити задачу в новій вкладці</value></data>
 </root>

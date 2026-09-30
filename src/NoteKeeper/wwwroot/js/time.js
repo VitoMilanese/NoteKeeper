@@ -76,6 +76,19 @@
     const options = document.getElementById('timeTaskOptions');
     if (!options) return;
 
+    const updateTaskLink = (form, noteId) => {
+        const link = form?.querySelector('[data-time-task-link]');
+        if (!link) return;
+
+        if (noteId) {
+            link.href = `/notes/${noteId}`;
+            link.hidden = false;
+        } else {
+            link.href = '#';
+            link.hidden = true;
+        }
+    };
+
     const resolveTaskNote = (input) => {
         const form = input.closest('form');
         const hidden = form?.querySelector('[data-time-task-note-id]');
@@ -88,7 +101,9 @@
                 undefined,
                 { sensitivity: 'accent' }) === 0);
 
-        hidden.value = match?.dataset.noteId || '';
+        const noteId = match?.dataset.noteId || '';
+        hidden.value = noteId;
+        updateTaskLink(form, noteId);
     };
 
     document.addEventListener('input', (event) => {
@@ -101,6 +116,7 @@
 
         if (hidden) {
             hidden.value = '';
+            updateTaskLink(input.closest('form'), '');
         }
     });
 
@@ -199,5 +215,42 @@
         } finally {
             if (submitButton) submitButton.disabled = false;
         }
+    });
+})();
+
+
+(() => {
+    const durationPattern = /^(?:\s*\d+\s*[wdhm])+\s*$/i;
+
+    const isValidDuration = (value) => {
+        const text = String(value || '').trim();
+        return text.length === 0 || durationPattern.test(text);
+    };
+
+    document.addEventListener('input', (event) => {
+        const input = event.target.closest('[data-time-spent-input]');
+        if (!input) return;
+
+        input.setCustomValidity('');
+    });
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target.closest('[data-time-entry-form]');
+        if (!form) return;
+
+        const input = form.querySelector('[data-time-spent-input]');
+        if (!input) return;
+
+        input.setCustomValidity('');
+
+        if (isValidDuration(input.value)) {
+            return;
+        }
+
+        event.preventDefault();
+        input.setCustomValidity(
+            input.dataset.invalidMessage || 'Invalid time.');
+        input.reportValidity();
+        input.focus();
     });
 })();

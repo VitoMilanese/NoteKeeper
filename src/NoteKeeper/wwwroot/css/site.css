@@ -1193,6 +1193,26 @@ html[data-theme="light"] .project-card-topline {
     min-width: 0;
 }
 
+.time-task-control {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.time-task-control > input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.time-task-link {
+    flex: 0 0 34px;
+}
+
+.time-task-link[hidden] {
+    display: none;
+}
+
 .time-empty-month {
     margin-top: 16px;
 }

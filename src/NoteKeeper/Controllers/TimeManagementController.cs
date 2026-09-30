@@ -556,15 +556,13 @@ public sealed class TimeManagementController(
     {
         minutes = 0;
 
-        if (!JiraDuration.TryParse(value, out var parsed) ||
-            !parsed.HasValue ||
-            parsed.Value <= 0)
+        if (!JiraDuration.TryParse(value, out var parsed))
         {
             return false;
         }
 
-        minutes = parsed.Value;
-        return true;
+        minutes = parsed ?? 0;
+        return minutes >= 0;
     }
 
     private void SetError(string resourceKey)

@@ -33,7 +33,8 @@
             <div class="time-entry-row">
                 <form method="post"
                       action="/projects/@Model.ProjectId/time/entries/@entry.Id/update"
-                      class="time-entry-form">
+                      class="time-entry-form"
+                      data-time-entry-form>
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="month" value="@Model.MonthKey" />
 
@@ -42,7 +43,8 @@
                         <input name="timeSpent"
                                value="@entry.TimeSpent"
                                title="@Localizer["Edit_TimeFormatHint"]"
-                               required />
+                               data-time-spent-input
+                               data-invalid-message="@Localizer["Time_InvalidTimeSpent"]" />
                     </label>
 
                     <label class="field time-entry-task">
@@ -51,13 +53,23 @@
                                name="noteId"
                                value="@(entry.NoteId?.ToString() ?? "")"
                                data-time-task-note-id />
-                        <input name="taskTitle"
-                               value="@entry.TaskTitle"
-                               maxlength="240"
-                               list="timeTaskOptions"
-                               placeholder="@Localizer["Time_TaskPlaceholder"]"
-                               autocomplete="off"
-                               data-time-task-input />
+                        <div class="time-task-control">
+                            <input name="taskTitle"
+                                   value="@entry.TaskTitle"
+                                   maxlength="240"
+                                   list="timeTaskOptions"
+                                   placeholder="@Localizer["Time_TaskPlaceholder"]"
+                                   autocomplete="off"
+                                   data-time-task-input />
+                            <a class="icon-button time-task-link"
+                               href="@(entry.NoteId.HasValue ? $"/notes/{entry.NoteId.Value}" : "#")"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               title="@Localizer["Time_OpenTask"]"
+                               aria-label="@Localizer["Time_OpenTask"]"
+                               data-time-task-link
+                               hidden="@(!entry.NoteId.HasValue ? "hidden" : null)">↗</a>
+                        </div>
                     </label>
 
                     <label class="field time-entry-comment">
@@ -86,7 +98,8 @@
 
         <form method="post"
               action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/entries/create"
-              class="time-entry-form time-entry-new">
+              class="time-entry-form time-entry-new"
+              data-time-entry-form>
             @Html.AntiForgeryToken()
             <input type="hidden" name="month" value="@Model.MonthKey" />
 
@@ -95,7 +108,8 @@
                 <input name="timeSpent"
                        placeholder="@Localizer["Time_TimeSpentPlaceholder"]"
                        title="@Localizer["Edit_TimeFormatHint"]"
-                       required />
+                       data-time-spent-input
+                       data-invalid-message="@Localizer["Time_InvalidTimeSpent"]" />
             </label>
 
             <label class="field time-entry-task">
@@ -104,12 +118,22 @@
                        name="noteId"
                        value=""
                        data-time-task-note-id />
-                <input name="taskTitle"
-                       maxlength="240"
-                       list="timeTaskOptions"
-                       placeholder="@Localizer["Time_TaskPlaceholder"]"
-                       autocomplete="off"
-                       data-time-task-input />
+                <div class="time-task-control">
+                    <input name="taskTitle"
+                           maxlength="240"
+                           list="timeTaskOptions"
+                           placeholder="@Localizer["Time_TaskPlaceholder"]"
+                           autocomplete="off"
+                           data-time-task-input />
+                    <a class="icon-button time-task-link"
+                       href="#"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       title="@Localizer["Time_OpenTask"]"
+                       aria-label="@Localizer["Time_OpenTask"]"
+                       data-time-task-link
+                       hidden>↗</a>
+                </div>
             </label>
 
             <label class="field time-entry-comment">

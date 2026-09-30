@@ -93,7 +93,7 @@ public static partial class JiraDuration
         var minutes = Math.Max(0, totalMinutes.Value);
         if (minutes == 0)
         {
-            return "0m";
+            return "0h";
         }
 
         var result = new StringBuilder();

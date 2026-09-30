@@ -240,13 +240,13 @@
   <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Optional comment</value></data>
   <data name="Time_SaveEntry" xml:space="preserve"><value>Save</value></data>
   <data name="Time_DeleteEntry" xml:space="preserve"><value>Delete time record</value></data>
-  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>1h 30m</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>0h</value></data>
   <data name="Time_SelectTask" xml:space="preserve"><value>Select task</value></data>
   <data name="Time_AddEntry" xml:space="preserve"><value>+ Add record</value></data>
   <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Time management months</value></data>
   <data name="Time_CurrentMonth" xml:space="preserve"><value>Current month</value></data>
   <data name="Time_TaskRequired" xml:space="preserve"><value>Select a valid task.</value></data>
-  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Enter a positive time in Jira format, for example 15m, 1h 30m, or 1d.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Use Jira time format, for example 0h, 15m, 1h 30m, or 1d. An empty value is treated as 0h.</value></data>
   <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Select an existing note from the search results.</value></data>
 
 
@@ -259,4 +259,5 @@
 
 
   <data name="Time_AddDateFailed" xml:space="preserve"><value>Could not add the date.</value></data>
+  <data name="Time_OpenTask" xml:space="preserve"><value>Open task in a new tab</value></data>
 </root>

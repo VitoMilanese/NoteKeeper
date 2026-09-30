@@ -346,7 +346,7 @@ public sealed class ProjectsController(
                     day.Entries is null ||
                     day.Entries.Count > 2000 ||
                     day.Entries.Any(entry =>
-                        entry.TimeSpentMinutes <= 0 ||
+                        entry.TimeSpentMinutes < 0 ||
                         (entry.TaskTitle?.Length ?? 0) > 240 ||
                         (entry.Comment?.Length ?? 0) > 2000)))
             {
