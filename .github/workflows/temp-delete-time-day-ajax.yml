@@ -1,0 +1,68 @@
+name: Temporary AJAX delete Time day verification
+
+on:
+  push:
+    branches:
+      - ci/temp-delete-time-day-ajax
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: JavaScript syntax
+        run: node --check src/NoteKeeper/wwwroot/js/time.js
+
+      - name: Verify AJAX delete-day wiring
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          ctrl = Path("src/NoteKeeper/Controllers/TimeManagementController.cs").read_text()
+          partial = Path("src/NoteKeeper/Views/TimeManagement/_TimeDay.cshtml").read_text()
+          index = Path("src/NoteKeeper/Views/TimeManagement/Index.cshtml").read_text()
+          js = Path("src/NoteKeeper/wwwroot/js/time.js").read_text()
+
+          delete_start = partial.index(
+              'action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/delete"')
+          delete_end = partial.index('</form>', delete_start)
+          delete_form = partial[delete_start:delete_end]
+
+          assert 'data-time-day-delete-form' in delete_form
+          assert 'data-confirm-form' not in delete_form
+          assert 'data-delete-day-error' in delete_form
+
+          assert "if (IsAjaxRequest())" in ctrl
+          assert "noteSummaries = affectedNotes.Select" in ctrl
+          assert "spentTime = JiraDuration.Format" in ctrl
+          assert "remainingTime = note.EstimatedTimeMinutes.HasValue" in ctrl
+
+          assert 'data-time-tracked-note-id="@note.Id"' in index
+          assert 'data-time-tracked-spent' in index
+          assert 'data-time-tracked-remaining' in index
+
+          assert "data-time-day-delete-form" in js
+          assert "window.noteKeeperConfirm" in js
+          assert "X-Requested-With" in js
+          assert "Accept: 'application/json'" in js
+          assert "card.remove();" in js
+          assert "updateTrackedNoteSummaries" in js
+          assert "data-time-empty-month" in js
+
+          print("AJAX delete-day wiring passed.")
+          PY
