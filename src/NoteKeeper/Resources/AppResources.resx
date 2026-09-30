@@ -254,4 +254,9 @@
   <data name="Time_DateFormatHint" xml:space="preserve"><value>Date format: dd/mm/yy</value></data>
   <data name="Time_DatePickerAria" xml:space="preserve"><value>Open calendar</value></data>
   <data name="Time_InvalidDate" xml:space="preserve"><value>Invalid date. Use dd/mm/yy, for example 30/09/26.</value></data>
+
+  <data name="Time_TaskPlaceholder" xml:space="preserve"><value>Search a note or enter any activity</value></data>
+
+
+  <data name="Time_AddDateFailed" xml:space="preserve"><value>Could not add the date.</value></data>
 </root>

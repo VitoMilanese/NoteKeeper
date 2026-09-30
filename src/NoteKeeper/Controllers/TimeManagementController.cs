@@ -65,10 +65,14 @@ public sealed class TimeManagementController(
             .ToList();
 
         var noteOptions = notes
+            .OrderByDescending(x => x.IsTimeManagementPinned)
+            .ThenBy(x => x.Title)
+            .ThenBy(x => x.Id)
             .Select(x => new TimeNoteOptionViewModel
             {
                 Id = x.Id,
-                Title = x.Title
+                Title = x.Title,
+                IsPinned = x.IsTimeManagementPinned
             })
             .ToList();
 
@@ -121,24 +125,7 @@ public sealed class TimeManagementController(
             TrackedNotes = trackedNotes,
             NoteOptions = noteOptions,
             AvailableNotes = availableNotes,
-            Days = days.Select(day => new TimeManagementDayViewModel
-            {
-                Id = day.Id,
-                Date = day.Date,
-                TotalTimeSpent = JiraDuration.Format(
-                    day.Entries.Sum(entry => entry.TimeSpentMinutes)),
-                Entries = day.Entries
-                    .OrderBy(entry => entry.Id)
-                    .Select(entry => new TimeManagementEntryViewModel
-                    {
-                        Id = entry.Id,
-                        NoteId = entry.NoteId,
-                        TaskTitle = entry.Note?.Title ?? entry.TaskTitle,
-                        TimeSpent = JiraDuration.Format(entry.TimeSpentMinutes),
-                        Comment = entry.Comment ?? string.Empty
-                    })
-                    .ToList()
-            }).ToList()
+            Days = days.Select(MapDay).ToList()
         };
 
         return View(model);
@@ -163,6 +150,11 @@ public sealed class TimeManagementController(
 
         if (!TryParseCalendarDate(date, out var normalizedDate))
         {
+            if (IsAjaxRequest())
+            {
+                return BadRequest(localizer["Time_InvalidDate"].Value);
+            }
+
             SetError("Time_InvalidDate");
             return RedirectToMonth(projectId, ParseMonth(month));
         }
@@ -175,16 +167,41 @@ public sealed class TimeManagementController(
             .Select(day => (int?)day.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (!existingId.HasValue)
+        var dayId = existingId;
+
+        if (!dayId.HasValue)
         {
-            db.TimeManagementDays.Add(new TimeManagementDay
+            var newDay = new TimeManagementDay
             {
                 ProjectId = projectId,
                 Date = normalizedDate
-            });
+            };
 
+            db.TimeManagementDays.Add(newDay);
             await TouchProjectAsync(projectId, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
+            dayId = newDay.Id;
+        }
+
+        if (IsAjaxRequest())
+        {
+            var day = await db.TimeManagementDays
+                .AsNoTracking()
+                .Include(x => x.Entries)
+                    .ThenInclude(entry => entry.Note)
+                .AsSplitQuery()
+                .FirstAsync(
+                    x => x.Id == dayId.Value,
+                    cancellationToken);
+
+            return PartialView(
+                "_TimeDay",
+                new TimeDayPartialViewModel
+                {
+                    ProjectId = projectId,
+                    MonthKey = month ?? MonthKey(normalizedDate),
+                    Day = MapDay(day)
+                });
         }
 
         return RedirectToMonth(projectId, normalizedDate);
@@ -234,7 +251,8 @@ public sealed class TimeManagementController(
     public async Task<IActionResult> CreateEntry(
         int projectId,
         int dayId,
-        int noteId,
+        int? noteId,
+        string? taskTitle,
         string? timeSpent,
         string? comment,
         string? month,
@@ -250,15 +268,15 @@ public sealed class TimeManagementController(
             return NotFound();
         }
 
-        var note = await db.Notes
-            .FirstOrDefaultAsync(
-                x => x.Id == noteId && x.ProjectId == projectId,
-                cancellationToken);
-
-        if (note is null)
+        Note? note = null;
+        if (noteId is > 0)
         {
-            SetError("Time_TaskRequired");
-            return RedirectToMonth(projectId, ParseMonth(month), dayId);
+            note = await db.Notes
+                .FirstOrDefaultAsync(
+                    x =>
+                        x.Id == noteId.Value &&
+                        x.ProjectId == projectId,
+                    cancellationToken);
         }
 
         if (!TryParseTimeSpent(timeSpent, out var minutes))
@@ -270,14 +288,18 @@ public sealed class TimeManagementController(
         db.TimeManagementEntries.Add(new TimeManagementEntry
         {
             TimeManagementDayId = day.Id,
-            NoteId = note.Id,
-            TaskTitle = note.Title,
+            NoteId = note?.Id,
+            TaskTitle = note?.Title ?? Limit(taskTitle, 240) ?? string.Empty,
             TimeSpentMinutes = minutes,
             Comment = Limit(comment, 2000)
         });
 
         await db.SaveChangesAsync(cancellationToken);
-        await RecalculateNoteSpentAsync([note.Id], cancellationToken);
+
+        if (note is not null)
+        {
+            await RecalculateNoteSpentAsync([note.Id], cancellationToken);
+        }
         await TouchProjectAsync(projectId, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -289,7 +311,8 @@ public sealed class TimeManagementController(
     public async Task<IActionResult> UpdateEntry(
         int projectId,
         int entryId,
-        int noteId,
+        int? noteId,
+        string? taskTitle,
         string? timeSpent,
         string? comment,
         string? month,
@@ -308,18 +331,15 @@ public sealed class TimeManagementController(
             return NotFound();
         }
 
-        var note = await db.Notes
-            .FirstOrDefaultAsync(
-                x => x.Id == noteId && x.ProjectId == projectId,
-                cancellationToken);
-
-        if (note is null)
+        Note? note = null;
+        if (noteId is > 0)
         {
-            SetError("Time_TaskRequired");
-            return RedirectToMonth(
-                projectId,
-                ParseMonth(month),
-                entry.TimeManagementDayId);
+            note = await db.Notes
+                .FirstOrDefaultAsync(
+                    x =>
+                        x.Id == noteId.Value &&
+                        x.ProjectId == projectId,
+                    cancellationToken);
         }
 
         if (!TryParseTimeSpent(timeSpent, out var minutes))
@@ -333,14 +353,14 @@ public sealed class TimeManagementController(
 
         var oldNoteId = entry.NoteId;
 
-        entry.NoteId = note.Id;
-        entry.TaskTitle = note.Title;
+        entry.NoteId = note?.Id;
+        entry.TaskTitle = note?.Title ?? Limit(taskTitle, 240) ?? string.Empty;
         entry.TimeSpentMinutes = minutes;
         entry.Comment = Limit(comment, 2000);
 
         await db.SaveChangesAsync(cancellationToken);
 
-        var affected = new[] { oldNoteId, note.Id }
+        var affected = new[] { oldNoteId, note?.Id }
             .Where(x => x.HasValue)
             .Select(x => x!.Value)
             .Distinct()
@@ -550,6 +570,37 @@ public sealed class TimeManagementController(
     private void SetError(string resourceKey)
     {
         TempData["TimeError"] = localizer[resourceKey].Value;
+    }
+
+    private static TimeManagementDayViewModel MapDay(
+        TimeManagementDay day)
+    {
+        return new TimeManagementDayViewModel
+        {
+            Id = day.Id,
+            Date = day.Date,
+            TotalTimeSpent = JiraDuration.Format(
+                day.Entries.Sum(entry => entry.TimeSpentMinutes)),
+            Entries = day.Entries
+                .OrderBy(entry => entry.Id)
+                .Select(entry => new TimeManagementEntryViewModel
+                {
+                    Id = entry.Id,
+                    NoteId = entry.NoteId,
+                    TaskTitle = entry.Note?.Title ?? entry.TaskTitle,
+                    TimeSpent = JiraDuration.Format(entry.TimeSpentMinutes),
+                    Comment = entry.Comment ?? string.Empty
+                })
+                .ToList()
+        };
+    }
+
+    private bool IsAjaxRequest()
+    {
+        return string.Equals(
+            Request.Headers["X-Requested-With"].ToString(),
+            "XMLHttpRequest",
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryParseCalendarDate(

@@ -95,7 +95,9 @@
 <section class="panel time-add-day-panel">
     <form method="post"
           action="/projects/@Model.ProjectId/time/days/create"
-          class="time-add-day-form">
+          class="time-add-day-form"
+          data-time-add-day-form
+          data-add-date-error="@Localizer["Time_AddDateFailed"]">
         @Html.AntiForgeryToken()
         <input type="hidden" name="month" value="@Model.MonthKey" />
         <label class="field time-date-field">
@@ -128,138 +130,37 @@
     </form>
 </section>
 
-@if (Model.Days.Count == 0)
-{
-    <section class="empty-state panel time-empty-month">
-        <div class="empty-icon">◷</div>
-        <h2>@Localizer["Time_NoDays"]</h2>
-        <p>@Localizer["Time_NoDaysCopy"]</p>
-    </section>
-}
-else
-{
-    <section class="time-days">
-        @foreach (var day in Model.Days)
-        {
-            <article id="time-day-@day.Id" class="panel time-day-card">
-                <header class="time-day-header">
-                    <div class="time-day-heading">
-                        <h2>@day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)</h2>
-                        <span class="time-day-total">@Localizer["Time_Total"]: @day.TotalTimeSpent</span>
-                    </div>
-                    <form method="post"
-                          action="/projects/@Model.ProjectId/time/days/@day.Id/delete"
-                          data-confirm-form
-                          data-confirm-title="@Localizer["Time_DeleteDayTitle"]"
-                          data-confirm-message="@Localizer["Time_DeleteDayMessage", day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)]"
-                          data-confirm-label="@Localizer["Index_Delete"]"
-                          data-confirm-danger="true">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="month" value="@Model.MonthKey" />
-                        <button class="icon-button"
-                                type="submit"
-                                title="@Localizer["Time_DeleteDay"]"
-                                aria-label="@Localizer["Time_DeleteDay"]">×</button>
-                    </form>
-                </header>
+<datalist id="timeTaskOptions">
+    @foreach (var option in Model.NoteOptions)
+    {
+        <option value="@option.Title"
+                data-note-id="@option.Id"
+                data-pinned="@(option.IsPinned ? "true" : "false")"
+                label="@(option.IsPinned ? $"★ {option.Title}" : option.Title)"></option>
+    }
+</datalist>
 
-                <div class="time-entry-list">
-                    @foreach (var entry in day.Entries)
-                    {
-                        <div class="time-entry-row">
-                            <form method="post"
-                                  action="/projects/@Model.ProjectId/time/entries/@entry.Id/update"
-                                  class="time-entry-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="month" value="@Model.MonthKey" />
+<section class="empty-state panel time-empty-month"
+         data-time-empty-month
+         hidden="@(Model.Days.Count > 0 ? "hidden" : null)">
+    <div class="empty-icon">◷</div>
+    <h2>@Localizer["Time_NoDays"]</h2>
+    <p>@Localizer["Time_NoDaysCopy"]</p>
+</section>
 
-                                <label class="field time-entry-spent">
-                                    <span>@Localizer["Time_TimeSpent"]</span>
-                                    <input name="timeSpent"
-                                           value="@entry.TimeSpent"
-                                           title="@Localizer["Edit_TimeFormatHint"]"
-                                           required />
-                                </label>
-
-                                <label class="field time-entry-task">
-                                    <span>@Localizer["Time_Task"]</span>
-                                    <select name="noteId" required>
-                                        @if (!entry.NoteId.HasValue)
-                                        {
-                                            <option value="" selected disabled>@entry.TaskTitle</option>
-                                        }
-                                        @foreach (var option in Model.NoteOptions)
-                                        {
-                                            <option value="@option.Id"
-                                                    selected="@(entry.NoteId == option.Id ? "selected" : null)">@option.Title</option>
-                                        }
-                                    </select>
-                                </label>
-
-                                <label class="field time-entry-comment">
-                                    <span>@Localizer["Time_Comment"]</span>
-                                    <input name="comment"
-                                           value="@entry.Comment"
-                                           maxlength="2000"
-                                           placeholder="@Localizer["Time_CommentPlaceholder"]" />
-                                </label>
-
-                                <button class="button button-secondary button-small"
-                                        type="submit">@Localizer["Time_SaveEntry"]</button>
-                            </form>
-                            <form method="post"
-                                  action="/projects/@Model.ProjectId/time/entries/@entry.Id/delete"
-                                  class="time-row-action">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="month" value="@Model.MonthKey" />
-                                <button class="icon-button"
-                                        type="submit"
-                                        title="@Localizer["Time_DeleteEntry"]"
-                                        aria-label="@Localizer["Time_DeleteEntry"]">×</button>
-                            </form>
-                        </div>
-                    }
-
-                    <form method="post"
-                          action="/projects/@Model.ProjectId/time/days/@day.Id/entries/create"
-                          class="time-entry-form time-entry-new">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="month" value="@Model.MonthKey" />
-
-                        <label class="field time-entry-spent">
-                            <span>@Localizer["Time_TimeSpent"]</span>
-                            <input name="timeSpent"
-                                   placeholder="@Localizer["Time_TimeSpentPlaceholder"]"
-                                   title="@Localizer["Edit_TimeFormatHint"]"
-                                   required />
-                        </label>
-
-                        <label class="field time-entry-task">
-                            <span>@Localizer["Time_Task"]</span>
-                            <select name="noteId" required>
-                                <option value="">@Localizer["Time_SelectTask"]</option>
-                                @foreach (var option in Model.NoteOptions)
-                                {
-                                    <option value="@option.Id">@option.Title</option>
-                                }
-                            </select>
-                        </label>
-
-                        <label class="field time-entry-comment">
-                            <span>@Localizer["Time_Comment"]</span>
-                            <input name="comment"
-                                   maxlength="2000"
-                                   placeholder="@Localizer["Time_CommentPlaceholder"]" />
-                        </label>
-
-                        <button class="button button-primary button-small"
-                                type="submit">@Localizer["Time_AddEntry"]</button>
-                    </form>
-                </div>
-            </article>
-        }
-    </section>
-}
+<section class="time-days" data-time-days>
+    @foreach (var day in Model.Days)
+    {
+        @await Html.PartialAsync(
+            "_TimeDay",
+            new TimeDayPartialViewModel
+            {
+                ProjectId = Model.ProjectId,
+                MonthKey = Model.MonthKey,
+                Day = day
+            })
+    }
+</section>
 
 @await Html.PartialAsync("_TimeMonthPagination", Model)
 

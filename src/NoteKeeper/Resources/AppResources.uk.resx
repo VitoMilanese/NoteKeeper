@@ -254,4 +254,9 @@
   <data name="Time_DateFormatHint" xml:space="preserve"><value>Формат дати: дд/мм/рр</value></data>
   <data name="Time_DatePickerAria" xml:space="preserve"><value>Відкрити календар</value></data>
   <data name="Time_InvalidDate" xml:space="preserve"><value>Некоректна дата. Використовуй дд/мм/рр, наприклад 30/09/26.</value></data>
+
+  <data name="Time_TaskPlaceholder" xml:space="preserve"><value>Знайти нотатку або ввести будь-яку активність</value></data>
+
+
+  <data name="Time_AddDateFailed" xml:space="preserve"><value>Не вдалося додати дату.</value></data>
 </root>

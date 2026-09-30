@@ -22,10 +22,8 @@
     });
 
     input.addEventListener('change', resolveNoteId);
-
     form.addEventListener('submit', resolveNoteId);
 })();
-
 
 (() => {
     const textInput = document.querySelector('[data-time-date-text]');
@@ -70,6 +68,136 @@
         const pickerValue = parseDisplayValue(textInput.value);
         if (pickerValue) {
             pickerInput.value = pickerValue;
+        }
+    });
+})();
+
+(() => {
+    const options = document.getElementById('timeTaskOptions');
+    if (!options) return;
+
+    const resolveTaskNote = (input) => {
+        const form = input.closest('form');
+        const hidden = form?.querySelector('[data-time-task-note-id]');
+        if (!hidden) return;
+
+        const value = input.value.trim();
+        const match = Array.from(options.options).find((option) =>
+            option.value.localeCompare(
+                value,
+                undefined,
+                { sensitivity: 'accent' }) === 0);
+
+        hidden.value = match?.dataset.noteId || '';
+    };
+
+    document.addEventListener('input', (event) => {
+        const input = event.target.closest('[data-time-task-input]');
+        if (!input) return;
+
+        const hidden = input
+            .closest('form')
+            ?.querySelector('[data-time-task-note-id]');
+
+        if (hidden) {
+            hidden.value = '';
+        }
+    });
+
+    document.addEventListener('change', (event) => {
+        const input = event.target.closest('[data-time-task-input]');
+        if (input) {
+            resolveTaskNote(input);
+        }
+    });
+
+    document.addEventListener('submit', (event) => {
+        const input = event.target.querySelector?.('[data-time-task-input]');
+        if (input) {
+            resolveTaskNote(input);
+        }
+    });
+})();
+
+(() => {
+    const form = document.querySelector('[data-time-add-day-form]');
+    const days = document.querySelector('[data-time-days]');
+    const emptyState = document.querySelector('[data-time-empty-month]');
+
+    if (!form || !days) return;
+
+    const showError = (message) => {
+        let error = document.querySelector('[data-time-client-error]');
+
+        if (!error) {
+            error = document.createElement('div');
+            error.className = 'time-error';
+            error.dataset.timeClientError = 'true';
+            error.setAttribute('role', 'alert');
+            form.closest('.time-add-day-panel')?.before(error);
+        }
+
+        error.textContent = message;
+    };
+
+    const clearError = () => {
+        document.querySelector('[data-time-client-error]')?.remove();
+    };
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearError();
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'text/html'
+                }
+            });
+
+            if (!response.ok) {
+                const message = (await response.text()).trim();
+                throw new Error(message || form.dataset.addDateError || '');
+            }
+
+            const html = await response.text();
+            const template = document.createElement('template');
+            template.innerHTML = html.trim();
+            const newDay = template.content.firstElementChild;
+
+            if (!newDay) return;
+
+            const existing = document.getElementById(newDay.id);
+            if (existing) {
+                existing.replaceWith(newDay);
+            } else {
+                const newDate = newDay.dataset.date || '';
+                const currentDays = Array.from(
+                    days.querySelectorAll('.time-day-card'));
+
+                const insertBefore = currentDays.find((item) =>
+                    (item.dataset.date || '') < newDate);
+
+                if (insertBefore) {
+                    days.insertBefore(newDay, insertBefore);
+                } else {
+                    days.appendChild(newDay);
+                }
+            }
+
+            if (emptyState) {
+                emptyState.hidden = true;
+            }
+        } catch (error) {
+            showError(error.message || form.dataset.addDateError || '');
+        } finally {
+            if (submitButton) submitButton.disabled = false;
         }
     });
 })();

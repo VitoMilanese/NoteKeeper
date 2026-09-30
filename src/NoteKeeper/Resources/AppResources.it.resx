@@ -254,4 +254,9 @@
   <data name="Time_DateFormatHint" xml:space="preserve"><value>Formato data: gg/mm/aa</value></data>
   <data name="Time_DatePickerAria" xml:space="preserve"><value>Apri calendario</value></data>
   <data name="Time_InvalidDate" xml:space="preserve"><value>Data non valida. Usa gg/mm/aa, ad esempio 30/09/26.</value></data>
+
+  <data name="Time_TaskPlaceholder" xml:space="preserve"><value>Cerca una nota o inserisci qualsiasi attività</value></data>
+
+
+  <data name="Time_AddDateFailed" xml:space="preserve"><value>Impossibile aggiungere la data.</value></data>
 </root>

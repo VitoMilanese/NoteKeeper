@@ -33,6 +33,14 @@ public sealed class TimeNoteOptionViewModel
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public bool IsPinned { get; set; }
+}
+
+public sealed class TimeDayPartialViewModel
+{
+    public int ProjectId { get; set; }
+    public string MonthKey { get; set; } = string.Empty;
+    public TimeManagementDayViewModel Day { get; set; } = new();
 }
 
 public sealed class TimeManagementDayViewModel
