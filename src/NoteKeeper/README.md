@@ -10,7 +10,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` contains `active`, `done`, and `released`, and changes to the file are picked up without restarting the app;
 - fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
 - show caret-aware tag suggestions while typing a tag-filter expression, using all tags in the database so additional filter terms remain discoverable even after narrowing the result set, and insert the selected tag without replacing the surrounding expression;
-- clear the search and tag filter fields from a dedicated button while preserving the selected sort, direction, and grouping;
+- clear the search field, tag filter, and Group by selection from a dedicated button while preserving the selected sort and direction;
 - sorting by title, creation date, or last update;
 - optionally group note results by any tag that occurs in the current filtered result set into “with tag” and “without tag” sections while keeping the selected sort/order inside each group;
 - rich text blocks with bold, italic, underline, strikethrough, inline code, hyperlinks on selected rich text, quotes, expandable containers, dividers, text sizing, custom text colors, numbered lists, bullet lists, dash lists, and a quick symbol palette;
