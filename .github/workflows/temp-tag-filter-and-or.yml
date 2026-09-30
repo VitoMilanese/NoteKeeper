@@ -1,0 +1,191 @@
+name: Temporary AND-OR tag-filter verification
+
+on:
+  push:
+    branches:
+      - ci/temp-tag-filter-and-or-3
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NoteKeeper.sln
+
+      - name: Build
+        run: dotnet build src/NoteKeeper.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test src/NoteKeeper.sln --configuration Release --no-build
+
+      - name: Parser and SQLite semantics
+        shell: bash
+        run: |
+          mkdir -p .tmp/tag-filter-tests
+          cat > .tmp/tag-filter-tests/TagFilterTests.csproj <<'XML'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <ProjectReference Include="../../src/NoteKeeper/NoteKeeper.csproj" />
+            </ItemGroup>
+          </Project>
+          XML
+
+          cat > .tmp/tag-filter-tests/Program.cs <<'CS'
+          using System.Reflection;
+          using Microsoft.Data.Sqlite;
+          using Microsoft.EntityFrameworkCore;
+          using NoteKeeper.Controllers;
+          using NoteKeeper.Data;
+          using NoteKeeper.Models;
+          using NoteKeeper.Services;
+
+          static bool Evaluate(TagFilterExpression? expression, HashSet<string> tags)
+          {
+              return expression switch
+              {
+                  null => true,
+                  TagFilterTag tag => tag.Negated
+                      ? !tags.Contains(tag.Name)
+                      : tags.Contains(tag.Name),
+                  TagFilterGroup group => group.MatchAny
+                      ? group.Items.Any(item => Evaluate(item, tags))
+                      : group.Items.All(item => Evaluate(item, tags)),
+                  _ => throw new InvalidOperationException()
+              };
+          }
+
+          static void AssertExpression(
+              string expression,
+              string[] presentTags,
+              bool expected)
+          {
+              var parsed = TagFilterParser.Parse(expression);
+              var actual = Evaluate(
+                  parsed.Expression,
+                  presentTags.ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+              if (actual != expected)
+              {
+                  throw new Exception(
+                      $"Expression '{expression}' expected {expected}, got {actual} for [{string.Join(",", presentTags)}].");
+              }
+          }
+
+          AssertExpression("tag1, tag2", ["tag1", "tag2"], true);
+          AssertExpression("tag1, tag2", ["tag1"], false);
+          AssertExpression("(tag1, tag2)", ["tag1", "tag2"], true);
+          AssertExpression("(tag1, tag2)", ["tag2"], false);
+          AssertExpression("((tag1, tag2))", ["tag1"], true);
+          AssertExpression("((tag1, tag2))", ["tag2"], true);
+          AssertExpression("((tag1, tag2))", ["other"], false);
+
+          AssertExpression("tag1, tag2, -tag3", ["tag1", "tag2"], true);
+          AssertExpression("tag1, tag2, -tag3", ["tag1", "tag2", "tag3"], false);
+
+          AssertExpression("-(tag1, tag2)", [], true);
+          AssertExpression("-(tag1, tag2)", ["tag1"], false);
+          AssertExpression("-((tag1, tag2))", ["tag1"], true);
+          AssertExpression("-((tag1, tag2))", ["tag1", "tag2"], false);
+          AssertExpression("-(-tn)", [], true);
+          AssertExpression("-(-tn)", ["tn"], false);
+
+          const string complex =
+              "(((tag1, tag2)), -tag3), (((tag4, tag5)), -tag6)";
+          AssertExpression(complex, ["tag1", "tag4"], true);
+          AssertExpression(complex, ["tag2", "tag5"], true);
+          AssertExpression(complex, ["tag1", "tag3", "tag4"], false);
+          AssertExpression(complex, ["tag1", "tag4", "tag6"], false);
+          AssertExpression(complex, ["tag1"], false);
+
+          var positiveTags = TagFilterParser.Parse(
+              "((tag1, tag2)), -tag3").IncludedTags;
+          if (!positiveTags.SequenceEqual(
+                  new[] { "tag1", "tag2" },
+                  StringComparer.OrdinalIgnoreCase))
+          {
+              throw new Exception("IncludedTags should contain only positive tags.");
+          }
+
+          await using var connection = new SqliteConnection("Data Source=:memory:");
+          await connection.OpenAsync();
+
+          var options = new DbContextOptionsBuilder<AppDbContext>()
+              .UseSqlite(connection)
+              .Options;
+
+          await using var db = new AppDbContext(options);
+          await db.Database.EnsureCreatedAsync();
+
+          static Note MakeNote(int id, params string[] tags) =>
+              new()
+              {
+                  Id = id,
+                  Title = $"Note {id}",
+                  Tags = tags.Select(name => new NoteTag { Name = name }).ToList()
+              };
+
+          db.Notes.AddRange(
+              MakeNote(1, "tag1", "tag2", "tag4", "tag5"),
+              MakeNote(2, "tag1", "tag4", "tag5"),
+              MakeNote(3, "tag2", "tag3", "tag4", "tag5"),
+              MakeNote(4, "tag1", "tag2", "tag4", "tag6"),
+              MakeNote(5, "tag1", "tag2", "tag5"),
+              MakeNote(6, "tag2", "tag4", "tag5"),
+              MakeNote(7, "tag1", "tag2", "tag3"),
+              MakeNote(8, "tag1", "tag3", "tag4", "tag6"));
+          await db.SaveChangesAsync();
+
+          var method = typeof(NotesController).GetMethod(
+              "ApplyTagFilter",
+              BindingFlags.Static | BindingFlags.NonPublic)
+              ?? throw new Exception("ApplyTagFilter not found.");
+
+          async Task<int[]> Filter(string expression)
+          {
+              var parsed = TagFilterParser.Parse(expression);
+              var result = method.Invoke(
+                  null,
+                  new object?[] { db.Notes.AsNoTracking(), parsed.Expression })
+                  as IQueryable<Note>
+                  ?? throw new Exception("ApplyTagFilter returned no query.");
+
+              return await result
+                  .OrderBy(x => x.Id)
+                  .Select(x => x.Id)
+                  .ToArrayAsync();
+          }
+
+          static void AssertIds(
+              string expression,
+              int[] actual,
+              params int[] expected)
+          {
+              if (!actual.SequenceEqual(expected))
+              {
+                  throw new Exception(
+                      $"SQLite filter '{expression}' expected [{string.Join(",", expected)}], got [{string.Join(",", actual)}].");
+              }
+          }
+
+          AssertIds("tag1, tag2", await Filter("tag1, tag2"), 1, 4, 5, 7);
+          AssertIds("(tag1, tag2)", await Filter("(tag1, tag2)"), 1, 4, 5, 7);
+          AssertIds("((tag1, tag2))", await Filter("((tag1, tag2))"), 1, 2, 3, 4, 5, 6, 7, 8);
+          AssertIds("tag1, tag2, -tag3", await Filter("tag1, tag2, -tag3"), 1, 4, 5);
+          AssertIds(complex, await Filter(complex), 1, 2, 5, 6);
+
+          Console.WriteLine("AND/OR parser and SQLite query semantics passed.");
+          CS
+
+          dotnet run --project .tmp/tag-filter-tests/TagFilterTests.csproj --configuration Release
