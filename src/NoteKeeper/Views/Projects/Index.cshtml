@@ -1,0 +1,177 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
+@model ProjectDashboardViewModel
+@{
+    ViewData["Title"] = Localizer["Projects_PageTitle"].Value;
+    var hasSearch = !string.IsNullOrWhiteSpace(Model.Query);
+}
+
+<section class="hero-row projects-hero">
+    <div>
+        <p class="eyebrow">@Localizer["Projects_Eyebrow"]</p>
+        <h1>@Localizer["Projects_HeroTitle"]</h1>
+    </div>
+    <div class="hero-actions">
+        <form method="post"
+              action="/projects/import"
+              enctype="multipart/form-data"
+              class="import-note-form">
+            @Html.AntiForgeryToken()
+            <input id="projectImportInput"
+                   type="file"
+                   name="projectFile"
+                   accept=".json,.notekeeper-project.json,application/json"
+                   hidden
+                   onchange="if (this.files.length) this.form.submit();" />
+            <button class="button button-secondary"
+                    type="button"
+                    onclick="document.getElementById('projectImportInput').click();">
+                @Localizer["Projects_Import"]
+            </button>
+        </form>
+    </div>
+</section>
+
+<section class="panel project-controls">
+    <form method="post"
+          action="/projects/create"
+          class="project-create-form">
+        @Html.AntiForgeryToken()
+        <label class="field">
+            <span>@Localizer["Projects_NewName"]</span>
+            <input name="name"
+                   maxlength="180"
+                   placeholder="@Localizer["Projects_NewNamePlaceholder"]"
+                   autocomplete="off" />
+        </label>
+        <button class="button button-primary"
+                type="submit">@Localizer["Projects_Create"]</button>
+    </form>
+
+    <form method="get"
+          action="/"
+          class="project-filter-grid">
+        <label class="field">
+            <span>@Localizer["Projects_Search"]</span>
+            <input name="q"
+                   value="@Model.Query"
+                   placeholder="@Localizer["Projects_SearchPlaceholder"]"
+                   autocomplete="off" />
+        </label>
+
+        <label class="field">
+            <span>@Localizer["Index_Sort"]</span>
+            <select name="sort">
+                <option value="updated" selected="@(Model.Sort == "updated" ? "selected" : null)">@Localizer["Projects_SortUpdated"]</option>
+                <option value="created" selected="@(Model.Sort == "created" ? "selected" : null)">@Localizer["Projects_SortCreated"]</option>
+                <option value="name" selected="@(Model.Sort == "name" ? "selected" : null)">@Localizer["Projects_SortName"]</option>
+                <option value="notes" selected="@(Model.Sort == "notes" ? "selected" : null)">@Localizer["Projects_SortNotes"]</option>
+            </select>
+        </label>
+
+        <label class="field">
+            <span>@Localizer["Index_Direction"]</span>
+            <select name="dir">
+                <option value="desc" selected="@(Model.Direction == "desc" ? "selected" : null)">@Localizer["Index_DirectionDesc"]</option>
+                <option value="asc" selected="@(Model.Direction == "asc" ? "selected" : null)">@Localizer["Index_DirectionAsc"]</option>
+            </select>
+        </label>
+
+        <button class="button button-secondary"
+                type="submit">@Localizer["Index_Apply"]</button>
+        <a class="button button-ghost"
+           href="/?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)">
+            @Localizer["Index_Clear"]
+        </a>
+    </form>
+</section>
+
+<div class="list-heading">
+    <h2>@(hasSearch ? Localizer["Projects_Results"] : Localizer["Projects_All"])</h2>
+    <span>@Model.TotalCount</span>
+</div>
+
+@if (Model.Projects.Count == 0)
+{
+    <section class="empty-state panel">
+        <div class="empty-icon">▦</div>
+        <h2>@(hasSearch ? Localizer["Projects_NoResults"] : Localizer["Projects_NoProjects"])</h2>
+        <p>@(hasSearch ? Localizer["Projects_NoResultsCopy"] : Localizer["Projects_NoProjectsCopy"])</p>
+    </section>
+}
+else
+{
+    <section class="project-grid">
+        @foreach (var project in Model.Projects)
+        {
+            <article class="project-card">
+                <a class="project-card-main"
+                   href="/projects/@project.Id">
+                    <div class="project-card-topline">
+                        <span>@Localizer["Projects_NoteCount", project.NoteCount]</span>
+                        <time class="js-local-time"
+                              datetime="@project.UpdatedAtUtc.ToString("O")">@project.UpdatedAtUtc.ToString("yyyy-MM-dd HH:mm")</time>
+                    </div>
+                    <h2>@project.Name</h2>
+                    <p>@Localizer["Projects_OpenProject"]</p>
+                </a>
+
+                <div class="project-card-actions">
+                    <button class="button button-ghost button-small"
+                            type="button"
+                            data-project-rename
+                            data-project-id="@project.Id"
+                            data-project-name="@project.Name">
+                        @Localizer["Projects_Rename"]
+                    </button>
+                    <a class="button button-secondary button-small"
+                       href="/projects/@project.Id/export">
+                        @Localizer["Projects_Export"]
+                    </a>
+                    <form method="post"
+                          action="/projects/@project.Id/delete"
+                          data-confirm-form
+                          data-confirm-title="@Localizer["Projects_DeleteDialogTitle"]"
+                          data-confirm-message="@Localizer["Projects_DeleteDialogMessage", project.Name, project.NoteCount]"
+                          data-confirm-label="@Localizer["Index_Delete"]"
+                          data-confirm-danger="true">
+                        @Html.AntiForgeryToken()
+                        <button class="button button-danger button-small"
+                                type="submit">@Localizer["Index_Delete"]</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+<dialog id="projectRenameDialog"
+        class="app-dialog project-rename-dialog"
+        aria-labelledby="projectRenameTitle">
+    <form method="post"
+          class="app-dialog-card project-rename-dialog-card"
+          data-project-rename-form>
+        @Html.AntiForgeryToken()
+        <div class="app-dialog-copy">
+            <h2 id="projectRenameTitle">@Localizer["Projects_RenameTitle"]</h2>
+            <label class="field">
+                <span>@Localizer["Projects_Name"]</span>
+                <input name="name"
+                       maxlength="180"
+                       autocomplete="off"
+                       data-project-rename-input />
+            </label>
+        </div>
+        <div class="app-dialog-actions">
+            <button class="button button-ghost"
+                    type="button"
+                    data-project-rename-cancel>@Localizer["Dialog_Cancel"]</button>
+            <button class="button button-primary"
+                    type="submit">@Localizer["Projects_RenameSave"]</button>
+        </div>
+    </form>
+</dialog>
+
+@section Scripts {
+    <script src="~/js/projects.js" asp-append-version="true"></script>
+}

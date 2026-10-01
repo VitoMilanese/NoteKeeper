@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Header_HomeAria" xml:space="preserve"><value>NoteKeeper — головна</value></data>
+  <data name="Common_NewNote" xml:space="preserve"><value>+ Нова нотатка</value></data>
+  <data name="Language_Label" xml:space="preserve"><value>Мова</value></data>
+  <data name="Index_PageTitle" xml:space="preserve"><value>Нотатки — NoteKeeper</value></data>
+  <data name="Index_Eyebrow" xml:space="preserve"><value>Твоя база нотаток</value></data>
+  <data name="Index_HeroTitle" xml:space="preserve"><value>Усе важливе — в одному місці.</value></data>
+  <data name="Index_CreateNote" xml:space="preserve"><value>+ Створити нотатку</value></data>
+  <data name="Index_Search" xml:space="preserve"><value>Пошук</value></data>
+  <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Назва, текст, посилання…</value></data>
+  <data name="Index_Tag" xml:space="preserve"><value>Теги</value></data>
+  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#ідея, #робота</value></data>
+  <data name="Index_TagSuggestionsAria" xml:space="preserve"><value>Підказки тегів</value></data>
+  <data name="Index_GroupBy" xml:space="preserve"><value>Групувати за</value></data>
+  <data name="Index_GroupByNone" xml:space="preserve"><value>Без групування</value></data>
+  <data name="Index_GroupWithTag" xml:space="preserve"><value>З тегом #{0}</value></data>
+  <data name="Index_GroupWithoutTag" xml:space="preserve"><value>Без тега #{0}</value></data>
+  <data name="Index_TagFilterLogicalCommaError" xml:space="preserve"><value>Коми не можна використовувати разом з &amp; або |. Використовуй тільки логічні оператори.</value></data>
+  <data name="Index_TagFilterLogicalSyntaxError" xml:space="preserve"><value>Некоректний логічний фільтр тегів. Перевір оператори, операнди та дужки.</value></data>
+  <data name="Index_Sort" xml:space="preserve"><value>Сортувати</value></data>
+  <data name="Index_SortUpdated" xml:space="preserve"><value>За зміною</value></data>
+  <data name="Index_SortCreated" xml:space="preserve"><value>За створенням</value></data>
+  <data name="Index_SortTitle" xml:space="preserve"><value>За назвою</value></data>
+  <data name="Index_Direction" xml:space="preserve"><value>Напрямок</value></data>
+  <data name="Index_DirectionDesc" xml:space="preserve"><value>Спочатку нові / Я→А</value></data>
+  <data name="Index_DirectionAsc" xml:space="preserve"><value>Спочатку старі / А→Я</value></data>
+  <data name="Index_Apply" xml:space="preserve"><value>Застосувати</value></data>
+  <data name="Index_Reset" xml:space="preserve"><value>Скинути</value></data>
+  <data name="Index_Clear" xml:space="preserve"><value>Очистити</value></data>
+  <data name="Index_PaginationAria" xml:space="preserve"><value>Сторінки нотаток</value></data>
+  <data name="Index_PreviousPage" xml:space="preserve"><value>Попередня сторінка</value></data>
+  <data name="Index_NextPage" xml:space="preserve"><value>Наступна сторінка</value></data>
+  <data name="Index_PageNumber" xml:space="preserve"><value>Сторінка {0}</value></data>
+  <data name="Index_PopularTagsAria" xml:space="preserve"><value>Популярні теги</value></data>
+  <data name="Index_Results" xml:space="preserve"><value>Результати</value></data>
+  <data name="Index_Notes" xml:space="preserve"><value>Нотатки</value></data>
+  <data name="Index_NoResults" xml:space="preserve"><value>Нічого не знайдено</value></data>
+  <data name="Index_NoNotes" xml:space="preserve"><value>Тут поки порожньо</value></data>
+  <data name="Index_NoResultsCopy" xml:space="preserve"><value>Спробуй змінити пошуковий запит або тег.</value></data>
+  <data name="Index_NoNotesCopy" xml:space="preserve"><value>Створи першу нотатку і додай до неї текст, посилання або картинку.</value></data>
+  <data name="Index_BlockCount" xml:space="preserve"><value>Блоків: {0}</value></data>
+  <data name="Index_Edit" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Index_OpenFirstLink" xml:space="preserve"><value>Відкрити перше посилання в новій вкладці</value></data>
+  <data name="Index_Delete" xml:space="preserve"><value>Видалити</value></data>
+  <data name="Index_DeleteConfirm" xml:space="preserve"><value>Видалити цю нотатку?</value></data>
+  <data name="Edit_PageTitleNew" xml:space="preserve"><value>Нова нотатка — NoteKeeper</value></data>
+  <data name="Edit_BackToList" xml:space="preserve"><value>← До списку</value></data>
+  <data name="Edit_Saved" xml:space="preserve"><value>Збережено</value></data>
+  <data name="Edit_NewNoteStatus" xml:space="preserve"><value>Нова нотатка</value></data>
+  <data name="Edit_Save" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Назва нотатки</value></data>
+  <data name="Edit_Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Edit_EstimatedTime" xml:space="preserve"><value>Оцінений час</value></data>
+  <data name="Edit_SpentTime" xml:space="preserve"><value>Витрачений час</value></data>
+  <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Формат Jira: 1w 2d 3h 15m</value></data>
+  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Додати або прибрати цю нотатку з Time management</value></data>
+  <data name="Edit_TimeHistoryButton" xml:space="preserve"><value>Показати записи часу</value></data>
+  <data name="Edit_TimeHistoryTitle" xml:space="preserve"><value>Записи часу</value></data>
+  <data name="Edit_TimeHistoryDescription" xml:space="preserve"><value>Календарні записи, пов’язані з цією нотаткою.</value></data>
+  <data name="Edit_TimeHistoryLoading" xml:space="preserve"><value>Завантаження записів часу…</value></data>
+  <data name="Edit_TimeHistoryEmpty" xml:space="preserve"><value>З цією нотаткою не пов’язано жодного запису часу.</value></data>
+  <data name="Edit_TimeHistoryOpenDate" xml:space="preserve"><value>Відкрити цю дату в Time management</value></data>
+  <data name="Edit_TimeHistoryDeleteEntry" xml:space="preserve"><value>Видалити цей запис часу</value></data>
+  <data name="Edit_TimeHistoryLoadFailed" xml:space="preserve"><value>Не вдалося завантажити записи часу.</value></data>
+  <data name="Edit_TimeHistoryDeleteFailed" xml:space="preserve"><value>Не вдалося видалити запис часу.</value></data>
+  <data name="Edit_TimeHistoryClose" xml:space="preserve"><value>Закрити</value></data>
+  <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
+  <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
+  <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="Edit_StatusTest" xml:space="preserve"><value>Test</value></data>
+  <data name="Edit_StatusDone" xml:space="preserve"><value>Done</value></data>
+  <data name="Edit_StatusReleased" xml:space="preserve"><value>Released</value></data>
+  <data name="Edit_StatusRejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Edit_StatusSuspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Edit_StatusSimpleNote" xml:space="preserve"><value>Simple note</value></data>
+  <data name="Edit_AddText" xml:space="preserve"><value>＋ Текст</value></data>
+  <data name="Edit_AddLink" xml:space="preserve"><value>↗ Посилання</value></data>
+  <data name="Edit_AddImage" xml:space="preserve"><value>▧ Зображення</value></data>
+  <data name="Edit_PasteHint" xml:space="preserve"><value>вставляє картинку з буфера як новий блок</value></data>
+  <data name="Edit_AddTextBlock" xml:space="preserve"><value>＋ Додати текстовий блок</value></data>
+  <data name="Edit_SaveChanges" xml:space="preserve"><value>Зберегти зміни</value></data>
+  <data name="Editor_TypeText" xml:space="preserve"><value>Текст</value></data>
+  <data name="Editor_TypeLink" xml:space="preserve"><value>Посилання</value></data>
+  <data name="Editor_TypeImage" xml:space="preserve"><value>Зображення</value></data>
+  <data name="Editor_Unsaved" xml:space="preserve"><value>Є незбережені зміни</value></data>
+  <data name="Editor_OpenLink" xml:space="preserve"><value>Відкрити посилання</value></data>
+  <data name="Editor_DragBlock" xml:space="preserve"><value>Перетягнути блок</value></data>
+  <data name="Editor_MoveUp" xml:space="preserve"><value>Перемістити вище</value></data>
+  <data name="Editor_MoveDown" xml:space="preserve"><value>Перемістити нижче</value></data>
+  <data name="Editor_RemoveBlock" xml:space="preserve"><value>Видалити блок</value></data>
+  <data name="Editor_TextPlaceholder" xml:space="preserve"><value>Текст, коментар, ідея… Використовуй #теги для швидкого пошуку.</value></data>
+  <data name="Editor_LinkTitlePlaceholder" xml:space="preserve"><value>Назва посилання</value></data>
+  <data name="Editor_LinkCommentPlaceholder" xml:space="preserve"><value>Коментар до посилання (необов’язково)</value></data>
+  <data name="Editor_ImageAlt" xml:space="preserve"><value>Зображення в нотатці</value></data>
+  <data name="Editor_OpenImagePreview" xml:space="preserve"><value>Відкрити зображення</value></data>
+  <data name="Editor_CloseImagePreview" xml:space="preserve"><value>Закрити зображення</value></data>
+  <data name="Editor_ImageCaptionPlaceholder" xml:space="preserve"><value>Підпис до зображення (необов’язково)</value></data>
+  <data name="Editor_ReplaceImage" xml:space="preserve"><value>Замінити</value></data>
+  <data name="Editor_UploadFailed" xml:space="preserve"><value>Не вдалося завантажити зображення.</value></data>
+  <data name="Editor_Uploading" xml:space="preserve"><value>Завантаження зображення…</value></data>
+  <data name="Editor_ImageAdded" xml:space="preserve"><value>Зображення додано.</value></data>
+  <data name="Editor_ImagesAdded" xml:space="preserve"><value>Додано зображень: {0}.</value></data>
+  <data name="Editor_UploadError" xml:space="preserve"><value>Помилка завантаження.</value></data>
+  <data name="Editor_UploadErrorStatus" xml:space="preserve"><value>Помилка завантаження</value></data>
+  <data name="Editor_LinkMustHttp" xml:space="preserve"><value>Посилання має починатися з http:// або https://</value></data>
+  <data name="Editor_Saving" xml:space="preserve"><value>Збереження…</value></data>
+  <data name="Editor_SaveErrorStatus" xml:space="preserve"><value>Помилка збереження ({0}).</value></data>
+  <data name="Editor_SavedAt" xml:space="preserve"><value>Збережено {0}</value></data>
+  <data name="Editor_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти нотатку</value></data>
+  <data name="Editor_SaveFailedToast" xml:space="preserve"><value>Не вдалося зберегти нотатку.</value></data>
+  <data name="Editor_OpenLinkInvalid" xml:space="preserve"><value>Вкажи коректне HTTP/HTTPS посилання.</value></data>
+  <data name="Server_TooManyBlocks" xml:space="preserve"><value>У нотатці забагато блоків.</value></data>
+  <data name="Server_InvalidEstimatedTime" xml:space="preserve"><value>Некоректний оцінений час. Використовуй формат Jira, наприклад: 1w, 2d, 3h, 15m або 1d 4h.</value></data>
+  <data name="Server_InvalidSpentTime" xml:space="preserve"><value>Некоректний витрачений час. Використовуй формат Jira, наприклад: 1w, 2d, 3h, 15m або 1h 30m.</value></data>
+  <data name="Server_NoteNotFound" xml:space="preserve"><value>Нотатку не знайдено.</value></data>
+  <data name="Server_ImageTooLarge" xml:space="preserve"><value>Зображення має бути не більше 12 МБ.</value></data>
+  <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>Підтримуються PNG, JPEG, WEBP та GIF.</value></data>
+  <data name="Server_UntitledNote" xml:space="preserve"><value>Без назви</value></data>
+  <data name="Server_EmptyNote" xml:space="preserve"><value>Порожня нотатка</value></data>
+  <data name="Theme_SwitchToLight" xml:space="preserve"><value>Увімкнути світлу тему</value></data>
+  <data name="Theme_SwitchToDark" xml:space="preserve"><value>Увімкнути темну тему</value></data>
+  <data name="Dialog_ConfirmTitle" xml:space="preserve"><value>Підтвердження дії</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="Dialog_Confirm" xml:space="preserve"><value>Підтвердити</value></data>
+  <data name="Index_DeleteDialogTitle" xml:space="preserve"><value>Видалити нотатку?</value></data>
+  <data name="Index_DeleteDialogMessage" xml:space="preserve"><value>«{0}» буде назавжди видалена з бази даних. Цю дію неможливо скасувати.</value></data>
+  <data name="Edit_DeleteNote" xml:space="preserve"><value>Видалити</value></data>
+  <data name="Editor_FormatBold" xml:space="preserve"><value>Жирний</value></data>
+  <data name="Editor_FormatItalic" xml:space="preserve"><value>Курсив</value></data>
+  <data name="Editor_FormatUnderline" xml:space="preserve"><value>Підкреслений</value></data>
+  <data name="Editor_FormatStrike" xml:space="preserve"><value>Закреслений</value></data>
+  <data name="Editor_FormatCode" xml:space="preserve"><value>Вбудований код</value></data>
+  <data name="Editor_FormatHyperlink" xml:space="preserve"><value>Гіперпосилання</value></data>
+  <data name="Editor_HyperlinkDialogTitle" xml:space="preserve"><value>Гіперпосилання</value></data>
+  <data name="Editor_HyperlinkUrlLabel" xml:space="preserve"><value>URL</value></data>
+  <data name="Editor_HyperlinkApply" xml:space="preserve"><value>Застосувати посилання</value></data>
+  <data name="Editor_HyperlinkRemove" xml:space="preserve"><value>Прибрати посилання</value></data>
+  <data name="Editor_HyperlinkCancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="Editor_HyperlinkSelectText" xml:space="preserve"><value>Спочатку виділіть текст.</value></data>
+  <data name="Editor_HyperlinkInvalidUrl" xml:space="preserve"><value>Введіть коректну HTTP або HTTPS адресу.</value></data>
+  <data name="Editor_FormatQuote" xml:space="preserve"><value>Цитата</value></data>
+  <data name="Editor_FormatExpander" xml:space="preserve"><value>Розгортаний контейнер</value></data>
+  <data name="Editor_FormatAddLineBelow" xml:space="preserve"><value>Додати порожній рядок під поточним рядком</value></data>
+  <data name="Editor_FormatDivider" xml:space="preserve"><value>Розділювач</value></data>
+  <data name="Editor_FormatList" xml:space="preserve"><value>Список</value></data>
+  <data name="Editor_FormatOrderedList" xml:space="preserve"><value>Нумерований список</value></data>
+  <data name="Editor_FormatBulletList" xml:space="preserve"><value>Список із маркером •</value></data>
+  <data name="Editor_FormatDashList" xml:space="preserve"><value>Список із маркером —</value></data>
+  <data name="Editor_FormatSymbols" xml:space="preserve"><value>Вставити символ</value></data>
+  <data name="Editor_ExpanderSummary" xml:space="preserve"><value>Деталі</value></data>
+  <data name="Editor_ExpanderContent" xml:space="preserve"><value>Вміст контейнера</value></data>
+  <data name="Editor_ExpanderDelete" xml:space="preserve"><value>Видалити розгортаний контейнер</value></data>
+  <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Відкинути незбережені зміни?</value></data>
+  <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>У цій нотатці є зміни, які ще не збережено.</value></data>
+  <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Вийти без збереження</value></data>
+  <data name="Index_ImportNote" xml:space="preserve"><value>⇩ Імпортувати нотатку</value></data>
+  <data name="Edit_ExportNote" xml:space="preserve"><value>⇧ Експорт</value></data>
+  <data name="Editor_FormatTextColor" xml:space="preserve"><value>Колір тексту</value></data>
+  <data name="Editor_FormatTextSize" xml:space="preserve"><value>Розмір тексту</value></data>
+  <data name="Editor_FormatSizeSmall" xml:space="preserve"><value>Малий</value></data>
+  <data name="Editor_FormatSizeNormal" xml:space="preserve"><value>Звичайний</value></data>
+  <data name="Editor_FormatSizeLarge" xml:space="preserve"><value>Великий</value></data>
+  <data name="Editor_FormatSizeExtraLarge" xml:space="preserve"><value>Дуже великий</value></data>
+  <data name="Editor_QuoteContent" xml:space="preserve"><value>Цитата</value></data>
+  <data name="Editor_DividerDeleteHint" xml:space="preserve"><value>Розділювач вибрано. Натисни Delete або Backspace, щоб видалити його.</value></data>
+  <data name="Editor_SystemEmoji" xml:space="preserve"><value>Більше emoji</value></data>
+  <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Браузер не може напряму відкрити системну панель emoji Windows. Натисни Win + . коли редактор у фокусі.</value></data>
+  <data name="Server_ImportInvalid" xml:space="preserve"><value>Це невалідний файл експорту нотатки NoteKeeper.</value></data>
+  <data name="Server_ImportTooLarge" xml:space="preserve"><value>Файл експорту нотатки порожній або завеликий для імпорту.</value></data>
+  <data name="Editor_EmojiSearchPlaceholder" xml:space="preserve"><value>Пошук emoji…</value></data>
+  <data name="Editor_EmojiNoResults" xml:space="preserve"><value>Emoji не знайдено.</value></data>
+  <data name="Editor_EmojiCategoryAll" xml:space="preserve"><value>Усі</value></data>
+  <data name="Editor_EmojiCategorySmileys" xml:space="preserve"><value>Смайли</value></data>
+  <data name="Editor_EmojiCategoryPeople" xml:space="preserve"><value>Люди</value></data>
+  <data name="Editor_EmojiCategoryAnimals" xml:space="preserve"><value>Тварини й природа</value></data>
+  <data name="Editor_EmojiCategoryFood" xml:space="preserve"><value>Їжа та напої</value></data>
+  <data name="Editor_EmojiCategoryTravel" xml:space="preserve"><value>Подорожі й місця</value></data>
+  <data name="Editor_EmojiCategoryActivities" xml:space="preserve"><value>Активності</value></data>
+  <data name="Editor_EmojiCategoryObjects" xml:space="preserve"><value>Об’єкти</value></data>
+  <data name="Editor_EmojiCategorySymbols" xml:space="preserve"><value>Символи</value></data>
+  <data name="Editor_EmojiCategoryFlags" xml:space="preserve"><value>Прапори</value></data>
+
+  <data name="Common_Projects" xml:space="preserve"><value>Проекти</value></data>
+  <data name="Index_ProjectEyebrow" xml:space="preserve"><value>Проект</value></data>
+  <data name="Index_BackToProjects" xml:space="preserve"><value>← Проекти</value></data>
+  <data name="Projects_PageTitle" xml:space="preserve"><value>Проекти — NoteKeeper</value></data>
+  <data name="Projects_Eyebrow" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Projects_HeroTitle" xml:space="preserve"><value>Проекти</value></data>
+  <data name="Projects_Import" xml:space="preserve"><value>⇩ Імпортувати проект</value></data>
+  <data name="Projects_NewName" xml:space="preserve"><value>Новий проект</value></data>
+  <data name="Projects_NewNamePlaceholder" xml:space="preserve"><value>Назва проекту</value></data>
+  <data name="Projects_Create" xml:space="preserve"><value>+ Створити проект</value></data>
+  <data name="Projects_Search" xml:space="preserve"><value>Пошук проектів</value></data>
+  <data name="Projects_SearchPlaceholder" xml:space="preserve"><value>Пошук за назвою проекту</value></data>
+  <data name="Projects_SortUpdated" xml:space="preserve"><value>Останнє оновлення</value></data>
+  <data name="Projects_SortCreated" xml:space="preserve"><value>Створення</value></data>
+  <data name="Projects_SortName" xml:space="preserve"><value>Назва</value></data>
+  <data name="Projects_SortNotes" xml:space="preserve"><value>Кількість нотаток</value></data>
+  <data name="Projects_Results" xml:space="preserve"><value>Результати</value></data>
+  <data name="Projects_All" xml:space="preserve"><value>Усі проекти</value></data>
+  <data name="Projects_NoResults" xml:space="preserve"><value>Проектів не знайдено</value></data>
+  <data name="Projects_NoProjects" xml:space="preserve"><value>Проектів ще немає</value></data>
+  <data name="Projects_NoResultsCopy" xml:space="preserve"><value>Спробуй іншу назву проекту.</value></data>
+  <data name="Projects_NoProjectsCopy" xml:space="preserve"><value>Створи проект вище або імпортуй готовий проект NoteKeeper.</value></data>
+  <data name="Projects_NoteCount" xml:space="preserve"><value>Нотаток: {0}</value></data>
+  <data name="Projects_OpenProject" xml:space="preserve"><value>Відкрити список нотаток →</value></data>
+  <data name="Projects_Rename" xml:space="preserve"><value>Перейменувати</value></data>
+  <data name="Projects_Export" xml:space="preserve"><value>Експорт</value></data>
+  <data name="Projects_DeleteDialogTitle" xml:space="preserve"><value>Видалити проект?</value></data>
+  <data name="Projects_DeleteDialogMessage" xml:space="preserve"><value>Видалити «{0}» і всі нотатки в ньому ({1})? Цю дію не можна скасувати.</value></data>
+  <data name="Projects_RenameTitle" xml:space="preserve"><value>Перейменувати проект</value></data>
+  <data name="Projects_Name" xml:space="preserve"><value>Назва проекту</value></data>
+  <data name="Projects_RenameSave" xml:space="preserve"><value>Зберегти назву</value></data>
+  <data name="Server_ProjectNotFound" xml:space="preserve"><value>Проект не знайдено.</value></data>
+  <data name="Server_ProjectImportTooLarge" xml:space="preserve"><value>Файл проекту порожній або завеликий.</value></data>
+  <data name="Server_ProjectImportInvalid" xml:space="preserve"><value>Файл проекту некоректний або містить непідтримувані дані.</value></data>
+  <data name="Server_UntitledProject" xml:space="preserve"><value>Проект без назви</value></data>
+
+
+  <data name="Index_Time" xml:space="preserve"><value>Час</value></data>
+  <data name="Editor_TimePinFailed" xml:space="preserve"><value>Не вдалося оновити список Time management.</value></data>
+  <data name="Time_Title" xml:space="preserve"><value>Керування часом</value></data>
+  <data name="Time_Eyebrow" xml:space="preserve"><value>Час проекту</value></data>
+  <data name="Time_BackToNotes" xml:space="preserve"><value>← Нотатки</value></data>
+  <data name="Time_TrackedEyebrow" xml:space="preserve"><value>Швидкий доступ</value></data>
+  <data name="Time_TrackedNotes" xml:space="preserve"><value>Вибрані нотатки</value></data>
+  <data name="Time_AddNote" xml:space="preserve"><value>Додати нотатку</value></data>
+  <data name="Time_SearchNotePlaceholder" xml:space="preserve"><value>Пошук за назвою нотатки</value></data>
+  <data name="Time_Add" xml:space="preserve"><value>Додати</value></data>
+  <data name="Time_NoTrackedNotes" xml:space="preserve"><value>У Time management ще не додано жодної нотатки.</value></data>
+  <data name="Time_Estimated" xml:space="preserve"><value>Оцінений час</value></data>
+  <data name="Time_Spent" xml:space="preserve"><value>Витрачено</value></data>
+  <data name="Time_Remaining" xml:space="preserve"><value>Залишилось</value></data>
+  <data name="Time_RemoveTrackedNote" xml:space="preserve"><value>Прибрати з Time management</value></data>
+  <data name="Time_NewDate" xml:space="preserve"><value>Дата</value></data>
+  <data name="Time_AddDate" xml:space="preserve"><value>+ Додати дату</value></data>
+  <data name="Time_NoDays" xml:space="preserve"><value>За цей місяць записів часу немає</value></data>
+  <data name="Time_NoDaysCopy" xml:space="preserve"><value>Додай дату календаря вище, а потім записуй витрачений на задачі час.</value></data>
+  <data name="Time_Total" xml:space="preserve"><value>Разом</value></data>
+  <data name="Time_DeleteDayTitle" xml:space="preserve"><value>Видалити цю дату?</value></data>
+  <data name="Time_DeleteDayMessage" xml:space="preserve"><value>Видалити {0} і всі записи часу всередині? Цю дію не можна скасувати.</value></data>
+  <data name="Time_DeleteDay" xml:space="preserve"><value>Видалити дату</value></data>
+  <data name="Time_TimeSpent" xml:space="preserve"><value>Витрачений час</value></data>
+  <data name="Time_Task" xml:space="preserve"><value>Задача</value></data>
+  <data name="Time_Comment" xml:space="preserve"><value>Коментар</value></data>
+  <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Необов’язковий коментар</value></data>
+  <data name="Time_SaveEntry" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="Time_DeleteEntry" xml:space="preserve"><value>Видалити запис часу</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>0h</value></data>
+  <data name="Time_SelectTask" xml:space="preserve"><value>Оберіть задачу</value></data>
+  <data name="Time_AddEntry" xml:space="preserve"><value>+ Додати запис</value></data>
+  <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Місяці керування часом</value></data>
+  <data name="Time_CurrentMonth" xml:space="preserve"><value>Поточний місяць</value></data>
+  <data name="Time_TaskRequired" xml:space="preserve"><value>Оберіть коректну задачу.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Використовуй формат часу Jira, наприклад 0h, 15m, 1h 30m або 1d. Порожнє значення вважається 0h.</value></data>
+  <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Оберіть існуючу нотатку з результатів пошуку.</value></data>
+
+
+  <data name="Time_DatePlaceholder" xml:space="preserve"><value>дд/мм/рр</value></data>
+  <data name="Time_DateFormatHint" xml:space="preserve"><value>Формат дати: дд/мм/рр</value></data>
+  <data name="Time_DatePickerAria" xml:space="preserve"><value>Відкрити календар</value></data>
+  <data name="Time_InvalidDate" xml:space="preserve"><value>Некоректна дата. Використовуй дд/мм/рр, наприклад 30/09/26.</value></data>
+
+  <data name="Time_TaskPlaceholder" xml:space="preserve"><value>Знайти нотатку або ввести будь-яку активність</value></data>
+
+
+  <data name="Time_AddDateFailed" xml:space="preserve"><value>Не вдалося додати дату.</value></data>
+  <data name="Time_OpenTask" xml:space="preserve"><value>Відкрити задачу в новій вкладці</value></data>
+
+  <data name="Time_EditDate" xml:space="preserve"><value>Змінити дату</value></data>
+  <data name="Time_SaveDate" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="Time_CancelDate" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="Time_UpdateDateFailed" xml:space="preserve"><value>Не вдалося змінити дату.</value></data>
+  <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Контейнер для цієї дати вже існує.</value></data>
+
+  <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Не вдалося видалити контейнер дати.</value></data>
+
+  <data name="Time_Overtime" xml:space="preserve"><value>Перевищення</value></data>
+  <data name="Time_RemoveAllTrackedNotes" xml:space="preserve"><value>Прибрати всі з Time management</value></data>
+  <data name="Time_RemoveAllTrackedNotesTitle" xml:space="preserve"><value>Прибрати всі вибрані нотатки?</value></data>
+  <data name="Time_RemoveAllTrackedNotesMessage" xml:space="preserve"><value>Вимкнути зірочку Time management для всіх вибраних нотаток цього проекту?</value></data>
+  <data name="Time_CollapseTrackedNotes" xml:space="preserve"><value>Згорнути вибрані нотатки</value></data>
+  <data name="Time_ExpandTrackedNotes" xml:space="preserve"><value>Розгорнути вибрані нотатки</value></data>
+
+</root>

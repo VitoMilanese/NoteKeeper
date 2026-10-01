@@ -1,0 +1,20 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
+@model TimeManagementViewModel
+
+<nav class="time-month-pagination"
+     aria-label="@Localizer["Time_MonthPaginationAria"]">
+    <a class="button button-ghost"
+       href="/projects/@Model.ProjectId/time?month=@Model.PreviousMonthKey">← @Model.PreviousMonthLabel</a>
+
+    <div class="time-month-current">
+        <strong>@Model.MonthLabel</strong>
+        @if (Model.MonthKey != Model.CurrentMonthKey)
+        {
+            <a href="/projects/@Model.ProjectId/time?month=@Model.CurrentMonthKey">@Localizer["Time_CurrentMonth"]</a>
+        }
+    </div>
+
+    <a class="button button-ghost"
+       href="/projects/@Model.ProjectId/time?month=@Model.NextMonthKey">@Model.NextMonthLabel →</a>
+</nav>

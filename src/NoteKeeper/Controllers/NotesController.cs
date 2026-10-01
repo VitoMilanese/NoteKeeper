@@ -1,81 +1,206 @@
+using System.Linq.Expressions;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using NoteKeeper.Data;
 using NoteKeeper.Models;
 using NoteKeeper.Services;
 using NoteKeeper.ViewModels;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace NoteKeeper.Controllers;
 
-public sealed class NotesController(AppDbContext db, IWebHostEnvironment environment) : Controller
+public sealed class NotesController(
+    AppDbContext db,
+    IWebHostEnvironment environment,
+    IStringLocalizer<AppResources> localizer,
+    PriorityTagService priorityTagService) : Controller
 {
-    [HttpGet("/")]
+    [HttpGet("/projects/{projectId:int}")]
     public async Task<IActionResult> Index(
+        int projectId,
         string? q,
         string? tag,
         string sort = "updated",
         string dir = "desc",
+        string? groupBy = null,
+        int page = 1,
+        int pageSize = 30,
         CancellationToken cancellationToken = default)
     {
+        var project = await db.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound();
+        }
+
         q = q?.Trim();
-        tag = NormalizeTag(tag);
+        var tagFilter = TagFilterParser.Parse(tag);
+        var includedTags = tagFilter.IncludedTags;
+        var tagFilterError = tagFilter.Error switch
+        {
+            TagFilterError.LogicalCommaNotAllowed =>
+                localizer["Index_TagFilterLogicalCommaError"].Value,
+            TagFilterError.LogicalSyntax =>
+                localizer["Index_TagFilterLogicalSyntaxError"].Value,
+            _ => string.Empty
+        };
+        var priorityTags = priorityTagService.GetTags();
+        var priorityRanks = priorityTags
+            .Select((name, index) => new { name, index })
+            .ToDictionary(x => x.name, x => x.index, StringComparer.OrdinalIgnoreCase);
         sort = sort is "title" or "created" or "updated" ? sort : "updated";
         dir = dir == "asc" ? "asc" : "desc";
+        pageSize = Math.Clamp(pageSize, 30, 60);
 
-        IQueryable<Note> query = db.Notes
+        var allTagCounts = (await db.NoteTags
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.Blocks)
-            .Include(x => x.Tags);
-
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            var pattern = $"%{q}%";
-            query = query.Where(note =>
-                EF.Functions.Like(note.Title, pattern) ||
-                note.Blocks.Any(block =>
-                    (block.TextContent != null && EF.Functions.Like(block.TextContent, pattern)) ||
-                    (block.LinkTitle != null && EF.Functions.Like(block.LinkTitle, pattern)) ||
-                    (block.Url != null && EF.Functions.Like(block.Url, pattern)) ||
-                    (block.Caption != null && EF.Functions.Like(block.Caption, pattern))));
-        }
-
-        if (!string.IsNullOrWhiteSpace(tag))
-        {
-            query = query.Where(note => note.Tags.Any(x => x.Name == tag));
-        }
-
-        query = (sort, dir) switch
-        {
-            ("title", "asc") => query.OrderBy(x => x.Title),
-            ("title", _) => query.OrderByDescending(x => x.Title),
-            ("created", "asc") => query.OrderBy(x => x.CreatedAtUtc),
-            ("created", _) => query.OrderByDescending(x => x.CreatedAtUtc),
-            ("updated", "asc") => query.OrderBy(x => x.UpdatedAtUtc),
-            _ => query.OrderByDescending(x => x.UpdatedAtUtc)
-        };
-
-        var notes = await query.ToListAsync(cancellationToken);
-        var tagCounts = await db.NoteTags
-            .AsNoTracking()
+            .Where(x => x.Note.ProjectId == projectId)
             .GroupBy(x => x.Name)
             .Select(group => new TagCountViewModel
             {
                 Name = group.Key,
                 Count = group.Count()
             })
-            .OrderByDescending(x => x.Count)
-            .ThenBy(x => x.Name)
-            .Take(40)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .OrderBy(x => priorityRanks.ContainsKey(x.Name) ? 0 : 1)
+            .ThenBy(x => priorityRanks.TryGetValue(x.Name, out var rank) ? rank : int.MaxValue)
+            .ThenByDescending(x => x.Count)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
+        var autocompleteTags = allTagCounts
+            .Select(x => x.Name)
+            .ToList();
+
+        var requestedGroupBy = groupBy?
+            .Trim()
+            .TrimStart('#')
+            .Trim();
+
+        IQueryable<Note> query = db.Notes
+            .AsNoTracking()
+            .Where(note => note.ProjectId == projectId);
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var pattern = $"%{q}%";
+            var tagSearch = q.TrimStart('#').Trim();
+            var tagPattern = $"%{tagSearch}%";
+
+            query = query.Where(note =>
+                EF.Functions.Like(note.Title, pattern) ||
+                note.Blocks.Any(block =>
+                    (block.TextContent != null && EF.Functions.Like(block.TextContent, pattern)) ||
+                    (block.LinkTitle != null && EF.Functions.Like(block.LinkTitle, pattern)) ||
+                    (block.Url != null && EF.Functions.Like(block.Url, pattern)) ||
+                    (block.Caption != null && EF.Functions.Like(block.Caption, pattern))) ||
+                (tagSearch.Length > 0 &&
+                 note.Tags.Any(tagItem =>
+                     EF.Functions.Like(tagItem.Name, tagPattern))));
+        }
+
+        query = tagFilter.Error == TagFilterError.None
+            ? ApplyTagFilter(query, tagFilter.Expression)
+            : query.Where(_ => false);
+
+        var filteredTagCounts = (await query
+            .SelectMany(note => note.Tags)
+            .GroupBy(tagItem => tagItem.Name)
+            .Select(group => new TagCountViewModel
+            {
+                Name = group.Key,
+                Count = group.Count()
+            })
+            .ToListAsync(cancellationToken))
+            .OrderBy(x => priorityRanks.ContainsKey(x.Name) ? 0 : 1)
+            .ThenBy(x => priorityRanks.TryGetValue(x.Name, out var rank) ? rank : int.MaxValue)
+            .ThenByDescending(x => x.Count)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var availableTags = filteredTagCounts
+            .Select(x => x.Name)
+            .ToList();
+
+        groupBy = string.IsNullOrWhiteSpace(requestedGroupBy)
+            ? string.Empty
+            : availableTags.FirstOrDefault(x =>
+                x.Equals(requestedGroupBy, StringComparison.OrdinalIgnoreCase))
+                ?? string.Empty;
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var totalPages = totalCount == 0
+            ? 0
+            : (int)Math.Ceiling(totalCount / (double)pageSize);
+        page = totalPages == 0
+            ? 1
+            : Math.Clamp(page, 1, totalPages);
+
+        if (string.IsNullOrWhiteSpace(groupBy))
+        {
+            query = (sort, dir) switch
+            {
+                ("title", "asc") => query.OrderBy(x => x.Title).ThenBy(x => x.Id),
+                ("title", _) => query.OrderByDescending(x => x.Title).ThenByDescending(x => x.Id),
+                ("created", "asc") => query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id),
+                ("created", _) => query.OrderByDescending(x => x.CreatedAtUtc).ThenByDescending(x => x.Id),
+                ("updated", "asc") => query.OrderBy(x => x.UpdatedAtUtc).ThenBy(x => x.Id),
+                _ => query.OrderByDescending(x => x.UpdatedAtUtc).ThenByDescending(x => x.Id)
+            };
+        }
+        else
+        {
+            var selectedGroupTag = groupBy;
+            var groupedQuery = query
+                .OrderByDescending(note =>
+                    note.Tags.Any(tagItem => tagItem.Name == selectedGroupTag));
+
+            query = (sort, dir) switch
+            {
+                ("title", "asc") => groupedQuery.ThenBy(x => x.Title).ThenBy(x => x.Id),
+                ("title", _) => groupedQuery.ThenByDescending(x => x.Title).ThenByDescending(x => x.Id),
+                ("created", "asc") => groupedQuery.ThenBy(x => x.CreatedAtUtc).ThenBy(x => x.Id),
+                ("created", _) => groupedQuery.ThenByDescending(x => x.CreatedAtUtc).ThenByDescending(x => x.Id),
+                ("updated", "asc") => groupedQuery.ThenBy(x => x.UpdatedAtUtc).ThenBy(x => x.Id),
+                _ => groupedQuery.ThenByDescending(x => x.UpdatedAtUtc).ThenByDescending(x => x.Id)
+            };
+        }
+
+        var notes = await query
+            .AsSplitQuery()
+            .Include(x => x.Blocks)
+            .Include(x => x.Tags)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
         var model = new NoteListViewModel
         {
+            ProjectId = project.Id,
+            ProjectName = project.Name,
             Query = q ?? string.Empty,
-            Tag = tag ?? string.Empty,
+            Tag = tag?.Trim() ?? string.Empty,
+            IncludedTags = includedTags.ToList(),
+            TagFilterError = tagFilterError,
             Sort = sort,
             Direction = dir,
-            Tags = tagCounts,
+            GroupBy = groupBy,
+            AvailableTags = availableTags,
+            AutocompleteTags = autocompleteTags,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages,
+            PriorityTags = priorityTags.ToList(),
+            Tags = allTagCounts.Take(40).ToList(),
             Notes = notes.Select(note => new NoteListItemViewModel
             {
                 Id = note.Id,
@@ -84,19 +209,41 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
                 CreatedAtUtc = note.CreatedAtUtc,
                 UpdatedAtUtc = note.UpdatedAtUtc,
                 BlockCount = note.Blocks.Count,
-                Tags = note.Tags.Select(x => x.Name).OrderBy(x => x).ToList()
+                FirstBlockLinkUrl = GetFirstBlockLinkUrl(note.Blocks),
+                Tags = note.Tags
+                    .Select(x => x.Name)
+                    .OrderBy(x => priorityRanks.ContainsKey(x) ? 0 : 1)
+                    .ThenBy(x => priorityRanks.TryGetValue(x, out var rank) ? rank : int.MaxValue)
+                    .ThenBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList()
             }).ToList()
         };
 
         return View(model);
     }
 
-    [HttpGet("/notes/new")]
-    public IActionResult New()
+    [HttpGet("/projects/{projectId:int}/notes/new")]
+    public async Task<IActionResult> New(
+        int projectId,
+        string? returnUrl,
+        CancellationToken cancellationToken)
     {
+        var project = await db.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound();
+        }
+
         return View("Edit", new NoteEditorViewModel
         {
+            ProjectId = project.Id,
+            ProjectName = project.Name,
+            ReturnUrl = NormalizeReturnUrl(project.Id, returnUrl),
             Title = string.Empty,
+            Status = NoteStatus.Backlog,
             Blocks =
             [
                 new NoteBlockViewModel { Type = BlockType.Text }
@@ -105,10 +252,14 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
     }
 
     [HttpGet("/notes/{id:int}")]
-    public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Edit(
+        int id,
+        string? returnUrl,
+        CancellationToken cancellationToken)
     {
         var note = await db.Notes
             .AsNoTracking()
+            .Include(x => x.Project)
             .Include(x => x.Blocks)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -120,8 +271,15 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         return View(new NoteEditorViewModel
         {
             Id = note.Id,
+            ProjectId = note.ProjectId,
+            ProjectName = note.Project.Name,
+            ReturnUrl = NormalizeReturnUrl(note.ProjectId, returnUrl),
             Title = note.Title,
             UpdatedAtUtc = note.UpdatedAtUtc,
+            Status = note.Status,
+            EstimatedTime = JiraDuration.Format(note.EstimatedTimeMinutes),
+            SpentTime = JiraDuration.Format(note.SpentTimeMinutes),
+            IsTimeManagementPinned = note.IsTimeManagementPinned,
             Blocks = note.Blocks
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new NoteBlockViewModel
@@ -137,13 +295,216 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         });
     }
 
+    [HttpGet("/notes/{id:int}/export")]
+    public async Task<IActionResult> Export(int id, CancellationToken cancellationToken)
+    {
+        var note = await db.Notes
+            .AsNoTracking()
+            .Include(x => x.Blocks)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (note is null)
+        {
+            return NotFound();
+        }
+
+        var document = new NoteTransferDocument
+        {
+            Title = note.Title,
+            Status = note.Status,
+            EstimatedTimeMinutes = note.EstimatedTimeMinutes,
+            SpentTimeMinutes = note.SpentTimeMinutes,
+            IsTimeManagementPinned = note.IsTimeManagementPinned,
+            Blocks = []
+        };
+
+        foreach (var block in note.Blocks.OrderBy(x => x.SortOrder))
+        {
+            var transferBlock = new NoteTransferBlock
+            {
+                Type = block.Type,
+                TextContent = block.TextContent,
+                Url = block.Url,
+                LinkTitle = block.LinkTitle,
+                Caption = block.Caption
+            };
+
+            if (block.Type == BlockType.Image && !string.IsNullOrWhiteSpace(block.ImagePath))
+            {
+                var fileName = Path.GetFileName(block.ImagePath);
+                var physicalPath = Path.Combine(environment.WebRootPath, "uploads", fileName);
+
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    transferBlock.ImageMimeType = GetImageMimeType(block.ImagePath);
+                    transferBlock.ImageBase64 = Convert.ToBase64String(
+                        await System.IO.File.ReadAllBytesAsync(physicalPath, cancellationToken));
+                }
+            }
+
+            document.Blocks.Add(transferBlock);
+        }
+
+        var json = JsonSerializer.SerializeToUtf8Bytes(document, CreateTransferJsonOptions());
+        var downloadName = $"{SanitizeFileName(note.Title)}.notekeeper.json";
+        return File(json, "application/json; charset=utf-8", downloadName);
+    }
+
+    [HttpPost("/projects/{projectId:int}/notes/import")]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(80_000_000)]
+    public async Task<IActionResult> Import(
+        int projectId,
+        IFormFile? noteFile,
+        CancellationToken cancellationToken)
+    {
+        var project = await db.Projects
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        if (noteFile is null || noteFile.Length == 0 || noteFile.Length > 70_000_000)
+        {
+            return BadRequest(localizer["Server_ImportTooLarge"].Value);
+        }
+
+        var storedImagePaths = new List<string>();
+
+        try
+        {
+            await using var input = noteFile.OpenReadStream();
+            var document = await JsonSerializer.DeserializeAsync<NoteTransferDocument>(
+                input,
+                CreateTransferJsonOptions(),
+                cancellationToken);
+
+            if (document is null ||
+                document.Blocks is null ||
+                !string.Equals(document.Format, NoteTransferDocument.ExpectedFormat, StringComparison.Ordinal) ||
+                document.Version != NoteTransferDocument.CurrentVersion ||
+                document.Blocks.Count > 500)
+            {
+                return BadRequest(localizer["Server_ImportInvalid"].Value);
+            }
+
+            var note = new Note
+            {
+                ProjectId = project.Id,
+                Title = NormalizeTitle(document.Title),
+                Status = NormalizeStatus(document.Status),
+                EstimatedTimeMinutes = JiraDuration.NormalizeMinutes(document.EstimatedTimeMinutes),
+                SpentTimeMinutes = JiraDuration.NormalizeMinutes(document.SpentTimeMinutes),
+                IsTimeManagementPinned = document.IsTimeManagementPinned,
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+                Blocks = []
+            };
+
+            for (var index = 0; index < document.Blocks.Count; index++)
+            {
+                var block = document.Blocks[index];
+
+                switch (block.Type)
+                {
+                    case BlockType.Text:
+                        note.Blocks.Add(new NoteBlock
+                        {
+                            Type = BlockType.Text,
+                            SortOrder = index,
+                            TextContent = block.TextContent?.TrimEnd()
+                        });
+                        break;
+
+                    case BlockType.Link:
+                        note.Blocks.Add(new NoteBlock
+                        {
+                            Type = BlockType.Link,
+                            SortOrder = index,
+                            Url = NormalizeUrl(block.Url),
+                            LinkTitle = Limit(block.LinkTitle?.Trim(), 300),
+                            TextContent = block.TextContent?.TrimEnd()
+                        });
+                        break;
+
+                    case BlockType.Image when
+                        !string.IsNullOrWhiteSpace(block.ImageMimeType) &&
+                        !string.IsNullOrWhiteSpace(block.ImageBase64):
+                    {
+                        var bytes = Convert.FromBase64String(block.ImageBase64);
+                        var imagePath = await StoreImageBytesAsync(
+                            bytes,
+                            block.ImageMimeType,
+                            cancellationToken);
+                        storedImagePaths.Add(imagePath);
+
+                        note.Blocks.Add(new NoteBlock
+                        {
+                            Type = BlockType.Image,
+                            SortOrder = index,
+                            ImagePath = imagePath,
+                            Caption = Limit(block.Caption?.Trim(), 500)
+                        });
+                        break;
+                    }
+                }
+            }
+
+            var tags = TagExtractor.Extract(note.Blocks
+                .Where(x => x.Type is BlockType.Text or BlockType.Link)
+                .Select(x => RichTextContent.ToTagSearchText(x.TextContent)));
+            var desiredTags = BuildDesiredTags(note.Status, tags);
+
+            note.Tags = desiredTags
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .Select(x => new NoteTag { Name = x })
+                .ToList();
+
+            db.Notes.Add(note);
+            project.UpdatedAtUtc = DateTime.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+
+            return RedirectToAction(nameof(Edit), new { id = note.Id });
+        }
+        catch (Exception ex) when (ex is JsonException or FormatException or InvalidDataException)
+        {
+            foreach (var imagePath in storedImagePaths)
+            {
+                DeleteStoredImageFile(imagePath);
+            }
+
+            return BadRequest(localizer["Server_ImportInvalid"].Value);
+        }
+        catch
+        {
+            foreach (var imagePath in storedImagePaths)
+            {
+                DeleteStoredImageFile(imagePath);
+            }
+
+            throw;
+        }
+    }
+
     [HttpPost("/notes/save")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save([FromBody] SaveNoteRequest request, CancellationToken cancellationToken)
     {
         if (request.Blocks.Count > 500)
         {
-            return BadRequest(new { message = "У нотатці забагато блоків." });
+            return BadRequest(new { message = localizer["Server_TooManyBlocks"].Value });
+        }
+
+        if (!JiraDuration.TryParse(
+                request.EstimatedTime,
+                out var estimatedTimeMinutes))
+        {
+            return BadRequest(new
+            {
+                message = localizer["Server_InvalidEstimatedTime"].Value
+            });
         }
 
         Note note;
@@ -156,7 +517,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
 
             if (existing is null)
             {
-                return NotFound(new { message = "Нотатку не знайдено." });
+                return NotFound(new { message = localizer["Server_NoteNotFound"].Value });
             }
 
             note = existing;
@@ -165,9 +526,18 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         {
             note = new Note
             {
+                ProjectId = request.ProjectId,
                 CreatedAtUtc = DateTime.UtcNow
             };
             db.Notes.Add(note);
+        }
+
+        var project = await db.Projects
+            .FirstOrDefaultAsync(x => x.Id == note.ProjectId, cancellationToken);
+
+        if (project is null)
+        {
+            return NotFound(new { message = localizer["Server_ProjectNotFound"].Value });
         }
 
         var oldImagePaths = note.Blocks
@@ -176,7 +546,10 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         note.Title = NormalizeTitle(request.Title);
+        note.Status = NormalizeStatus(request.Status);
+        note.EstimatedTimeMinutes = estimatedTimeMinutes;
         note.UpdatedAtUtc = DateTime.UtcNow;
+        project.UpdatedAtUtc = note.UpdatedAtUtc;
 
         if (note.Blocks.Count > 0)
         {
@@ -190,9 +563,9 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
             .ToList();
 
         var tags = TagExtractor.Extract(note.Blocks
-            .Where(x => x.Type == BlockType.Text)
-            .Select(x => x.TextContent));
-        var desiredTags = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .Where(x => x.Type is BlockType.Text or BlockType.Link)
+            .Select(x => RichTextContent.ToTagSearchText(x.TextContent)));
+        var desiredTags = BuildDesiredTags(note.Status, tags);
 
         var tagsToRemove = note.Tags
             .Where(x => !desiredTags.Contains(x.Name))
@@ -225,15 +598,23 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         return Ok(new
         {
             id = note.Id,
+            projectId = note.ProjectId,
             updatedAtUtc = note.UpdatedAtUtc,
             title = note.Title,
-            tags
+            status = note.Status,
+            estimatedTime = JiraDuration.Format(note.EstimatedTimeMinutes),
+            spentTime = JiraDuration.Format(note.SpentTimeMinutes),
+            isTimeManagementPinned = note.IsTimeManagementPinned,
+            tags = desiredTags.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
         });
     }
 
     [HttpPost("/notes/{id:int}/delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(
+        int id,
+        string? returnUrl,
+        CancellationToken cancellationToken)
     {
         var note = await db.Notes
             .Include(x => x.Blocks)
@@ -241,8 +622,12 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
 
         if (note is null)
         {
-            return RedirectToAction(nameof(Index));
+            return Redirect("/");
         }
+
+        var projectId = note.ProjectId;
+        var project = await db.Projects
+            .FirstOrDefaultAsync(x => x.Id == projectId, cancellationToken);
 
         var imagePaths = note.Blocks
             .Where(x => x.Type == BlockType.Image && !string.IsNullOrWhiteSpace(x.ImagePath))
@@ -251,6 +636,10 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
             .ToArray();
 
         db.Notes.Remove(note);
+        if (project is not null)
+        {
+            project.UpdatedAtUtc = DateTime.UtcNow;
+        }
         await db.SaveChangesAsync(cancellationToken);
 
         foreach (var imagePath in imagePaths)
@@ -258,7 +647,7 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
             await DeleteImageIfUnusedAsync(imagePath, id, cancellationToken);
         }
 
-        return RedirectToAction(nameof(Index));
+        return Redirect(NormalizeReturnUrl(projectId, returnUrl));
     }
 
     [HttpPost("/notes/upload-image")]
@@ -268,10 +657,106 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
     {
         if (image is null || image.Length == 0 || image.Length > 12_000_000)
         {
-            return BadRequest(new { message = "Зображення має бути не більше 12 МБ." });
+            return BadRequest(new { message = localizer["Server_ImageTooLarge"].Value });
         }
 
-        var extension = image.ContentType.ToLowerInvariant() switch
+        try
+        {
+            await using var source = image.OpenReadStream();
+            var path = await StoreImageAsync(source, image.ContentType, cancellationToken);
+            return Ok(new { path });
+        }
+        catch (InvalidDataException)
+        {
+            return BadRequest(new { message = localizer["Server_ImageTypeUnsupported"].Value });
+        }
+    }
+
+    private async Task<string> StoreImageAsync(
+        Stream source,
+        string contentType,
+        CancellationToken cancellationToken)
+    {
+        await using var buffer = new MemoryStream();
+        await source.CopyToAsync(buffer, cancellationToken);
+        return await StoreImageBytesAsync(buffer.ToArray(), contentType, cancellationToken);
+    }
+
+    private async Task<string> StoreImageBytesAsync(
+        byte[] bytes,
+        string contentType,
+        CancellationToken cancellationToken)
+    {
+        if (bytes.Length == 0 || bytes.Length > 12_000_000)
+        {
+            throw new InvalidDataException("Invalid image size.");
+        }
+
+        var originalExtension = GetExtensionForContentType(contentType);
+        if (originalExtension is null)
+        {
+            throw new InvalidDataException("Unsupported image type.");
+        }
+
+        Image<Rgba32> image;
+        try
+        {
+            using var input = new MemoryStream(bytes, writable: false);
+            image = Image.Load<Rgba32>(input);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidDataException("Invalid image data.", ex);
+        }
+
+        using (image)
+        {
+            var preserveOriginal = image.Frames.Count > 1 || HasTransparency(image);
+            var extension = preserveOriginal ? originalExtension : ".jpg";
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var uploadsDirectory = Path.Combine(environment.WebRootPath, "uploads");
+            Directory.CreateDirectory(uploadsDirectory);
+            var physicalPath = Path.Combine(uploadsDirectory, fileName);
+
+            if (preserveOriginal)
+            {
+                await System.IO.File.WriteAllBytesAsync(physicalPath, bytes, cancellationToken);
+            }
+            else
+            {
+                image.SaveAsJpeg(physicalPath, new JpegEncoder { Quality = 90 });
+            }
+
+            return $"/uploads/{fileName}";
+        }
+    }
+
+    private static bool HasTransparency(Image<Rgba32> image)
+    {
+        var hasTransparency = false;
+
+        image.ProcessPixelRows(accessor =>
+        {
+            for (var y = 0; y < accessor.Height && !hasTransparency; y++)
+            {
+                var row = accessor.GetRowSpan(y);
+                for (var x = 0; x < row.Length; x++)
+                {
+                    if (row[x].A < byte.MaxValue)
+                    {
+                        hasTransparency = true;
+                        break;
+                    }
+                }
+            }
+        });
+
+        return hasTransparency;
+    }
+
+    private static string? GetExtensionForContentType(string? contentType)
+    {
+        return contentType?.ToLowerInvariant() switch
         {
             "image/png" => ".png",
             "image/jpeg" => ".jpg",
@@ -279,39 +764,215 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
             "image/gif" => ".gif",
             _ => null
         };
-
-        if (extension is null)
-        {
-            return BadRequest(new { message = "Підтримуються PNG, JPEG, WEBP та GIF." });
-        }
-
-        var uploadsDirectory = Path.Combine(environment.WebRootPath, "uploads");
-        Directory.CreateDirectory(uploadsDirectory);
-
-        var fileName = $"{Guid.NewGuid():N}{extension}";
-        var physicalPath = Path.Combine(uploadsDirectory, fileName);
-
-        await using var stream = new FileStream(physicalPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        await image.CopyToAsync(stream, cancellationToken);
-
-        return Ok(new { path = $"/uploads/{fileName}" });
     }
 
-    private static string NormalizeTitle(string? value)
+    private static string GetImageMimeType(string imagePath)
+    {
+        return Path.GetExtension(imagePath).ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            ".gif" => "image/gif",
+            _ => "image/jpeg"
+        };
+    }
+
+    private static JsonSerializerOptions CreateTransferJsonOptions()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        options.Converters.Add(new JsonStringEnumConverter());
+        return options;
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars();
+        var safe = new string(value
+            .Select(character => invalidCharacters.Contains(character) ? '_' : character)
+            .ToArray())
+            .Trim();
+
+        return string.IsNullOrWhiteSpace(safe) ? "note" : safe;
+    }
+
+    private void DeleteStoredImageFile(string imagePath)
+    {
+        var fileName = Path.GetFileName(imagePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return;
+        }
+
+        var physicalPath = Path.Combine(environment.WebRootPath, "uploads", fileName);
+        if (System.IO.File.Exists(physicalPath))
+        {
+            System.IO.File.Delete(physicalPath);
+        }
+    }
+
+    private static IQueryable<Note> ApplyTagFilter(
+        IQueryable<Note> query,
+        TagFilterExpression? expression)
+    {
+        if (expression is null)
+        {
+            return query;
+        }
+
+        var noteParameter = Expression.Parameter(typeof(Note), "note");
+        var body = BuildTagFilterExpression(noteParameter, expression);
+        var predicate = Expression.Lambda<Func<Note, bool>>(
+            body,
+            noteParameter);
+
+        return query.Where(predicate);
+    }
+
+    private static Expression BuildTagFilterExpression(
+        ParameterExpression noteParameter,
+        TagFilterExpression expression)
+    {
+        if (expression is TagFilterNot not)
+        {
+            return Expression.Not(
+                BuildTagFilterExpression(
+                    noteParameter,
+                    not.Operand));
+        }
+
+        if (expression is TagFilterTag tag)
+        {
+            var tagParameter = Expression.Parameter(typeof(NoteTag), "tag");
+            var tagName = Expression.Property(
+                tagParameter,
+                nameof(NoteTag.Name));
+            var equalsName = Expression.Equal(
+                tagName,
+                Expression.Constant(tag.Name));
+            var tagPredicate = Expression.Lambda<Func<NoteTag, bool>>(
+                equalsName,
+                tagParameter);
+            var noteTags = Expression.Property(
+                noteParameter,
+                nameof(Note.Tags));
+            var anyTag = Expression.Call(
+                typeof(Enumerable),
+                nameof(Enumerable.Any),
+                [typeof(NoteTag)],
+                noteTags,
+                tagPredicate);
+
+            return tag.Negated
+                ? Expression.Not(anyTag)
+                : anyTag;
+        }
+
+        var group = (TagFilterGroup)expression;
+        var itemExpressions = group.Items
+            .Select(item => BuildTagFilterExpression(noteParameter, item))
+            .ToArray();
+
+        if (itemExpressions.Length == 0)
+        {
+            return Expression.Constant(true);
+        }
+
+        return itemExpressions
+            .Skip(1)
+            .Aggregate(
+                itemExpressions[0],
+                (current, item) => group.MatchAny
+                    ? Expression.OrElse(current, item)
+                    : Expression.AndAlso(current, item));
+    }
+
+    private static string? GetFirstBlockLinkUrl(
+        IEnumerable<NoteBlock> blocks)
+    {
+        var firstBlock = blocks
+            .OrderBy(block => block.SortOrder)
+            .ThenBy(block => block.Id)
+            .FirstOrDefault();
+
+        if (firstBlock?.Type != BlockType.Link ||
+            string.IsNullOrWhiteSpace(firstBlock.Url))
+        {
+            return null;
+        }
+
+        if (!Uri.TryCreate(
+                firstBlock.Url,
+                UriKind.Absolute,
+                out var parsed) ||
+            parsed.Scheme is not ("http" or "https"))
+        {
+            return null;
+        }
+
+        return parsed.ToString();
+    }
+
+    private static NoteStatus NormalizeStatus(NoteStatus status)
+    {
+        return Enum.IsDefined(status)
+            ? status
+            : NoteStatus.Backlog;
+    }
+
+    private static string NormalizeReturnUrl(
+        int projectId,
+        string? returnUrl)
+    {
+        var fallback = $"/projects/{projectId}";
+
+        if (string.IsNullOrWhiteSpace(returnUrl) ||
+            !returnUrl.StartsWith(fallback, StringComparison.Ordinal) ||
+            returnUrl.StartsWith("//", StringComparison.Ordinal) ||
+            returnUrl.Contains('\r') ||
+            returnUrl.Contains('\n'))
+        {
+            return fallback;
+        }
+
+        if (returnUrl.Length == fallback.Length)
+        {
+            return returnUrl;
+        }
+
+        return returnUrl[fallback.Length] is '?' or '#'
+            ? returnUrl
+            : fallback;
+    }
+
+    private static HashSet<string> BuildDesiredTags(
+        NoteStatus status,
+        IEnumerable<string> explicitTags)
+    {
+        var result = explicitTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tag in NoteStatusTags.GetImplicitTags(status))
+        {
+            result.Add(tag);
+        }
+
+        return result;
+    }
+
+    private string NormalizeTitle(string? value)
     {
         var title = (value ?? string.Empty).Trim();
         if (title.Length == 0)
         {
-            return "Без назви";
+            return localizer["Server_UntitledNote"].Value;
         }
 
         return title.Length <= 240 ? title : title[..240];
-    }
-
-    private static string? NormalizeTag(string? value)
-    {
-        var tag = value?.Trim().TrimStart('#').ToLowerInvariant();
-        return string.IsNullOrWhiteSpace(tag) ? null : tag;
     }
 
     private static string? NormalizeUrl(string? value)
@@ -386,23 +1047,43 @@ public sealed class NotesController(AppDbContext db, IWebHostEnvironment environ
         return value.Length <= maxLength ? value : value[..maxLength];
     }
 
-    private static string BuildPreview(IEnumerable<NoteBlock> blocks)
+    private string BuildPreview(IEnumerable<NoteBlock> blocks)
     {
         var preview = blocks
             .OrderBy(x => x.SortOrder)
             .Select(x => x.Type switch
             {
-                BlockType.Text => x.TextContent,
-                BlockType.Link => x.LinkTitle ?? x.Url,
+                BlockType.Text => NormalizePreviewText(RichTextContent.ToPlainText(x.TextContent)),
+                BlockType.Link => BuildLinkPreview(x),
                 BlockType.Image => x.Caption,
                 _ => null
             })
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
-            ?.Replace('\r', ' ')
-            .Replace('\n', ' ')
-            .Trim() ?? "Порожня нотатка";
+            ?.Trim() ?? localizer["Server_EmptyNote"].Value;
 
         return preview.Length <= 180 ? preview : preview[..177] + "…";
+    }
+
+    private static string? NormalizePreviewText(string? value)
+    {
+        return value?
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n');
+    }
+
+    private static string? BuildLinkPreview(NoteBlock block)
+    {
+        var title = block.LinkTitle?.Trim();
+        var url = block.Url?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(title) &&
+            !string.IsNullOrWhiteSpace(url) &&
+            !string.Equals(title, url, StringComparison.OrdinalIgnoreCase))
+        {
+            return $"{title}\n{url}";
+        }
+
+        return title ?? url;
     }
 
     private async Task DeleteImageIfUnusedAsync(string imagePath, int excludedNoteId, CancellationToken cancellationToken)

@@ -1,0 +1,9 @@
+backlog
+selected
+active
+test
+done
+released
+rejected
+suspended
+note

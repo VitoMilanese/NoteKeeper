@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Header_HomeAria" xml:space="preserve"><value>NoteKeeper — home</value></data>
+  <data name="Common_NewNote" xml:space="preserve"><value>+ Nuova nota</value></data>
+  <data name="Language_Label" xml:space="preserve"><value>Lingua</value></data>
+  <data name="Index_PageTitle" xml:space="preserve"><value>Note — NoteKeeper</value></data>
+  <data name="Index_Eyebrow" xml:space="preserve"><value>Il tuo archivio di note</value></data>
+  <data name="Index_HeroTitle" xml:space="preserve"><value>Tutto ciò che conta — in un unico posto.</value></data>
+  <data name="Index_CreateNote" xml:space="preserve"><value>+ Crea nota</value></data>
+  <data name="Index_Search" xml:space="preserve"><value>Cerca</value></data>
+  <data name="Index_SearchPlaceholder" xml:space="preserve"><value>Titolo, testo, link…</value></data>
+  <data name="Index_Tag" xml:space="preserve"><value>Tag</value></data>
+  <data name="Index_TagPlaceholder" xml:space="preserve"><value>#idea, #lavoro</value></data>
+  <data name="Index_TagSuggestionsAria" xml:space="preserve"><value>Suggerimenti tag</value></data>
+  <data name="Index_GroupBy" xml:space="preserve"><value>Raggruppa per</value></data>
+  <data name="Index_GroupByNone" xml:space="preserve"><value>Nessun raggruppamento</value></data>
+  <data name="Index_GroupWithTag" xml:space="preserve"><value>Con #{0}</value></data>
+  <data name="Index_GroupWithoutTag" xml:space="preserve"><value>Senza #{0}</value></data>
+  <data name="Index_TagFilterLogicalCommaError" xml:space="preserve"><value>Le virgole non possono essere usate insieme a &amp; o |. Usa solo gli operatori logici.</value></data>
+  <data name="Index_TagFilterLogicalSyntaxError" xml:space="preserve"><value>Filtro logico dei tag non valido. Controlla operatori, operandi e parentesi.</value></data>
+  <data name="Index_Sort" xml:space="preserve"><value>Ordina per</value></data>
+  <data name="Index_SortUpdated" xml:space="preserve"><value>Ultima modifica</value></data>
+  <data name="Index_SortCreated" xml:space="preserve"><value>Data di creazione</value></data>
+  <data name="Index_SortTitle" xml:space="preserve"><value>Titolo</value></data>
+  <data name="Index_Direction" xml:space="preserve"><value>Ordine</value></data>
+  <data name="Index_DirectionDesc" xml:space="preserve"><value>Più recenti / Z→A</value></data>
+  <data name="Index_DirectionAsc" xml:space="preserve"><value>Più vecchie / A→Z</value></data>
+  <data name="Index_Apply" xml:space="preserve"><value>Applica</value></data>
+  <data name="Index_Reset" xml:space="preserve"><value>Reimposta</value></data>
+  <data name="Index_Clear" xml:space="preserve"><value>Pulisci</value></data>
+  <data name="Index_PaginationAria" xml:space="preserve"><value>Pagine delle note</value></data>
+  <data name="Index_PreviousPage" xml:space="preserve"><value>Pagina precedente</value></data>
+  <data name="Index_NextPage" xml:space="preserve"><value>Pagina successiva</value></data>
+  <data name="Index_PageNumber" xml:space="preserve"><value>Pagina {0}</value></data>
+  <data name="Index_PopularTagsAria" xml:space="preserve"><value>Tag più usati</value></data>
+  <data name="Index_Results" xml:space="preserve"><value>Risultati</value></data>
+  <data name="Index_Notes" xml:space="preserve"><value>Note</value></data>
+  <data name="Index_NoResults" xml:space="preserve"><value>Nessun risultato</value></data>
+  <data name="Index_NoNotes" xml:space="preserve"><value>Ancora nessuna nota</value></data>
+  <data name="Index_NoResultsCopy" xml:space="preserve"><value>Prova a cambiare la ricerca o il tag.</value></data>
+  <data name="Index_NoNotesCopy" xml:space="preserve"><value>Crea la prima nota e aggiungi testo, un link o un&apos;immagine.</value></data>
+  <data name="Index_BlockCount" xml:space="preserve"><value>Blocchi: {0}</value></data>
+  <data name="Index_Edit" xml:space="preserve"><value>Modifica</value></data>
+  <data name="Index_OpenFirstLink" xml:space="preserve"><value>Apri il primo link in una nuova scheda</value></data>
+  <data name="Index_Delete" xml:space="preserve"><value>Elimina</value></data>
+  <data name="Index_DeleteConfirm" xml:space="preserve"><value>Eliminare questa nota?</value></data>
+  <data name="Edit_PageTitleNew" xml:space="preserve"><value>Nuova nota — NoteKeeper</value></data>
+  <data name="Edit_BackToList" xml:space="preserve"><value>← Torna all&apos;elenco</value></data>
+  <data name="Edit_Saved" xml:space="preserve"><value>Salvato</value></data>
+  <data name="Edit_NewNoteStatus" xml:space="preserve"><value>Nuova nota</value></data>
+  <data name="Edit_Save" xml:space="preserve"><value>Salva</value></data>
+  <data name="Edit_TitlePlaceholder" xml:space="preserve"><value>Titolo della nota</value></data>
+  <data name="Edit_Status" xml:space="preserve"><value>Stato</value></data>
+  <data name="Edit_EstimatedTime" xml:space="preserve"><value>Tempo stimato</value></data>
+  <data name="Edit_SpentTime" xml:space="preserve"><value>Tempo impiegato</value></data>
+  <data name="Edit_TimeFormatHint" xml:space="preserve"><value>Formato Jira: 1w 2d 3h 15m</value></data>
+  <data name="Edit_TimeManagementStar" xml:space="preserve"><value>Aggiungi o rimuovi questa nota dalla gestione del tempo</value></data>
+  <data name="Edit_TimeHistoryButton" xml:space="preserve"><value>Mostra registrazioni di tempo</value></data>
+  <data name="Edit_TimeHistoryTitle" xml:space="preserve"><value>Registrazioni di tempo</value></data>
+  <data name="Edit_TimeHistoryDescription" xml:space="preserve"><value>Registrazioni del calendario collegate a questa nota.</value></data>
+  <data name="Edit_TimeHistoryLoading" xml:space="preserve"><value>Caricamento registrazioni di tempo…</value></data>
+  <data name="Edit_TimeHistoryEmpty" xml:space="preserve"><value>Nessuna registrazione di tempo è collegata a questa nota.</value></data>
+  <data name="Edit_TimeHistoryOpenDate" xml:space="preserve"><value>Apri questa data nella gestione del tempo</value></data>
+  <data name="Edit_TimeHistoryDeleteEntry" xml:space="preserve"><value>Elimina questa registrazione di tempo</value></data>
+  <data name="Edit_TimeHistoryLoadFailed" xml:space="preserve"><value>Impossibile caricare le registrazioni di tempo.</value></data>
+  <data name="Edit_TimeHistoryDeleteFailed" xml:space="preserve"><value>Impossibile eliminare la registrazione di tempo.</value></data>
+  <data name="Edit_TimeHistoryClose" xml:space="preserve"><value>Chiudi</value></data>
+  <data name="Edit_StatusBacklog" xml:space="preserve"><value>Backlog</value></data>
+  <data name="Edit_StatusSelected" xml:space="preserve"><value>Selected</value></data>
+  <data name="Edit_StatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="Edit_StatusTest" xml:space="preserve"><value>Test</value></data>
+  <data name="Edit_StatusDone" xml:space="preserve"><value>Done</value></data>
+  <data name="Edit_StatusReleased" xml:space="preserve"><value>Released</value></data>
+  <data name="Edit_StatusRejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Edit_StatusSuspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Edit_StatusSimpleNote" xml:space="preserve"><value>Simple note</value></data>
+  <data name="Edit_AddText" xml:space="preserve"><value>＋ Testo</value></data>
+  <data name="Edit_AddLink" xml:space="preserve"><value>↗ Link</value></data>
+  <data name="Edit_AddImage" xml:space="preserve"><value>▧ Immagine</value></data>
+  <data name="Edit_PasteHint" xml:space="preserve"><value>incolla un&apos;immagine dagli appunti come nuovo blocco</value></data>
+  <data name="Edit_AddTextBlock" xml:space="preserve"><value>＋ Aggiungi blocco di testo</value></data>
+  <data name="Edit_SaveChanges" xml:space="preserve"><value>Salva modifiche</value></data>
+  <data name="Editor_TypeText" xml:space="preserve"><value>Testo</value></data>
+  <data name="Editor_TypeLink" xml:space="preserve"><value>Link</value></data>
+  <data name="Editor_TypeImage" xml:space="preserve"><value>Immagine</value></data>
+  <data name="Editor_Unsaved" xml:space="preserve"><value>Modifiche non salvate</value></data>
+  <data name="Editor_OpenLink" xml:space="preserve"><value>Apri link</value></data>
+  <data name="Editor_DragBlock" xml:space="preserve"><value>Trascina il blocco</value></data>
+  <data name="Editor_MoveUp" xml:space="preserve"><value>Sposta in alto</value></data>
+  <data name="Editor_MoveDown" xml:space="preserve"><value>Sposta in basso</value></data>
+  <data name="Editor_RemoveBlock" xml:space="preserve"><value>Elimina blocco</value></data>
+  <data name="Editor_TextPlaceholder" xml:space="preserve"><value>Testo, commento, idea… Usa #tag per la ricerca rapida.</value></data>
+  <data name="Editor_LinkTitlePlaceholder" xml:space="preserve"><value>Titolo del link</value></data>
+  <data name="Editor_LinkCommentPlaceholder" xml:space="preserve"><value>Commento al link (facoltativo)</value></data>
+  <data name="Editor_ImageAlt" xml:space="preserve"><value>Immagine nella nota</value></data>
+  <data name="Editor_OpenImagePreview" xml:space="preserve"><value>Apri anteprima immagine</value></data>
+  <data name="Editor_CloseImagePreview" xml:space="preserve"><value>Chiudi anteprima immagine</value></data>
+  <data name="Editor_ImageCaptionPlaceholder" xml:space="preserve"><value>Didascalia dell&apos;immagine (facoltativa)</value></data>
+  <data name="Editor_ReplaceImage" xml:space="preserve"><value>Sostituisci</value></data>
+  <data name="Editor_UploadFailed" xml:space="preserve"><value>Impossibile caricare l&apos;immagine.</value></data>
+  <data name="Editor_Uploading" xml:space="preserve"><value>Caricamento immagine…</value></data>
+  <data name="Editor_ImageAdded" xml:space="preserve"><value>Immagine aggiunta.</value></data>
+  <data name="Editor_ImagesAdded" xml:space="preserve"><value>Immagini aggiunte: {0}.</value></data>
+  <data name="Editor_UploadError" xml:space="preserve"><value>Errore di caricamento.</value></data>
+  <data name="Editor_UploadErrorStatus" xml:space="preserve"><value>Errore di caricamento</value></data>
+  <data name="Editor_LinkMustHttp" xml:space="preserve"><value>Il link deve iniziare con http:// o https://</value></data>
+  <data name="Editor_Saving" xml:space="preserve"><value>Salvataggio…</value></data>
+  <data name="Editor_SaveErrorStatus" xml:space="preserve"><value>Errore di salvataggio ({0}).</value></data>
+  <data name="Editor_SavedAt" xml:space="preserve"><value>Salvato {0}</value></data>
+  <data name="Editor_SaveFailed" xml:space="preserve"><value>Impossibile salvare la nota</value></data>
+  <data name="Editor_SaveFailedToast" xml:space="preserve"><value>Impossibile salvare la nota.</value></data>
+  <data name="Editor_OpenLinkInvalid" xml:space="preserve"><value>Inserisci un link HTTP/HTTPS valido.</value></data>
+  <data name="Server_TooManyBlocks" xml:space="preserve"><value>La nota contiene troppi blocchi.</value></data>
+  <data name="Server_InvalidEstimatedTime" xml:space="preserve"><value>Tempo stimato non valido. Usa il formato Jira, ad esempio: 1w, 2d, 3h, 15m oppure 1d 4h.</value></data>
+  <data name="Server_InvalidSpentTime" xml:space="preserve"><value>Tempo impiegato non valido. Usa il formato Jira, ad esempio: 1w, 2d, 3h, 15m oppure 1h 30m.</value></data>
+  <data name="Server_NoteNotFound" xml:space="preserve"><value>Nota non trovata.</value></data>
+  <data name="Server_ImageTooLarge" xml:space="preserve"><value>L&apos;immagine non può superare 12 MB.</value></data>
+  <data name="Server_ImageTypeUnsupported" xml:space="preserve"><value>Sono supportati PNG, JPEG, WEBP e GIF.</value></data>
+  <data name="Server_UntitledNote" xml:space="preserve"><value>Senza titolo</value></data>
+  <data name="Server_EmptyNote" xml:space="preserve"><value>Nota vuota</value></data>
+  <data name="Theme_SwitchToLight" xml:space="preserve"><value>Passa al tema chiaro</value></data>
+  <data name="Theme_SwitchToDark" xml:space="preserve"><value>Passa al tema scuro</value></data>
+  <data name="Dialog_ConfirmTitle" xml:space="preserve"><value>Conferma azione</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>Annulla</value></data>
+  <data name="Dialog_Confirm" xml:space="preserve"><value>Conferma</value></data>
+  <data name="Index_DeleteDialogTitle" xml:space="preserve"><value>Eliminare la nota?</value></data>
+  <data name="Index_DeleteDialogMessage" xml:space="preserve"><value>“{0}” verrà eliminata definitivamente dal database. Questa azione non può essere annullata.</value></data>
+  <data name="Edit_DeleteNote" xml:space="preserve"><value>Elimina</value></data>
+  <data name="Editor_FormatBold" xml:space="preserve"><value>Grassetto</value></data>
+  <data name="Editor_FormatItalic" xml:space="preserve"><value>Corsivo</value></data>
+  <data name="Editor_FormatUnderline" xml:space="preserve"><value>Sottolineato</value></data>
+  <data name="Editor_FormatStrike" xml:space="preserve"><value>Barrato</value></data>
+  <data name="Editor_FormatCode" xml:space="preserve"><value>Codice inline</value></data>
+  <data name="Editor_FormatHyperlink" xml:space="preserve"><value>Collegamento</value></data>
+  <data name="Editor_HyperlinkDialogTitle" xml:space="preserve"><value>Collegamento</value></data>
+  <data name="Editor_HyperlinkUrlLabel" xml:space="preserve"><value>URL</value></data>
+  <data name="Editor_HyperlinkApply" xml:space="preserve"><value>Applica link</value></data>
+  <data name="Editor_HyperlinkRemove" xml:space="preserve"><value>Rimuovi link</value></data>
+  <data name="Editor_HyperlinkCancel" xml:space="preserve"><value>Annulla</value></data>
+  <data name="Editor_HyperlinkSelectText" xml:space="preserve"><value>Seleziona prima del testo.</value></data>
+  <data name="Editor_HyperlinkInvalidUrl" xml:space="preserve"><value>Inserisci un URL HTTP o HTTPS valido.</value></data>
+  <data name="Editor_FormatQuote" xml:space="preserve"><value>Citazione</value></data>
+  <data name="Editor_FormatExpander" xml:space="preserve"><value>Contenitore espandibile</value></data>
+  <data name="Editor_FormatAddLineBelow" xml:space="preserve"><value>Aggiungi una riga vuota sotto la riga corrente</value></data>
+  <data name="Editor_FormatDivider" xml:space="preserve"><value>Separatore</value></data>
+  <data name="Editor_FormatList" xml:space="preserve"><value>Elenco</value></data>
+  <data name="Editor_FormatOrderedList" xml:space="preserve"><value>Elenco numerato</value></data>
+  <data name="Editor_FormatBulletList" xml:space="preserve"><value>Elenco puntato (•)</value></data>
+  <data name="Editor_FormatDashList" xml:space="preserve"><value>Elenco con trattino (—)</value></data>
+  <data name="Editor_FormatSymbols" xml:space="preserve"><value>Inserisci simbolo</value></data>
+  <data name="Editor_ExpanderSummary" xml:space="preserve"><value>Dettagli</value></data>
+  <data name="Editor_ExpanderContent" xml:space="preserve"><value>Contenuto espandibile</value></data>
+  <data name="Editor_ExpanderDelete" xml:space="preserve"><value>Elimina contenitore espandibile</value></data>
+  <data name="Editor_UnsavedDialogTitle" xml:space="preserve"><value>Scartare le modifiche non salvate?</value></data>
+  <data name="Editor_UnsavedDialogMessage" xml:space="preserve"><value>Questa nota contiene modifiche non ancora salvate.</value></data>
+  <data name="Editor_LeaveWithoutSaving" xml:space="preserve"><value>Esci senza salvare</value></data>
+  <data name="Index_ImportNote" xml:space="preserve"><value>⇩ Importa nota</value></data>
+  <data name="Edit_ExportNote" xml:space="preserve"><value>⇧ Esporta</value></data>
+  <data name="Editor_FormatTextColor" xml:space="preserve"><value>Colore testo</value></data>
+  <data name="Editor_FormatTextSize" xml:space="preserve"><value>Dimensione testo</value></data>
+  <data name="Editor_FormatSizeSmall" xml:space="preserve"><value>Piccolo</value></data>
+  <data name="Editor_FormatSizeNormal" xml:space="preserve"><value>Normale</value></data>
+  <data name="Editor_FormatSizeLarge" xml:space="preserve"><value>Grande</value></data>
+  <data name="Editor_FormatSizeExtraLarge" xml:space="preserve"><value>Molto grande</value></data>
+  <data name="Editor_QuoteContent" xml:space="preserve"><value>Citazione</value></data>
+  <data name="Editor_DividerDeleteHint" xml:space="preserve"><value>Separatore selezionato. Premi Canc o Backspace per eliminarlo.</value></data>
+  <data name="Editor_SystemEmoji" xml:space="preserve"><value>Altre emoji</value></data>
+  <data name="Editor_SystemEmojiHint" xml:space="preserve"><value>Il browser non può aprire direttamente il pannello emoji di Windows. Premi Win + . mentre l&apos;editor è attivo.</value></data>
+  <data name="Server_ImportInvalid" xml:space="preserve"><value>Il file non è un&apos;esportazione valida di una nota NoteKeeper.</value></data>
+  <data name="Server_ImportTooLarge" xml:space="preserve"><value>L&apos;esportazione della nota è vuota o troppo grande per essere importata.</value></data>
+  <data name="Editor_EmojiSearchPlaceholder" xml:space="preserve"><value>Cerca emoji…</value></data>
+  <data name="Editor_EmojiNoResults" xml:space="preserve"><value>Nessuna emoji trovata.</value></data>
+  <data name="Editor_EmojiCategoryAll" xml:space="preserve"><value>Tutte</value></data>
+  <data name="Editor_EmojiCategorySmileys" xml:space="preserve"><value>Faccine</value></data>
+  <data name="Editor_EmojiCategoryPeople" xml:space="preserve"><value>Persone</value></data>
+  <data name="Editor_EmojiCategoryAnimals" xml:space="preserve"><value>Animali e natura</value></data>
+  <data name="Editor_EmojiCategoryFood" xml:space="preserve"><value>Cibo e bevande</value></data>
+  <data name="Editor_EmojiCategoryTravel" xml:space="preserve"><value>Viaggi e luoghi</value></data>
+  <data name="Editor_EmojiCategoryActivities" xml:space="preserve"><value>Attività</value></data>
+  <data name="Editor_EmojiCategoryObjects" xml:space="preserve"><value>Oggetti</value></data>
+  <data name="Editor_EmojiCategorySymbols" xml:space="preserve"><value>Simboli</value></data>
+  <data name="Editor_EmojiCategoryFlags" xml:space="preserve"><value>Bandiere</value></data>
+
+  <data name="Common_Projects" xml:space="preserve"><value>Progetti</value></data>
+  <data name="Index_ProjectEyebrow" xml:space="preserve"><value>Progetto</value></data>
+  <data name="Index_BackToProjects" xml:space="preserve"><value>← Progetti</value></data>
+  <data name="Projects_PageTitle" xml:space="preserve"><value>Progetti — NoteKeeper</value></data>
+  <data name="Projects_Eyebrow" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Projects_HeroTitle" xml:space="preserve"><value>Progetti</value></data>
+  <data name="Projects_Import" xml:space="preserve"><value>⇩ Importa progetto</value></data>
+  <data name="Projects_NewName" xml:space="preserve"><value>Nuovo progetto</value></data>
+  <data name="Projects_NewNamePlaceholder" xml:space="preserve"><value>Nome progetto</value></data>
+  <data name="Projects_Create" xml:space="preserve"><value>+ Crea progetto</value></data>
+  <data name="Projects_Search" xml:space="preserve"><value>Cerca progetti</value></data>
+  <data name="Projects_SearchPlaceholder" xml:space="preserve"><value>Cerca per nome del progetto</value></data>
+  <data name="Projects_SortUpdated" xml:space="preserve"><value>Ultimo aggiornamento</value></data>
+  <data name="Projects_SortCreated" xml:space="preserve"><value>Creazione</value></data>
+  <data name="Projects_SortName" xml:space="preserve"><value>Nome</value></data>
+  <data name="Projects_SortNotes" xml:space="preserve"><value>Numero di note</value></data>
+  <data name="Projects_Results" xml:space="preserve"><value>Risultati</value></data>
+  <data name="Projects_All" xml:space="preserve"><value>Tutti i progetti</value></data>
+  <data name="Projects_NoResults" xml:space="preserve"><value>Nessun progetto trovato</value></data>
+  <data name="Projects_NoProjects" xml:space="preserve"><value>Nessun progetto</value></data>
+  <data name="Projects_NoResultsCopy" xml:space="preserve"><value>Prova con un altro nome di progetto.</value></data>
+  <data name="Projects_NoProjectsCopy" xml:space="preserve"><value>Crea un progetto qui sopra oppure importa un progetto NoteKeeper.</value></data>
+  <data name="Projects_NoteCount" xml:space="preserve"><value>{0} note</value></data>
+  <data name="Projects_OpenProject" xml:space="preserve"><value>Apri elenco note →</value></data>
+  <data name="Projects_Rename" xml:space="preserve"><value>Rinomina</value></data>
+  <data name="Projects_Export" xml:space="preserve"><value>Esporta</value></data>
+  <data name="Projects_DeleteDialogTitle" xml:space="preserve"><value>Eliminare il progetto?</value></data>
+  <data name="Projects_DeleteDialogMessage" xml:space="preserve"><value>Eliminare “{0}” e tutte le {1} note contenute? L&apos;operazione non può essere annullata.</value></data>
+  <data name="Projects_RenameTitle" xml:space="preserve"><value>Rinomina progetto</value></data>
+  <data name="Projects_Name" xml:space="preserve"><value>Nome progetto</value></data>
+  <data name="Projects_RenameSave" xml:space="preserve"><value>Salva nome</value></data>
+  <data name="Server_ProjectNotFound" xml:space="preserve"><value>Progetto non trovato.</value></data>
+  <data name="Server_ProjectImportTooLarge" xml:space="preserve"><value>Il file del progetto è vuoto o troppo grande.</value></data>
+  <data name="Server_ProjectImportInvalid" xml:space="preserve"><value>Il file del progetto non è valido o contiene dati non supportati.</value></data>
+  <data name="Server_UntitledProject" xml:space="preserve"><value>Progetto senza titolo</value></data>
+
+
+  <data name="Index_Time" xml:space="preserve"><value>Tempo</value></data>
+  <data name="Editor_TimePinFailed" xml:space="preserve"><value>Impossibile aggiornare il collegamento alla gestione del tempo.</value></data>
+  <data name="Time_Title" xml:space="preserve"><value>Gestione del tempo</value></data>
+  <data name="Time_Eyebrow" xml:space="preserve"><value>Tempo del progetto</value></data>
+  <data name="Time_BackToNotes" xml:space="preserve"><value>← Note</value></data>
+  <data name="Time_TrackedEyebrow" xml:space="preserve"><value>Accesso rapido</value></data>
+  <data name="Time_TrackedNotes" xml:space="preserve"><value>Note monitorate</value></data>
+  <data name="Time_AddNote" xml:space="preserve"><value>Aggiungi nota</value></data>
+  <data name="Time_SearchNotePlaceholder" xml:space="preserve"><value>Cerca per titolo della nota</value></data>
+  <data name="Time_Add" xml:space="preserve"><value>Aggiungi</value></data>
+  <data name="Time_NoTrackedNotes" xml:space="preserve"><value>Nessuna nota è ancora fissata nella gestione del tempo.</value></data>
+  <data name="Time_Estimated" xml:space="preserve"><value>Tempo stimato</value></data>
+  <data name="Time_Spent" xml:space="preserve"><value>Impiegato</value></data>
+  <data name="Time_Remaining" xml:space="preserve"><value>Rimanente</value></data>
+  <data name="Time_RemoveTrackedNote" xml:space="preserve"><value>Rimuovi dalla gestione del tempo</value></data>
+  <data name="Time_NewDate" xml:space="preserve"><value>Data</value></data>
+  <data name="Time_AddDate" xml:space="preserve"><value>+ Aggiungi data</value></data>
+  <data name="Time_NoDays" xml:space="preserve"><value>Nessun tempo registrato questo mese</value></data>
+  <data name="Time_NoDaysCopy" xml:space="preserve"><value>Aggiungi una data del calendario qui sopra e poi registra il tempo impiegato.</value></data>
+  <data name="Time_Total" xml:space="preserve"><value>Totale</value></data>
+  <data name="Time_DeleteDayTitle" xml:space="preserve"><value>Eliminare questa data?</value></data>
+  <data name="Time_DeleteDayMessage" xml:space="preserve"><value>Eliminare {0} e tutte le registrazioni contenute? L&apos;operazione non può essere annullata.</value></data>
+  <data name="Time_DeleteDay" xml:space="preserve"><value>Elimina data</value></data>
+  <data name="Time_TimeSpent" xml:space="preserve"><value>Tempo impiegato</value></data>
+  <data name="Time_Task" xml:space="preserve"><value>Attività</value></data>
+  <data name="Time_Comment" xml:space="preserve"><value>Commento</value></data>
+  <data name="Time_CommentPlaceholder" xml:space="preserve"><value>Commento facoltativo</value></data>
+  <data name="Time_SaveEntry" xml:space="preserve"><value>Salva</value></data>
+  <data name="Time_DeleteEntry" xml:space="preserve"><value>Elimina registrazione</value></data>
+  <data name="Time_TimeSpentPlaceholder" xml:space="preserve"><value>0h</value></data>
+  <data name="Time_SelectTask" xml:space="preserve"><value>Seleziona attività</value></data>
+  <data name="Time_AddEntry" xml:space="preserve"><value>+ Aggiungi registrazione</value></data>
+  <data name="Time_MonthPaginationAria" xml:space="preserve"><value>Mesi della gestione del tempo</value></data>
+  <data name="Time_CurrentMonth" xml:space="preserve"><value>Mese corrente</value></data>
+  <data name="Time_TaskRequired" xml:space="preserve"><value>Seleziona un&apos;attività valida.</value></data>
+  <data name="Time_InvalidTimeSpent" xml:space="preserve"><value>Usa il formato tempo Jira, ad esempio 0h, 15m, 1h 30m oppure 1d. Un valore vuoto viene considerato 0h.</value></data>
+  <data name="Time_NoteSearchNotFound" xml:space="preserve"><value>Seleziona una nota esistente dai risultati di ricerca.</value></data>
+
+
+  <data name="Time_DatePlaceholder" xml:space="preserve"><value>gg/mm/aa</value></data>
+  <data name="Time_DateFormatHint" xml:space="preserve"><value>Formato data: gg/mm/aa</value></data>
+  <data name="Time_DatePickerAria" xml:space="preserve"><value>Apri calendario</value></data>
+  <data name="Time_InvalidDate" xml:space="preserve"><value>Data non valida. Usa gg/mm/aa, ad esempio 30/09/26.</value></data>
+
+  <data name="Time_TaskPlaceholder" xml:space="preserve"><value>Cerca una nota o inserisci qualsiasi attività</value></data>
+
+
+  <data name="Time_AddDateFailed" xml:space="preserve"><value>Impossibile aggiungere la data.</value></data>
+  <data name="Time_OpenTask" xml:space="preserve"><value>Apri attività in una nuova scheda</value></data>
+
+  <data name="Time_EditDate" xml:space="preserve"><value>Modifica data</value></data>
+  <data name="Time_SaveDate" xml:space="preserve"><value>Salva</value></data>
+  <data name="Time_CancelDate" xml:space="preserve"><value>Annulla</value></data>
+  <data name="Time_UpdateDateFailed" xml:space="preserve"><value>Impossibile modificare la data.</value></data>
+  <data name="Time_DateAlreadyExists" xml:space="preserve"><value>Esiste già un contenitore per questa data.</value></data>
+
+  <data name="Time_DeleteDayFailed" xml:space="preserve"><value>Impossibile eliminare il contenitore della data.</value></data>
+
+  <data name="Time_Overtime" xml:space="preserve"><value>Tempo extra</value></data>
+  <data name="Time_RemoveAllTrackedNotes" xml:space="preserve"><value>Rimuovi tutte dalla gestione del tempo</value></data>
+  <data name="Time_RemoveAllTrackedNotesTitle" xml:space="preserve"><value>Rimuovere tutte le note monitorate?</value></data>
+  <data name="Time_RemoveAllTrackedNotesMessage" xml:space="preserve"><value>Disattivare la stella della gestione del tempo per tutte le note monitorate di questo progetto?</value></data>
+  <data name="Time_CollapseTrackedNotes" xml:space="preserve"><value>Comprimi note monitorate</value></data>
+  <data name="Time_ExpandTrackedNotes" xml:space="preserve"><value>Espandi note monitorate</value></data>
+
+</root>
