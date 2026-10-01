@@ -129,6 +129,7 @@
                         <option value="@((int)NoteStatus.Released)" selected="@(Model.Status == NoteStatus.Released ? "selected" : null)">@Localizer["Edit_StatusReleased"]</option>
                         <option value="@((int)NoteStatus.Rejected)" selected="@(Model.Status == NoteStatus.Rejected ? "selected" : null)">@Localizer["Edit_StatusRejected"]</option>
                         <option value="@((int)NoteStatus.Suspended)" selected="@(Model.Status == NoteStatus.Suspended ? "selected" : null)">@Localizer["Edit_StatusSuspended"]</option>
+                        <option value="@((int)NoteStatus.SimpleNote)" selected="@(Model.Status == NoteStatus.SimpleNote ? "selected" : null)">@Localizer["Edit_StatusSimpleNote"]</option>
                     </select>
                 </label>
                 <label class="editor-time-field" for="estimatedTimeInput">

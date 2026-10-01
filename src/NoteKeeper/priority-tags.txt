@@ -6,3 +6,4 @@ done
 released
 rejected
 suspended
+note
