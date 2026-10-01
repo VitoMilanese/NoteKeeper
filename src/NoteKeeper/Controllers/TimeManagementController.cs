@@ -203,12 +203,15 @@ public sealed class TimeManagementController(
                     x => x.Id == dayId.Value,
                     cancellationToken);
 
+            Response.Headers["X-Time-Day-Month"] =
+                MonthKey(normalizedDate);
+
             return PartialView(
                 "_TimeDay",
                 new TimeDayPartialViewModel
                 {
                     ProjectId = projectId,
-                    MonthKey = month ?? MonthKey(normalizedDate),
+                    MonthKey = MonthKey(normalizedDate),
                     Day = MapDay(day)
                 });
         }

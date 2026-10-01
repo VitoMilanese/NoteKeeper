@@ -211,6 +211,17 @@
                 throw new Error(message || form.dataset.addDateError || '');
             }
 
+            const currentMonth =
+                form.querySelector('input[name="month"]')?.value || '';
+            const dayMonth =
+                response.headers.get('X-Time-Day-Month') || '';
+
+            if (currentMonth &&
+                dayMonth &&
+                currentMonth !== dayMonth) {
+                return;
+            }
+
             const html = await response.text();
             const template = document.createElement('template');
             template.innerHTML = html.trim();
