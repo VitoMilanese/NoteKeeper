@@ -117,7 +117,8 @@ public static class TagFilterParser
 
         var negated = inheritedNegated;
 
-        while (value.Length > 0 && value[0] == '-')
+        while (value.Length > 0 &&
+               value[0] is '-' or '!')
         {
             negated = true;
             value = value[1..].TrimStart();

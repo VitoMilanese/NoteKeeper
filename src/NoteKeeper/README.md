@@ -22,7 +22,7 @@ A modern web-based note keeper built with **ASP.NET Core 8, EF Core, and SQLite*
 - show configurable priority tags first and in bold on tag lists; the default `priority-tags.txt` follows the status order: `backlog`, `selected`, `active`, `test`, `done`, `released`, `rejected`, `suspended`, `note`; changes to the file are picked up without restarting the app;
 - fit note-card tags into at most two complete rows and replace any remaining tags with a responsive `+X` chip showing how many are hidden;
 - show caret-aware tag suggestions while typing a tag-filter expression, using all tags in the database so additional filter terms remain discoverable even after narrowing the result set, and insert the selected tag without replacing the surrounding expression;
-- clear the search field, tag filter, and Group by selection from a dedicated button while preserving the selected sort and direction;
+- preserve the current note-list URL when opening and closing a note, so search/tag filters, Group by, sorting, pagination, and page size survive Back to list, Esc, and editor deletion;
 - sorting by title, creation date, or last update;
 - optionally group note results by any tag that occurs in the current filtered result set into “with tag” and “without tag” sections while keeping the selected sort/order inside each group;
 - rich text blocks with bold, italic, underline, strikethrough, inline code, hyperlinks on selected rich text, quotes, expandable containers, dividers, text sizing, custom text colors, numbered lists, bullet lists, dash lists, and a quick symbol palette;
@@ -89,9 +89,9 @@ Add tags directly to a text block or a link comment, for example:
 Review this idea later. #work #idea
 ```
 
-After saving the note, `work` and `idea` become available as filters on the home page. Note statuses also contribute effective tags: `Backlog` adds `backlog`, `Selected` adds `selected`, `Active` adds `active`, `Test` adds `test`, `Done` adds `done`, `Released` adds both `done` and `released`, `Rejected` adds `done`, and `Suspended` adds `suspended`. These status tags participate in tag filtering, text search, autocomplete, tag counts, card tag displays, and Group by exactly like explicitly written tags.
+After saving the note, `work` and `idea` become available as filters on the home page. Note statuses also contribute effective tags: `Backlog` adds `backlog`, `Selected` adds `selected`, `Active` adds `active`, `Test` adds `test`, `Done` adds `done`, `Released` adds both `done` and `released`, `Rejected` adds `done`, `Suspended` adds `suspended`, and `Simple note` adds `note`. These status tags participate in tag filtering, text search, autocomplete, tag counts, card tag displays, and Group by exactly like explicitly written tags.
 
-The legacy syntax remains available. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with `-` to make every tag in that expression negative without changing the group operator: `atm, done, -tn` means `atm AND done AND NOT tn`; `-(tn, dsde)` means `NOT tn AND NOT dsde`; and `-((tn, dsde))` means `NOT tn OR NOT dsde`. Repeated minus prefixes remain negative rather than toggling back, so `-(-tn)` is still `NOT tn`.
+The legacy syntax remains available. The top level and single parentheses use AND semantics, so `work, idea` and `(work, idea)` both require both tags. Double parentheses switch that group to OR semantics, so `((work, idea))` matches a note containing either tag. Prefix a tag or group with either `-` or `!` to make every tag in that expression negative without changing the group operator: `atm, done, !tn` means `atm AND done AND NOT tn`; `!(tn, dsde)` means `NOT tn AND NOT dsde`; and `!((tn, dsde))` means `NOT tn OR NOT dsde`. The `-` examples remain equivalent, and repeated or mixed negative prefixes stay negative rather than toggling back, so `-(!tn)` is still `NOT tn`.
 
 A second syntax is enabled automatically whenever the filter contains `&` or `|`. In this logical mode commas are not allowed: `&` means AND, `|` means OR, and `!` means NOT. Operator precedence is the conventional `!` first, then `&`, then `|`; parentheses only group expressions and do not change the meaning of operators. For example, `(tag1 | tag2) & tag3` requires `tag3` plus either `tag1` or `tag2`, while `((tag1 | tag2) & tag3) | ((tag4 | tag5) & !tag6)` combines two explicit alternatives. Invalid logical expressions, including mixing commas with `&` or `|`, are reported below the tag-filter field instead of being executed.
 
@@ -115,6 +115,7 @@ Each note has a status selected in this order in the editor:
 - `Released` — behaves as if the note contains both `#done` and `#released`.
 - `Rejected` — behaves as if the note contains `#done`.
 - `Suspended` — behaves as if the note contains `#suspended`.
+- `Simple note` — behaves as if the note contains `#note`.
 
 Status-implied tags are stored together with extracted tags, so filtering, text search, autocomplete, tag counts, card tags, and Group by all use the same effective tag set. Changing a status removes automatic tags that are no longer implied unless those tags are still written explicitly in the note content.
 

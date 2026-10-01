@@ -111,11 +111,13 @@
 <section id="noteEditor"
          class="editor-page"
          data-note-id="@(Model.Id?.ToString() ?? "")"
-         data-project-id="@Model.ProjectId">
+         data-project-id="@Model.ProjectId"
+         data-return-url="@Model.ReturnUrl">
     @Html.AntiForgeryToken()
 
     <div class="editor-topbar">
-        <a class="button button-ghost button-small" href="/projects/@Model.ProjectId">@Localizer["Edit_BackToList"]</a>
+        <a class="button button-ghost button-small"
+           href="@Model.ReturnUrl">@Localizer["Edit_BackToList"]</a>
         <div class="save-cluster">
             <div class="editor-note-meta">
                 <label class="editor-status-field" for="statusSelect">
@@ -178,6 +180,7 @@
                   data-confirm-label="@Localizer["Index_Delete"]"
                   data-confirm-danger="true">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
                 <button class="button button-danger button-small" type="submit">@Localizer["Edit_DeleteNote"]</button>
             </form>
             <a id="exportNoteLink"

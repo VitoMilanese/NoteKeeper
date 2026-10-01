@@ -11,9 +11,8 @@
     const timeHistoryDialog = document.getElementById('timeHistoryDialog');
     const timeHistoryBody = timeHistoryDialog?.querySelector('[data-time-history-body]');
     const projectId = Number(editor.dataset.projectId || 0);
-    const projectListUrl = projectId > 0
-        ? `/projects/${projectId}`
-        : '/';
+    const projectListUrl = editor.dataset.returnUrl ||
+        (projectId > 0 ? `/projects/${projectId}` : '/');
     const blocksContainer = document.getElementById('blocksContainer');
     const saveButton = document.getElementById('saveButton');
     const saveButtonBottom = document.getElementById('saveButtonBottom');
@@ -1993,9 +1992,16 @@
                 exportNoteLink.href = `/notes/${result.id}/export`;
             }
 
-            const url = `/notes/${result.id}`;
-            if (window.location.pathname !== url) {
-                window.history.replaceState({}, '', url);
+            const noteUrl = new URL(
+                `/notes/${result.id}`,
+                window.location.origin);
+            noteUrl.searchParams.set('returnUrl', projectListUrl);
+            const relativeNoteUrl =
+                `${noteUrl.pathname}${noteUrl.search}`;
+
+            if (`${window.location.pathname}${window.location.search}` !==
+                relativeNoteUrl) {
+                window.history.replaceState({}, '', relativeNoteUrl);
             }
 
             document.title = `${result.title} — NoteKeeper`;

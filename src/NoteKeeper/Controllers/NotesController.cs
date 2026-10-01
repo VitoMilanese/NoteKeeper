@@ -225,6 +225,7 @@ public sealed class NotesController(
     [HttpGet("/projects/{projectId:int}/notes/new")]
     public async Task<IActionResult> New(
         int projectId,
+        string? returnUrl,
         CancellationToken cancellationToken)
     {
         var project = await db.Projects
@@ -240,6 +241,7 @@ public sealed class NotesController(
         {
             ProjectId = project.Id,
             ProjectName = project.Name,
+            ReturnUrl = NormalizeReturnUrl(project.Id, returnUrl),
             Title = string.Empty,
             Status = NoteStatus.Backlog,
             Blocks =
@@ -250,7 +252,10 @@ public sealed class NotesController(
     }
 
     [HttpGet("/notes/{id:int}")]
-    public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Edit(
+        int id,
+        string? returnUrl,
+        CancellationToken cancellationToken)
     {
         var note = await db.Notes
             .AsNoTracking()
@@ -268,6 +273,7 @@ public sealed class NotesController(
             Id = note.Id,
             ProjectId = note.ProjectId,
             ProjectName = note.Project.Name,
+            ReturnUrl = NormalizeReturnUrl(note.ProjectId, returnUrl),
             Title = note.Title,
             UpdatedAtUtc = note.UpdatedAtUtc,
             Status = note.Status,
@@ -605,7 +611,10 @@ public sealed class NotesController(
 
     [HttpPost("/notes/{id:int}/delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(
+        int id,
+        string? returnUrl,
+        CancellationToken cancellationToken)
     {
         var note = await db.Notes
             .Include(x => x.Blocks)
@@ -638,7 +647,7 @@ public sealed class NotesController(
             await DeleteImageIfUnusedAsync(imagePath, id, cancellationToken);
         }
 
-        return Redirect($"/projects/{projectId}");
+        return Redirect(NormalizeReturnUrl(projectId, returnUrl));
     }
 
     [HttpPost("/notes/upload-image")]
@@ -914,6 +923,31 @@ public sealed class NotesController(
         return Enum.IsDefined(status)
             ? status
             : NoteStatus.Backlog;
+    }
+
+    private static string NormalizeReturnUrl(
+        int projectId,
+        string? returnUrl)
+    {
+        var fallback = $"/projects/{projectId}";
+
+        if (string.IsNullOrWhiteSpace(returnUrl) ||
+            !returnUrl.StartsWith(fallback, StringComparison.Ordinal) ||
+            returnUrl.StartsWith("//", StringComparison.Ordinal) ||
+            returnUrl.Contains('\r') ||
+            returnUrl.Contains('\n'))
+        {
+            return fallback;
+        }
+
+        if (returnUrl.Length == fallback.Length)
+        {
+            return returnUrl;
+        }
+
+        return returnUrl[fallback.Length] is '?' or '#'
+            ? returnUrl
+            : fallback;
     }
 
     private static HashSet<string> BuildDesiredTags(

@@ -7,6 +7,7 @@ public sealed class NoteEditorViewModel
     public int? Id { get; set; }
     public int ProjectId { get; set; }
     public string ProjectName { get; set; } = string.Empty;
+    public string ReturnUrl { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public DateTime? UpdatedAtUtc { get; set; }
     public NoteStatus Status { get; set; } = NoteStatus.Backlog;
