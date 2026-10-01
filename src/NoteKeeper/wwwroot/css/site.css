@@ -1195,6 +1195,7 @@ html[data-theme="light"] .time-estimated-input:focus {
     width: 36px;
     height: 36px;
     transform: translateY(-50%);
+    cursor: pointer;
 }
 
 .time-date-picker-icon {
@@ -1223,7 +1224,7 @@ html[data-theme="light"] .time-estimated-input:focus {
     height: 100%;
     margin: 0;
     opacity: 0;
-    cursor: pointer;
+    pointer-events: none;
 }
 
 .time-date-picker-shell:focus-within .time-date-picker-icon,
@@ -1699,6 +1700,8 @@ html[data-theme="light"] .editor-time-history:hover:not(:disabled) {
 }
 
 .editor-time-star {
+    position: relative;
+    top: -3px;
     appearance: none;
     width: 34px;
     height: 36px;

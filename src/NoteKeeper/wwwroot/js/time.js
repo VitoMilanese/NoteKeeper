@@ -52,6 +52,25 @@
         return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     };
 
+    document.addEventListener('click', (event) => {
+        const shell = event.target.closest('.time-date-picker-shell');
+        if (!shell) return;
+
+        const picker = shell.querySelector('[data-time-date-picker]');
+        if (!picker) return;
+
+        if (typeof picker.showPicker === 'function') {
+            try {
+                picker.showPicker();
+                return;
+            } catch {
+                // Fall back to focusing the native date input below.
+            }
+        }
+
+        picker.focus();
+    });
+
     document.addEventListener('change', (event) => {
         const pickerInput = event.target.closest('[data-time-date-picker]');
         if (pickerInput) {
