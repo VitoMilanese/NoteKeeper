@@ -1,57 +1,261 @@
+@using System.Globalization
 @using System.Text.Json
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
 @model NoteEditorViewModel
 @{
-    ViewData["Title"] = Model.Id.HasValue ? $"{Model.Title} — NoteKeeper" : "Нова нотатка — NoteKeeper";
+    ViewData["Title"] = Model.Id.HasValue ? $"{Model.Title} — NoteKeeper" : Localizer["Edit_PageTitleNew"].Value;
     var initialJson = JsonSerializer.Serialize(Model.Blocks, new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     });
+    var editorStrings = new Dictionary<string, string>
+    {
+        ["locale"] = CultureInfo.CurrentUICulture.Name,
+        ["typeText"] = Localizer["Editor_TypeText"].Value,
+        ["typeLink"] = Localizer["Editor_TypeLink"].Value,
+        ["typeImage"] = Localizer["Editor_TypeImage"].Value,
+        ["unsaved"] = Localizer["Editor_Unsaved"].Value,
+        ["openLink"] = Localizer["Editor_OpenLink"].Value,
+        ["dragBlock"] = Localizer["Editor_DragBlock"].Value,
+        ["moveUp"] = Localizer["Editor_MoveUp"].Value,
+        ["moveDown"] = Localizer["Editor_MoveDown"].Value,
+        ["removeBlock"] = Localizer["Editor_RemoveBlock"].Value,
+        ["textPlaceholder"] = Localizer["Editor_TextPlaceholder"].Value,
+        ["linkTitlePlaceholder"] = Localizer["Editor_LinkTitlePlaceholder"].Value,
+        ["linkCommentPlaceholder"] = Localizer["Editor_LinkCommentPlaceholder"].Value,
+        ["imageAlt"] = Localizer["Editor_ImageAlt"].Value,
+        ["openImagePreview"] = Localizer["Editor_OpenImagePreview"].Value,
+        ["closeImagePreview"] = Localizer["Editor_CloseImagePreview"].Value,
+        ["imageCaptionPlaceholder"] = Localizer["Editor_ImageCaptionPlaceholder"].Value,
+        ["replaceImage"] = Localizer["Editor_ReplaceImage"].Value,
+        ["uploadFailed"] = Localizer["Editor_UploadFailed"].Value,
+        ["uploading"] = Localizer["Editor_Uploading"].Value,
+        ["imageAdded"] = Localizer["Editor_ImageAdded"].Value,
+        ["imagesAdded"] = Localizer["Editor_ImagesAdded"].Value,
+        ["uploadError"] = Localizer["Editor_UploadError"].Value,
+        ["uploadErrorStatus"] = Localizer["Editor_UploadErrorStatus"].Value,
+        ["linkMustHttp"] = Localizer["Editor_LinkMustHttp"].Value,
+        ["saving"] = Localizer["Editor_Saving"].Value,
+        ["saveErrorStatus"] = Localizer["Editor_SaveErrorStatus"].Value,
+        ["savedAt"] = Localizer["Editor_SavedAt"].Value,
+        ["saveFailed"] = Localizer["Editor_SaveFailed"].Value,
+        ["saveFailedToast"] = Localizer["Editor_SaveFailedToast"].Value,
+        ["openLinkInvalid"] = Localizer["Editor_OpenLinkInvalid"].Value,
+        ["formatBold"] = Localizer["Editor_FormatBold"].Value,
+        ["formatItalic"] = Localizer["Editor_FormatItalic"].Value,
+        ["formatUnderline"] = Localizer["Editor_FormatUnderline"].Value,
+        ["formatStrike"] = Localizer["Editor_FormatStrike"].Value,
+        ["formatCode"] = Localizer["Editor_FormatCode"].Value,
+        ["formatHyperlink"] = Localizer["Editor_FormatHyperlink"].Value,
+        ["hyperlinkDialogTitle"] = Localizer["Editor_HyperlinkDialogTitle"].Value,
+        ["hyperlinkUrlLabel"] = Localizer["Editor_HyperlinkUrlLabel"].Value,
+        ["hyperlinkApply"] = Localizer["Editor_HyperlinkApply"].Value,
+        ["hyperlinkRemove"] = Localizer["Editor_HyperlinkRemove"].Value,
+        ["hyperlinkCancel"] = Localizer["Editor_HyperlinkCancel"].Value,
+        ["hyperlinkSelectText"] = Localizer["Editor_HyperlinkSelectText"].Value,
+        ["hyperlinkInvalidUrl"] = Localizer["Editor_HyperlinkInvalidUrl"].Value,
+        ["formatQuote"] = Localizer["Editor_FormatQuote"].Value,
+        ["formatExpander"] = Localizer["Editor_FormatExpander"].Value,
+        ["formatDivider"] = Localizer["Editor_FormatDivider"].Value,
+        ["formatAddLineBelow"] = Localizer["Editor_FormatAddLineBelow"].Value,
+        ["formatList"] = Localizer["Editor_FormatList"].Value,
+        ["formatOrderedList"] = Localizer["Editor_FormatOrderedList"].Value,
+        ["formatBulletList"] = Localizer["Editor_FormatBulletList"].Value,
+        ["formatDashList"] = Localizer["Editor_FormatDashList"].Value,
+        ["formatSymbols"] = Localizer["Editor_FormatSymbols"].Value,
+        ["expanderSummary"] = Localizer["Editor_ExpanderSummary"].Value,
+        ["expanderContent"] = Localizer["Editor_ExpanderContent"].Value,
+        ["expanderDelete"] = Localizer["Editor_ExpanderDelete"].Value,
+        ["unsavedDialogTitle"] = Localizer["Editor_UnsavedDialogTitle"].Value,
+        ["unsavedDialogMessage"] = Localizer["Editor_UnsavedDialogMessage"].Value,
+        ["leaveWithoutSaving"] = Localizer["Editor_LeaveWithoutSaving"].Value,
+        ["deleteDialogTitle"] = Localizer["Index_DeleteDialogTitle"].Value,
+        ["deleteDialogMessage"] = Localizer["Index_DeleteDialogMessage"].Value,
+        ["deleteLabel"] = Localizer["Index_Delete"].Value,
+        ["formatTextSize"] = Localizer["Editor_FormatTextSize"].Value,
+        ["formatTextColor"] = Localizer["Editor_FormatTextColor"].Value,
+        ["formatSizeSmall"] = Localizer["Editor_FormatSizeSmall"].Value,
+        ["formatSizeNormal"] = Localizer["Editor_FormatSizeNormal"].Value,
+        ["formatSizeLarge"] = Localizer["Editor_FormatSizeLarge"].Value,
+        ["formatSizeExtraLarge"] = Localizer["Editor_FormatSizeExtraLarge"].Value,
+        ["quoteContent"] = Localizer["Editor_QuoteContent"].Value,
+        ["dividerDeleteHint"] = Localizer["Editor_DividerDeleteHint"].Value,
+        ["systemEmoji"] = Localizer["Editor_SystemEmoji"].Value,
+        ["systemEmojiHint"] = Localizer["Editor_SystemEmojiHint"].Value,
+        ["emojiSearchPlaceholder"] = Localizer["Editor_EmojiSearchPlaceholder"].Value,
+        ["emojiNoResults"] = Localizer["Editor_EmojiNoResults"].Value,
+        ["emojiCategoryAll"] = Localizer["Editor_EmojiCategoryAll"].Value,
+        ["emojiCategorySmileys"] = Localizer["Editor_EmojiCategorySmileys"].Value,
+        ["emojiCategoryPeople"] = Localizer["Editor_EmojiCategoryPeople"].Value,
+        ["emojiCategoryAnimals"] = Localizer["Editor_EmojiCategoryAnimals"].Value,
+        ["emojiCategoryFood"] = Localizer["Editor_EmojiCategoryFood"].Value,
+        ["emojiCategoryTravel"] = Localizer["Editor_EmojiCategoryTravel"].Value,
+        ["emojiCategoryActivities"] = Localizer["Editor_EmojiCategoryActivities"].Value,
+        ["emojiCategoryObjects"] = Localizer["Editor_EmojiCategoryObjects"].Value,
+        ["emojiCategorySymbols"] = Localizer["Editor_EmojiCategorySymbols"].Value,
+        ["emojiCategoryFlags"] = Localizer["Editor_EmojiCategoryFlags"].Value,
+        ["timePinFailed"] = Localizer["Editor_TimePinFailed"].Value,
+        ["timeHistoryLoading"] = Localizer["Edit_TimeHistoryLoading"].Value,
+        ["timeHistoryEmpty"] = Localizer["Edit_TimeHistoryEmpty"].Value,
+        ["timeHistorySpent"] = Localizer["Time_TimeSpent"].Value,
+        ["timeHistoryComment"] = Localizer["Time_Comment"].Value,
+        ["timeHistoryOpenDate"] = Localizer["Edit_TimeHistoryOpenDate"].Value,
+        ["timeHistoryDeleteEntry"] = Localizer["Edit_TimeHistoryDeleteEntry"].Value,
+        ["timeHistoryLoadFailed"] = Localizer["Edit_TimeHistoryLoadFailed"].Value,
+        ["timeHistoryDeleteFailed"] = Localizer["Edit_TimeHistoryDeleteFailed"].Value
+    };
+    var editorStringsJson = JsonSerializer.Serialize(editorStrings);
 }
 
-<section id="noteEditor" class="editor-page" data-note-id="@(Model.Id?.ToString() ?? "")">
+<section id="noteEditor"
+         class="editor-page"
+         data-note-id="@(Model.Id?.ToString() ?? "")"
+         data-project-id="@Model.ProjectId"
+         data-return-url="@Model.ReturnUrl">
     @Html.AntiForgeryToken()
 
     <div class="editor-topbar">
-        <a class="button button-ghost button-small" href="/">← До списку</a>
+        <a class="button button-ghost button-small"
+           href="@Model.ReturnUrl">@Localizer["Edit_BackToList"]</a>
         <div class="save-cluster">
+            <div class="editor-note-meta">
+                <label class="editor-status-field" for="statusSelect">
+                    <span>@Localizer["Edit_Status"]</span>
+                    <select id="statusSelect">
+                        <option value="@((int)NoteStatus.Backlog)" selected="@(Model.Status == NoteStatus.Backlog ? "selected" : null)">@Localizer["Edit_StatusBacklog"]</option>
+                        <option value="@((int)NoteStatus.Selected)" selected="@(Model.Status == NoteStatus.Selected ? "selected" : null)">@Localizer["Edit_StatusSelected"]</option>
+                        <option value="@((int)NoteStatus.Active)" selected="@(Model.Status == NoteStatus.Active ? "selected" : null)">@Localizer["Edit_StatusActive"]</option>
+                        <option value="@((int)NoteStatus.Test)" selected="@(Model.Status == NoteStatus.Test ? "selected" : null)">@Localizer["Edit_StatusTest"]</option>
+                        <option value="@((int)NoteStatus.Done)" selected="@(Model.Status == NoteStatus.Done ? "selected" : null)">@Localizer["Edit_StatusDone"]</option>
+                        <option value="@((int)NoteStatus.Released)" selected="@(Model.Status == NoteStatus.Released ? "selected" : null)">@Localizer["Edit_StatusReleased"]</option>
+                        <option value="@((int)NoteStatus.Rejected)" selected="@(Model.Status == NoteStatus.Rejected ? "selected" : null)">@Localizer["Edit_StatusRejected"]</option>
+                        <option value="@((int)NoteStatus.Suspended)" selected="@(Model.Status == NoteStatus.Suspended ? "selected" : null)">@Localizer["Edit_StatusSuspended"]</option>
+                        <option value="@((int)NoteStatus.SimpleNote)" selected="@(Model.Status == NoteStatus.SimpleNote ? "selected" : null)">@Localizer["Edit_StatusSimpleNote"]</option>
+                    </select>
+                </label>
+                <label class="editor-time-field" for="estimatedTimeInput">
+                    <span>@Localizer["Edit_EstimatedTime"]</span>
+                    <input id="estimatedTimeInput"
+                           value="@Model.EstimatedTime"
+                           maxlength="80"
+                           title="@Localizer["Edit_TimeFormatHint"]"
+                           autocomplete="off" />
+                </label>
+                <label class="editor-time-field" for="spentTimeInput">
+                    <span>@Localizer["Edit_SpentTime"]</span>
+                    <input id="spentTimeInput"
+                           value="@Model.SpentTime"
+                           maxlength="80"
+                           title="@Localizer["Edit_TimeFormatHint"]"
+                           autocomplete="off"
+                           readonly />
+                </label>
+                <button id="timeManagementStarButton"
+                        class="editor-time-star @(Model.IsTimeManagementPinned ? "is-active" : "")"
+                        type="button"
+                        title="@Localizer["Edit_TimeManagementStar"]"
+                        aria-label="@Localizer["Edit_TimeManagementStar"]"
+                        aria-pressed="@(Model.IsTimeManagementPinned ? "true" : "false")"
+                        disabled="@(!Model.Id.HasValue ? "disabled" : null)">@(Model.IsTimeManagementPinned ? "★" : "☆")</button>
+                <button id="timeHistoryButton"
+                        class="editor-time-history"
+                        type="button"
+                        title="@Localizer["Edit_TimeHistoryButton"]"
+                        aria-label="@Localizer["Edit_TimeHistoryButton"]"
+                        disabled="@(!Model.Id.HasValue ? "disabled" : null)">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <circle cx="12" cy="12" r="8.5" />
+                        <path d="M12 7.5v5l3.25 2" />
+                    </svg>
+                </button>
+            </div>
+            <form id="deleteNoteForm"
+                  method="post"
+                  action="@(Model.Id.HasValue ? $"/notes/{Model.Id}/delete" : "#")"
+                  class="editor-delete-form @(Model.Id.HasValue ? "" : "is-hidden")"
+                  data-confirm-form
+                  data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
+                  data-confirm-message="@(Model.Id.HasValue ? Localizer["Index_DeleteDialogMessage", Model.Title].Value : "")"
+                  data-confirm-label="@Localizer["Index_Delete"]"
+                  data-confirm-danger="true">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                <button class="button button-danger button-small" type="submit">@Localizer["Edit_DeleteNote"]</button>
+            </form>
+            <a id="exportNoteLink"
+               class="button button-secondary button-small @(Model.Id.HasValue ? "" : "is-hidden")"
+               href="@(Model.Id.HasValue ? $"/notes/{Model.Id}/export" : "#")">@Localizer["Edit_ExportNote"]</a>
             <span id="saveStatus" class="save-status">
                 @if (Model.UpdatedAtUtc.HasValue)
                 {
-                    <span>Збережено <time class="js-local-time" datetime="@Model.UpdatedAtUtc.Value.ToString("O")">@Model.UpdatedAtUtc.Value.ToString("dd.MM.yyyy HH:mm")</time></span>
+                    <span>@Localizer["Edit_Saved"] <time class="js-local-time" datetime="@Model.UpdatedAtUtc.Value.ToString("O")">@Model.UpdatedAtUtc.Value.ToString("yyyy-MM-dd HH:mm")</time></span>
                 }
                 else
                 {
-                    <span>Нова нотатка</span>
+                    <span>@Localizer["Edit_NewNoteStatus"]</span>
                 }
             </span>
-            <button id="saveButton" class="button button-primary button-small" type="button">Зберегти <kbd>Ctrl+S</kbd></button>
+            <button id="saveButton" class="button button-primary button-small" type="button">@Localizer["Edit_Save"] <kbd>Ctrl+S</kbd></button>
         </div>
     </div>
 
     <div class="editor-heading">
-        <input id="titleInput" class="title-input" maxlength="240" value="@Model.Title" placeholder="Назва нотатки" autocomplete="off" />
-        <p>Додай блоки нижче. <code>#теги</code> в тексті автоматично стануть доступними для пошуку.</p>
+        <input id="titleInput" class="title-input" maxlength="240" value="@Model.Title" placeholder="@Localizer["Edit_TitlePlaceholder"]" autocomplete="off" />
     </div>
 
     <div class="add-block-bar panel">
         <div class="add-actions">
-            <button class="button button-secondary" type="button" data-add-block="text">＋ Текст</button>
-            <button class="button button-secondary" type="button" data-add-block="link">↗ Посилання</button>
-            <button class="button button-secondary" type="button" id="addImageButton">▧ Зображення</button>
+            <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddText"]</button>
+            <button class="button button-secondary" type="button" data-add-block="link">@Localizer["Edit_AddLink"]</button>
+            <button class="button button-secondary" type="button" id="addImageButton" data-add-image-button>@Localizer["Edit_AddImage"]</button>
             <input id="imageFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
         </div>
-        <div class="paste-hint"><kbd>Ctrl+V</kbd> вставляє картинку з буфера як новий блок</div>
+        <div class="paste-hint"><kbd>Ctrl+V</kbd> @Localizer["Edit_PasteHint"]</div>
     </div>
 
     <div id="blocksContainer" class="blocks-list" aria-live="polite"></div>
 
     <div class="editor-footer-actions">
-        <button class="button button-secondary" type="button" data-add-block="text">＋ Додати текстовий блок</button>
-        <button id="saveButtonBottom" class="button button-primary" type="button">Зберегти зміни</button>
+        <div class="footer-add-actions">
+            <button class="button button-secondary" type="button" data-add-block="text">@Localizer["Edit_AddText"]</button>
+            <button class="button button-secondary" type="button" data-add-block="link">@Localizer["Edit_AddLink"]</button>
+            <button class="button button-secondary" type="button" data-add-image-button>@Localizer["Edit_AddImage"]</button>
+        </div>
+        <button id="saveButtonBottom" class="button button-primary" type="button">@Localizer["Edit_SaveChanges"]</button>
     </div>
 </section>
 
+<dialog id="timeHistoryDialog"
+        class="app-dialog time-history-dialog"
+        aria-labelledby="timeHistoryTitle">
+    <div class="app-dialog-card time-history-dialog-card">
+        <div class="app-dialog-icon time-history-dialog-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.5" />
+                <path d="M12 7.5v5l3.25 2" />
+            </svg>
+        </div>
+        <div class="app-dialog-copy">
+            <h2 id="timeHistoryTitle">@Localizer["Edit_TimeHistoryTitle"]</h2>
+            <p>@Localizer["Edit_TimeHistoryDescription"]</p>
+        </div>
+        <div class="time-history-body"
+             data-time-history-body
+             aria-live="polite"></div>
+        <form method="dialog" class="app-dialog-actions time-history-actions">
+            <a class="button button-primary"
+               href="/projects/@Model.ProjectId/time"
+               target="_blank"
+               rel="noopener noreferrer">@Localizer["Time_Title"]</a>
+            <button class="button button-secondary"
+                    type="submit">@Localizer["Edit_TimeHistoryClose"]</button>
+        </form>
+    </div>
+</dialog>
+
 <script id="initialBlocks" type="application/json">@Html.Raw(initialJson)</script>
+<script id="editorStrings" type="application/json">@Html.Raw(editorStringsJson)</script>
 
 @section Scripts {
     <script src="~/js/editor.js" asp-append-version="true"></script>

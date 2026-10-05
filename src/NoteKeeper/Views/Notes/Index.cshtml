@@ -1,61 +1,141 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
 @model NoteListViewModel
 @{
-    ViewData["Title"] = "Нотатки — NoteKeeper";
+    ViewData["Title"] = $"{Model.ProjectName} — NoteKeeper";
     var hasFilters = !string.IsNullOrWhiteSpace(Model.Query) || !string.IsNullOrWhiteSpace(Model.Tag);
+    var selectedTags = Model.IncludedTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var priorityTags = Model.PriorityTags.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var encodedReturnUrl = Uri.EscapeDataString(returnUrl);
+    var noteGroups = new List<(string? Heading, List<NoteListItemViewModel> Notes)>();
+
+    if (string.IsNullOrWhiteSpace(Model.GroupBy))
+    {
+        noteGroups.Add((null, Model.Notes));
+    }
+    else
+    {
+        var withTag = Model.Notes
+            .Where(note => note.Tags.Contains(Model.GroupBy, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        var withoutTag = Model.Notes
+            .Where(note => !note.Tags.Contains(Model.GroupBy, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        noteGroups.Add((Localizer["Index_GroupWithTag", Model.GroupBy].Value, withTag));
+        noteGroups.Add((Localizer["Index_GroupWithoutTag", Model.GroupBy].Value, withoutTag));
+    }
 }
 
 <section class="hero-row">
     <div>
-        <p class="eyebrow">Твоя база нотаток</p>
-        <h1>Усе важливе — в одному місці.</h1>
-        <p class="hero-copy">Текст, посилання, зображення, теги та швидкий пошук без зайвого шуму.</p>
+        <p class="eyebrow">@Localizer["Index_ProjectEyebrow"]</p>
+        <h1>@Model.ProjectName</h1>
     </div>
-    <a class="button button-primary hero-action" href="/notes/new">+ Створити нотатку</a>
+    <div class="hero-actions">
+        <a class="button button-ghost" href="/">@Localizer["Index_BackToProjects"]</a>
+        <a class="button button-secondary" href="/projects/@Model.ProjectId/time">@Localizer["Index_Time"]</a>
+        <form method="post" action="/projects/@Model.ProjectId/notes/import" enctype="multipart/form-data" class="import-note-form">
+            @Html.AntiForgeryToken()
+            <input id="noteImportInput"
+                   type="file"
+                   name="noteFile"
+                   accept=".json,.notekeeper.json,application/json"
+                   hidden
+                   onchange="if (this.files.length) this.form.submit();" />
+            <button class="button button-secondary" type="button" onclick="document.getElementById('noteImportInput').click();">
+                @Localizer["Index_ImportNote"]
+            </button>
+        </form>
+        <a class="button button-primary hero-action"
+           href="/projects/@Model.ProjectId/notes/new?returnUrl=@encodedReturnUrl">@Localizer["Index_CreateNote"]</a>
+    </div>
 </section>
 
 <section class="panel filter-panel">
-    <form method="get" action="/" class="filter-grid">
+    <form method="get" action="/projects/@Model.ProjectId" class="filter-grid">
+        <input type="hidden" name="pageSize" value="@Model.PageSize" />
         <label class="field search-field">
-            <span>Пошук</span>
-            <input name="q" value="@Model.Query" placeholder="Назва, текст, посилання…" autocomplete="off" />
+            <span>@Localizer["Index_Search"]</span>
+            <input name="q" value="@Model.Query" placeholder="@Localizer["Index_SearchPlaceholder"]" autocomplete="off" />
         </label>
 
-        <label class="field">
-            <span>Тег</span>
-            <input name="tag" value="@Model.Tag" placeholder="#ідея" autocomplete="off" />
-        </label>
+        <div class="field tag-filter-field">
+            <label for="tagFilterInput">@Localizer["Index_Tag"]</label>
+            <input id="tagFilterInput"
+                   name="tag"
+                   value="@Model.Tag"
+                   placeholder="@Localizer["Index_TagPlaceholder"]"
+                   autocomplete="off"
+                   data-tag-filter-input
+                   aria-autocomplete="list"
+                   aria-expanded="false"
+                   aria-controls="tagSuggestions"
+                   aria-invalid="@(!string.IsNullOrWhiteSpace(Model.TagFilterError) ? "true" : null)"
+                   aria-describedby="@(!string.IsNullOrWhiteSpace(Model.TagFilterError) ? "tagFilterError" : null)" />
+            <div id="tagSuggestions"
+                 class="tag-suggestions"
+                 data-tag-suggestions
+                 role="listbox"
+                 aria-label="@Localizer["Index_TagSuggestionsAria"]"
+                 hidden></div>
+            <template data-tag-suggestion-source>
+                @foreach (var availableTag in Model.AutocompleteTags)
+                {
+                    <span data-tag-value="@availableTag"></span>
+                }
+            </template>
+            @if (!string.IsNullOrWhiteSpace(Model.TagFilterError))
+            {
+                <span id="tagFilterError" class="filter-error" role="alert">@Model.TagFilterError</span>
+            }
+        </div>
 
         <label class="field">
-            <span>Сортувати</span>
+            <span>@Localizer["Index_Sort"]</span>
             <select name="sort">
-                <option value="updated" selected="@(Model.Sort == "updated" ? "selected" : null)">За зміною</option>
-                <option value="created" selected="@(Model.Sort == "created" ? "selected" : null)">За створенням</option>
-                <option value="title" selected="@(Model.Sort == "title" ? "selected" : null)">За назвою</option>
+                <option value="updated" selected="@(Model.Sort == "updated" ? "selected" : null)">@Localizer["Index_SortUpdated"]</option>
+                <option value="created" selected="@(Model.Sort == "created" ? "selected" : null)">@Localizer["Index_SortCreated"]</option>
+                <option value="title" selected="@(Model.Sort == "title" ? "selected" : null)">@Localizer["Index_SortTitle"]</option>
             </select>
         </label>
 
         <label class="field">
-            <span>Напрямок</span>
+            <span>@Localizer["Index_Direction"]</span>
             <select name="dir">
-                <option value="desc" selected="@(Model.Direction == "desc" ? "selected" : null)">Спочатку нові / Я→А</option>
-                <option value="asc" selected="@(Model.Direction == "asc" ? "selected" : null)">Спочатку старі / А→Я</option>
+                <option value="desc" selected="@(Model.Direction == "desc" ? "selected" : null)">@Localizer["Index_DirectionDesc"]</option>
+                <option value="asc" selected="@(Model.Direction == "asc" ? "selected" : null)">@Localizer["Index_DirectionAsc"]</option>
             </select>
         </label>
 
-        <button class="button button-secondary filter-submit" type="submit">Застосувати</button>
-        @if (hasFilters)
-        {
-            <a class="button button-ghost filter-reset" href="/">Скинути</a>
-        }
+        <label class="field">
+            <span>@Localizer["Index_GroupBy"]</span>
+            <select name="groupBy">
+                <option value="">@Localizer["Index_GroupByNone"]</option>
+                @foreach (var availableTag in Model.AvailableTags)
+                {
+                    <option value="@availableTag"
+                            selected="@(Model.GroupBy.Equals(availableTag, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
+                        #@availableTag
+                    </option>
+                }
+            </select>
+        </label>
+
+        <button class="button button-secondary filter-submit" type="submit">@Localizer["Index_Apply"]</button>
+        <a class="button button-ghost filter-reset"
+           href="/projects/@Model.ProjectId?sort=@Uri.EscapeDataString(Model.Sort)&dir=@Uri.EscapeDataString(Model.Direction)&pageSize=@Model.PageSize">@Localizer["Index_Clear"]</a>
     </form>
 
     @if (Model.Tags.Count > 0)
     {
-        <div class="tag-cloud" aria-label="Популярні теги">
+        <div class="tag-cloud" aria-label="@Localizer["Index_PopularTagsAria"]">
             @foreach (var item in Model.Tags)
             {
-                <a class="tag-chip @(Model.Tag == item.Name ? "is-active" : "")"
-                   href="/?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction">
+                var isPriorityTag = priorityTags.Contains(item.Name);
+                <a class="tag-chip @(selectedTags.Contains(item.Name) ? "is-active" : "") @(isPriorityTag ? "is-priority-tag" : "")"
+                   href="/projects/@Model.ProjectId?q=@Uri.EscapeDataString(Model.Query)&tag=@Uri.EscapeDataString(item.Name)&sort=@Model.Sort&dir=@Model.Direction&groupBy=@Uri.EscapeDataString(Model.GroupBy)&pageSize=@Model.PageSize">
                     #@item.Name <span>@item.Count</span>
                 </a>
             }
@@ -64,50 +144,95 @@
 </section>
 
 <div class="list-heading">
-    <h2>@(hasFilters ? "Результати" : "Нотатки")</h2>
-    <span>@Model.Notes.Count</span>
+    <h2>@(hasFilters ? Localizer["Index_Results"] : Localizer["Index_Notes"])</h2>
+    <span>@Model.TotalCount</span>
+    <partial name="_Pagination" model="Model" />
 </div>
 
 @if (Model.Notes.Count == 0)
 {
     <section class="empty-state panel">
         <div class="empty-icon">✦</div>
-        <h2>@(hasFilters ? "Нічого не знайдено" : "Тут поки порожньо")</h2>
-        <p>@(hasFilters ? "Спробуй змінити пошуковий запит або тег." : "Створи першу нотатку і додай до неї текст, посилання або картинку.")</p>
-        <a class="button button-primary" href="/notes/new">+ Нова нотатка</a>
+        <h2>@(hasFilters ? Localizer["Index_NoResults"] : Localizer["Index_NoNotes"])</h2>
+        <p>@(hasFilters ? Localizer["Index_NoResultsCopy"] : Localizer["Index_NoNotesCopy"])</p>
+        <a class="button button-primary" href="/projects/@Model.ProjectId/notes/new">@Localizer["Common_NewNote"]</a>
     </section>
 }
 else
 {
-    <section class="notes-grid">
-        @foreach (var note in Model.Notes)
+    <section class="notes-grid"
+             data-notes-grid
+             data-page="@Model.Page"
+             data-page-size="@Model.PageSize"
+             data-total-count="@Model.TotalCount">
+        @foreach (var noteGroup in noteGroups.Where(group => group.Notes.Count > 0))
         {
-            <article class="note-card">
-                <a class="note-card-main" href="/notes/@note.Id">
-                    <div class="note-card-topline">
-                        <span>@note.BlockCount блок@(note.BlockCount == 1 ? "" : "ів")</span>
-                        <time class="js-local-time" datetime="@note.UpdatedAtUtc.ToString("O")">@note.UpdatedAtUtc.ToString("dd.MM.yyyy HH:mm")</time>
-                    </div>
-                    <h3>@note.Title</h3>
-                    <p>@note.Preview</p>
-                    @if (note.Tags.Count > 0)
-                    {
-                        <div class="note-tags">
-                            @foreach (var noteTag in note.Tags.Take(6))
-                            {
-                                <span>#@noteTag</span>
-                            }
-                        </div>
-                    }
-                </a>
-                <div class="note-card-actions">
-                    <a class="icon-button" href="/notes/@note.Id" title="Редагувати" aria-label="Редагувати">✎</a>
-                    <form method="post" action="/notes/@note.Id/delete" onsubmit="return confirm('Видалити цю нотатку?');">
-                        @Html.AntiForgeryToken()
-                        <button class="icon-button danger" type="submit" title="Видалити" aria-label="Видалити">×</button>
-                    </form>
+            @if (!string.IsNullOrWhiteSpace(noteGroup.Heading))
+            {
+                <div class="note-group-heading">
+                    <h3>@noteGroup.Heading</h3>
+                    <span>@noteGroup.Notes.Count</span>
                 </div>
-            </article>
+            }
+
+            @foreach (var note in noteGroup.Notes)
+            {
+                <article class="note-card">
+                                <a class="note-card-main"
+                                   href="/notes/@note.Id?returnUrl=@encodedReturnUrl">
+                                    <div class="note-card-topline">
+                                        <span>@Localizer["Index_BlockCount", note.BlockCount]</span>
+                                        <time class="js-local-time" datetime="@note.UpdatedAtUtc.ToString("O")">@note.UpdatedAtUtc.ToString("yyyy-MM-dd HH:mm")</time>
+                                    </div>
+                                    <h3>@note.Title</h3>
+                                    <p>@note.Preview</p>
+                                    @if (note.Tags.Count > 0)
+                                    {
+                                        <div class="note-tags" data-note-tags>
+                                            @foreach (var noteTag in note.Tags)
+                                            {
+                                                var isPriorityTag = priorityTags.Contains(noteTag);
+                                                <span class="@(isPriorityTag ? "is-priority-tag" : "")" data-note-tag>#@noteTag</span>
+                                            }
+                                            <span class="note-tag-overflow" data-note-tag-overflow hidden></span>
+                                        </div>
+                                    }
+                                </a>
+                                <div class="note-card-actions">
+                                    @if (!string.IsNullOrWhiteSpace(note.FirstBlockLinkUrl))
+                                    {
+                                        <a class="icon-button"
+                                           href="@note.FirstBlockLinkUrl"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           title="@Localizer["Index_OpenFirstLink"]"
+                                           aria-label="@Localizer["Index_OpenFirstLink"]">↗</a>
+                                    }
+                                    <a class="icon-button"
+                                       href="/notes/@note.Id?returnUrl=@encodedReturnUrl"
+                                       title="@Localizer["Index_Edit"]"
+                                       aria-label="@Localizer["Index_Edit"]">✎</a>
+                                    <form method="post"
+                                          action="/notes/@note.Id/delete"
+                                          data-confirm-form
+                                          data-confirm-title="@Localizer["Index_DeleteDialogTitle"]"
+                                          data-confirm-message="@Localizer["Index_DeleteDialogMessage", note.Title]"
+                                          data-confirm-label="@Localizer["Index_Delete"]"
+                                          data-confirm-danger="true">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                        <button class="icon-button danger" type="submit" title="@Localizer["Index_Delete"]" aria-label="@Localizer["Index_Delete"]">×</button>
+                                    </form>
+                                </div>
+                            </article>
+                
+            }
         }
     </section>
+
+    <partial name="_Pagination" model="Model" />
+}
+
+@section Scripts {
+    <script src="~/js/index.js" asp-append-version="true"></script>
 }

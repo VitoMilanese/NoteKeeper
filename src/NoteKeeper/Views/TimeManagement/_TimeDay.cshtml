@@ -1,0 +1,202 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
+@model TimeDayPartialViewModel
+
+<article id="time-day-@Model.Day.Id"
+         class="panel time-day-card"
+         data-date="@Model.Day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">
+    <header class="time-day-header">
+        <div class="time-day-heading" data-time-day-date-display>
+            <h2>@Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)</h2>
+            <span class="time-day-total">@Localizer["Time_Total"]: @Model.Day.TotalTimeSpent</span>
+        </div>
+
+        <form method="post"
+              action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/date"
+              class="time-day-date-edit-form"
+              data-time-day-date-form
+              data-current-month="@Model.MonthKey"
+              data-update-date-error="@Localizer["Time_UpdateDateFailed"]"
+              hidden>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="month" value="@Model.MonthKey" />
+            <div class="time-date-control time-day-date-control"
+                 data-time-date-control>
+                <input type="text"
+                       name="date"
+                       value="@Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)"
+                       maxlength="8"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       title="@Localizer["Time_DateFormatHint"]"
+                       data-time-date-text
+                       data-time-day-date-input />
+                <span class="time-date-picker-shell">
+                    <span class="time-date-picker-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M7 2v3M17 2v3M3.5 9h17M5.5 4h13a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+                        </svg>
+                    </span>
+                    <input type="date"
+                           value="@Model.Day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                           aria-label="@Localizer["Time_DatePickerAria"]"
+                           data-time-date-picker />
+                </span>
+            </div>
+            <button class="button button-secondary button-small"
+                    type="submit">@Localizer["Time_SaveDate"]</button>
+            <button class="button button-ghost button-small"
+                    type="button"
+                    data-time-day-date-cancel>@Localizer["Time_CancelDate"]</button>
+            <span class="time-day-date-error"
+                  role="alert"
+                  data-time-day-date-error
+                  hidden></span>
+        </form>
+
+        <div class="time-day-actions">
+            <button class="icon-button"
+                    type="button"
+                    title="@Localizer["Time_EditDate"]"
+                    aria-label="@Localizer["Time_EditDate"]"
+                    data-time-day-date-edit>✎</button>
+            <form method="post"
+                  action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/delete"
+                  data-time-day-delete-form
+                  data-confirm-title="@Localizer["Time_DeleteDayTitle"]"
+                  data-confirm-message="@Localizer["Time_DeleteDayMessage", Model.Day.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture)]"
+                  data-confirm-label="@Localizer["Index_Delete"]"
+                  data-confirm-danger="true"
+                  data-delete-day-error="@Localizer["Time_DeleteDayFailed"]">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="month" value="@Model.MonthKey" />
+                <button class="icon-button"
+                        type="submit"
+                        title="@Localizer["Time_DeleteDay"]"
+                        aria-label="@Localizer["Time_DeleteDay"]">×</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="time-entry-list">
+        @foreach (var entry in Model.Day.Entries)
+        {
+            <div class="time-entry-row">
+                <form method="post"
+                      action="/projects/@Model.ProjectId/time/entries/@entry.Id/update"
+                      class="time-entry-form"
+                      data-time-entry-form>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="month" value="@Model.MonthKey" />
+
+                    <label class="field time-entry-spent">
+                        <span>@Localizer["Time_TimeSpent"]</span>
+                        <input name="timeSpent"
+                               value="@entry.TimeSpent"
+                               title="@Localizer["Edit_TimeFormatHint"]"
+                               data-time-spent-input
+                               data-invalid-message="@Localizer["Time_InvalidTimeSpent"]" />
+                    </label>
+
+                    <label class="field time-entry-task">
+                        <span>@Localizer["Time_Task"]</span>
+                        <input type="hidden"
+                               name="noteId"
+                               value="@(entry.NoteId?.ToString() ?? "")"
+                               data-time-task-note-id />
+                        <div class="time-task-control">
+                            <input name="taskTitle"
+                                   value="@entry.TaskTitle"
+                                   maxlength="240"
+                                   list="timeTaskOptions"
+                                   placeholder="@Localizer["Time_TaskPlaceholder"]"
+                                   autocomplete="off"
+                                   data-time-task-input />
+                            <a class="icon-button time-task-link"
+                               href="@(entry.NoteId.HasValue ? $"/notes/{entry.NoteId.Value}" : "#")"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               title="@Localizer["Time_OpenTask"]"
+                               aria-label="@Localizer["Time_OpenTask"]"
+                               data-time-task-link
+                               hidden="@(!entry.NoteId.HasValue ? "hidden" : null)">↗</a>
+                        </div>
+                    </label>
+
+                    <label class="field time-entry-comment">
+                        <span>@Localizer["Time_Comment"]</span>
+                        <input name="comment"
+                               value="@entry.Comment"
+                               maxlength="2000"
+                               placeholder="@Localizer["Time_CommentPlaceholder"]" />
+                    </label>
+
+                    <button class="button button-secondary button-small"
+                            type="submit">@Localizer["Time_SaveEntry"]</button>
+                </form>
+                <form method="post"
+                      action="/projects/@Model.ProjectId/time/entries/@entry.Id/delete"
+                      class="time-row-action">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="month" value="@Model.MonthKey" />
+                    <button class="icon-button"
+                            type="submit"
+                            title="@Localizer["Time_DeleteEntry"]"
+                            aria-label="@Localizer["Time_DeleteEntry"]">×</button>
+                </form>
+            </div>
+        }
+
+        <form method="post"
+              action="/projects/@Model.ProjectId/time/days/@Model.Day.Id/entries/create"
+              class="time-entry-form time-entry-new"
+              data-time-entry-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="month" value="@Model.MonthKey" />
+
+            <label class="field time-entry-spent">
+                <span>@Localizer["Time_TimeSpent"]</span>
+                <input name="timeSpent"
+                       placeholder="@Localizer["Time_TimeSpentPlaceholder"]"
+                       title="@Localizer["Edit_TimeFormatHint"]"
+                       data-time-spent-input
+                       data-invalid-message="@Localizer["Time_InvalidTimeSpent"]" />
+            </label>
+
+            <label class="field time-entry-task">
+                <span>@Localizer["Time_Task"]</span>
+                <input type="hidden"
+                       name="noteId"
+                       value=""
+                       data-time-task-note-id />
+                <div class="time-task-control">
+                    <input name="taskTitle"
+                           maxlength="240"
+                           list="timeTaskOptions"
+                           placeholder="@Localizer["Time_TaskPlaceholder"]"
+                           autocomplete="off"
+                           data-time-task-input />
+                    <a class="icon-button time-task-link"
+                       href="#"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       title="@Localizer["Time_OpenTask"]"
+                       aria-label="@Localizer["Time_OpenTask"]"
+                       data-time-task-link
+                       hidden>↗</a>
+                </div>
+            </label>
+
+            <label class="field time-entry-comment">
+                <span>@Localizer["Time_Comment"]</span>
+                <input name="comment"
+                       maxlength="2000"
+                       placeholder="@Localizer["Time_CommentPlaceholder"]" />
+            </label>
+
+            <button class="button button-primary button-small"
+                    type="submit">@Localizer["Time_AddEntry"]</button>
+        </form>
+    </div>
+</article>

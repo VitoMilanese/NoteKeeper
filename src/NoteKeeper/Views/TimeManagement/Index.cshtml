@@ -1,0 +1,222 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<AppResources> Localizer
+@model TimeManagementViewModel
+@{
+    ViewData["Title"] = $"{Localizer["Time_Title"]} — {Model.ProjectName} — NoteKeeper";
+}
+
+<section class="hero-row time-hero">
+    <div>
+        <p class="eyebrow">@Localizer["Time_Eyebrow"]</p>
+        <h1>@Localizer["Time_Title"]</h1>
+    </div>
+    <div class="hero-actions">
+        <a class="button button-ghost" href="/projects/@Model.ProjectId">@Localizer["Time_BackToNotes"]</a>
+        <a class="button button-ghost" href="/">@Localizer["Index_BackToProjects"]</a>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="time-error" role="alert">@Model.ErrorMessage</div>
+}
+
+<section class="panel time-tracked-panel"
+         data-time-tracked-panel>
+    <div class="time-section-heading time-tracked-heading">
+        <div class="time-tracked-title-group">
+            <button class="time-tracked-collapse-button"
+                    type="button"
+                    aria-expanded="true"
+                    title="@Localizer["Time_CollapseTrackedNotes"]"
+                    aria-label="@Localizer["Time_CollapseTrackedNotes"]"
+                    data-time-tracked-toggle
+                    data-expand-label="@Localizer["Time_ExpandTrackedNotes"]"
+                    data-collapse-label="@Localizer["Time_CollapseTrackedNotes"]">▾</button>
+            <div>
+                <p class="eyebrow">@Localizer["Time_TrackedEyebrow"]</p>
+                <h2>@Localizer["Time_TrackedNotes"]</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="time-tracked-content"
+         data-time-tracked-content>
+        <form method="post"
+              action="/projects/@Model.ProjectId/time/notes/add"
+              class="time-note-search-form"
+              data-time-note-search-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="month" value="@Model.MonthKey" />
+            <input type="hidden" name="noteId" value="" data-time-note-id />
+            <label class="field">
+                <span>@Localizer["Time_AddNote"]</span>
+                <input name="noteTitle"
+                       list="timeAvailableNotes"
+                       placeholder="@Localizer["Time_SearchNotePlaceholder"]"
+                       autocomplete="off"
+                       data-time-note-search />
+            </label>
+            <datalist id="timeAvailableNotes">
+                @foreach (var note in Model.AvailableNotes)
+                {
+                    <option value="@note.Title" data-note-id="@note.Id"></option>
+                }
+            </datalist>
+            <button class="button button-secondary" type="submit">@Localizer["Time_Add"]</button>
+        </form>
+
+        <div class="time-empty-inline"
+             data-time-tracked-empty
+             hidden="@(Model.TrackedNotes.Count > 0 ? "hidden" : null)">@Localizer["Time_NoTrackedNotes"]</div>
+
+        <div class="time-note-table"
+             data-time-tracked-table
+             hidden="@(Model.TrackedNotes.Count == 0 ? "hidden" : null)">
+            <div class="time-note-row time-note-header">
+                <span>@Localizer["Time_Task"]</span>
+                <span>@Localizer["Time_Estimated"]</span>
+                <span>@Localizer["Time_Spent"]</span>
+                <span>@Localizer["Time_Remaining"]</span>
+                <form method="post"
+                      action="/projects/@Model.ProjectId/time/notes/remove-all"
+                      class="time-row-action"
+                      data-time-unpin-all-form
+                      data-confirm-title="@Localizer["Time_RemoveAllTrackedNotesTitle"]"
+                      data-confirm-message="@Localizer["Time_RemoveAllTrackedNotesMessage"]"
+                      data-confirm-label="@Localizer["Time_RemoveAllTrackedNotes"]">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="month" value="@Model.MonthKey" />
+                    <button class="icon-button"
+                            type="submit"
+                            title="@Localizer["Time_RemoveAllTrackedNotes"]"
+                            aria-label="@Localizer["Time_RemoveAllTrackedNotes"]">×</button>
+                </form>
+            </div>
+            @foreach (var note in Model.TrackedNotes)
+            {
+                <div class="time-note-row"
+                     data-time-tracked-note-id="@note.Id">
+                    <a class="time-note-title" href="/notes/@note.Id">@note.Title</a>
+                    <form method="post"
+                          action="/projects/@Model.ProjectId/time/notes/@note.Id/estimated"
+                          class="time-estimated-form"
+                          data-time-estimated-form>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="month" value="@Model.MonthKey" />
+                        <input type="text"
+                               name="estimatedTime"
+                               value="@note.EstimatedTime"
+                               placeholder="—"
+                               autocomplete="off"
+                               spellcheck="false"
+                               class="time-estimated-input"
+                               title="@Localizer["Edit_TimeFormatHint"]"
+                               aria-label="@Localizer["Time_Estimated"]"
+                               data-time-estimated-input
+                               data-invalid-message="@Localizer["Server_InvalidEstimatedTime"]" />
+                    </form>
+                    <span data-time-tracked-spent>@note.SpentTime</span>
+                    <span class="@(note.IsOvertime ? "time-note-overtime" : "")"
+                          title="@(note.IsOvertime ? Localizer["Time_Overtime"].Value : null)"
+                          data-time-tracked-remaining
+                          data-is-overtime="@(note.IsOvertime ? "true" : "false")"
+                          data-overtime-label="@Localizer["Time_Overtime"]">@(string.IsNullOrWhiteSpace(note.RemainingTime) ? "—" : note.RemainingTime)</span>
+                    <form method="post"
+                          action="/projects/@Model.ProjectId/time/notes/@note.Id/remove"
+                          class="time-row-action"
+                          data-time-unpin-form>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="month" value="@Model.MonthKey" />
+                        <button class="icon-button"
+                                type="submit"
+                                title="@Localizer["Time_RemoveTrackedNote"]"
+                                aria-label="@Localizer["Time_RemoveTrackedNote"]">×</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@await Html.PartialAsync("_TimeMonthPagination", Model)
+
+<section class="panel time-add-day-panel">
+    <form method="post"
+          action="/projects/@Model.ProjectId/time/days/create"
+          class="time-add-day-form"
+          data-time-add-day-form
+          data-add-date-error="@Localizer["Time_AddDateFailed"]">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="month" value="@Model.MonthKey" />
+        <label class="field time-date-field">
+            <span>@Localizer["Time_NewDate"]</span>
+            <div class="time-date-control"
+                 data-time-date-control>
+                <input type="text"
+                       name="date"
+                       value="@Model.DefaultNewDayDate.ToString("dd/MM/yy", CultureInfo.InvariantCulture)"
+                       maxlength="8"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       placeholder="@Localizer["Time_DatePlaceholder"]"
+                       title="@Localizer["Time_DateFormatHint"]"
+                       data-time-date-text
+                       required />
+                <span class="time-date-picker-shell">
+                    <span class="time-date-picker-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                            <path d="M7 2v3M17 2v3M3.5 9h17M5.5 4h13a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+                        </svg>
+                    </span>
+                    <input type="date"
+                           value="@Model.DefaultNewDayDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                           aria-label="@Localizer["Time_DatePickerAria"]"
+                           data-time-date-picker />
+                </span>
+            </div>
+        </label>
+        <button class="button button-primary" type="submit">@Localizer["Time_AddDate"]</button>
+    </form>
+</section>
+
+<datalist id="timeTaskOptions">
+    @foreach (var option in Model.NoteOptions)
+    {
+        <option value="@option.Title"
+                data-note-id="@option.Id"
+                data-pinned="@(option.IsPinned ? "true" : "false")"
+                label="@(option.IsPinned ? $"★ {option.Title}" : option.Title)"></option>
+    }
+</datalist>
+
+<section class="empty-state panel time-empty-month"
+         data-time-empty-month
+         hidden="@(Model.Days.Count > 0 ? "hidden" : null)">
+    <div class="empty-icon">◷</div>
+    <h2>@Localizer["Time_NoDays"]</h2>
+    <p>@Localizer["Time_NoDaysCopy"]</p>
+</section>
+
+<section class="time-days"
+         data-time-days
+         data-project-id="@Model.ProjectId">
+    @foreach (var day in Model.Days)
+    {
+        @await Html.PartialAsync(
+            "_TimeDay",
+            new TimeDayPartialViewModel
+            {
+                ProjectId = Model.ProjectId,
+                MonthKey = Model.MonthKey,
+                Day = day
+            })
+    }
+</section>
+
+@await Html.PartialAsync("_TimeMonthPagination", Model)
+
+@section Scripts {
+    <script src="~/js/time.js" asp-append-version="true"></script>
+}
