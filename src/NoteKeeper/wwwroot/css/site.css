@@ -2246,6 +2246,68 @@ html[data-theme="light"] .image-viewer-card {
     background: rgba(124, 140, 255, 0.1);
 }
 
+.table-picker {
+    position: relative;
+}
+
+.table-picker > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.table-picker > summary::-webkit-details-marker {
+    display: none;
+}
+
+.table-picker-panel {
+    position: absolute;
+    z-index: 45;
+    top: calc(100% + 7px);
+    right: 0;
+    width: 226px;
+    padding: 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: #131d32;
+    box-shadow: var(--shadow);
+}
+
+.format-toolbar-floating .table-picker-panel {
+    top: auto;
+    bottom: calc(100% + 7px);
+}
+
+.table-picker-label {
+    min-height: 22px;
+    margin-bottom: 7px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.table-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+}
+
+.table-picker-cell {
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #0d1527;
+}
+
+.table-picker-cell:hover,
+.table-picker-cell:focus-visible,
+.table-picker-cell.is-highlighted {
+    border-color: var(--accent);
+    outline: none;
+    background: rgba(124, 140, 255, 0.24);
+}
+
 .emoji-picker-popover {
     position: fixed;
     z-index: 1200;
@@ -2349,6 +2411,7 @@ html[data-theme="light"] .emoji-item:hover {
     padding: 13px 14px;
     border-radius: 0 0 11px 11px;
     white-space: pre-wrap;
+    overflow-x: auto;
     overflow-wrap: anywhere;
     cursor: text;
 }
@@ -2501,6 +2564,79 @@ html[data-theme="light"] .emoji-item:hover {
     box-shadow: 0 -2px 0 rgba(255, 110, 129, 0.16);
 }
 
+.rich-table-toolbar {
+    width: max-content;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 10px 0 4px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: rgba(13, 21, 39, 0.88);
+    user-select: none;
+}
+
+.rich-table-control {
+    min-width: 32px;
+    height: 28px;
+    padding: 0 7px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.rich-table-control:hover,
+.rich-table-control:focus-visible {
+    border-color: var(--border-strong);
+    outline: none;
+    background: rgba(124, 140, 255, 0.1);
+    color: var(--text);
+}
+
+.rich-table-control.is-danger:hover,
+.rich-table-control.is-danger:focus-visible {
+    border-color: rgba(255, 110, 129, 0.42);
+    background: rgba(255, 110, 129, 0.08);
+    color: var(--danger);
+}
+
+.rich-text-editor table {
+    width: max-content;
+    min-width: 100%;
+    margin: 0 0 10px;
+    border-collapse: collapse;
+    table-layout: auto;
+    white-space: normal;
+}
+
+.rich-text-editor th,
+.rich-text-editor td {
+    min-width: 110px;
+    max-width: 420px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    vertical-align: top;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.rich-text-editor th {
+    background: rgba(124, 140, 255, 0.12);
+    color: var(--text);
+    font-weight: 750;
+    text-align: left;
+}
+
+.rich-text-editor td {
+    background: rgba(13, 21, 39, 0.32);
+}
+
 .rich-text-editor ol,
 .rich-text-editor ul {
     margin: 8px 0;
@@ -2524,6 +2660,33 @@ html[data-theme="light"] .emoji-item:hover {
 
 .rich-text-editor ul[data-marker="bullet"] {
     list-style-type: disc;
+}
+
+html[data-theme="light"] .table-picker-panel {
+    background: #ffffff;
+    box-shadow: 0 12px 34px rgba(35, 48, 78, 0.18);
+}
+
+html[data-theme="light"] .table-picker-cell {
+    background: #f8faff;
+}
+
+html[data-theme="light"] .table-picker-cell:hover,
+html[data-theme="light"] .table-picker-cell:focus-visible,
+html[data-theme="light"] .table-picker-cell.is-highlighted {
+    background: rgba(124, 140, 255, 0.16);
+}
+
+html[data-theme="light"] .rich-table-toolbar {
+    background: rgba(245, 247, 252, 0.96);
+}
+
+html[data-theme="light"] .rich-text-editor th {
+    background: rgba(124, 140, 255, 0.1);
+}
+
+html[data-theme="light"] .rich-text-editor td {
+    background: rgba(255, 255, 255, 0.8);
 }
 
 html[data-theme="light"] .format-toolbar {

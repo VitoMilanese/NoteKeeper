@@ -144,6 +144,13 @@
   <data name="Editor_HyperlinkSelectText" xml:space="preserve"><value>Спочатку виділіть текст.</value></data>
   <data name="Editor_HyperlinkInvalidUrl" xml:space="preserve"><value>Введіть коректну HTTP або HTTPS адресу.</value></data>
   <data name="Editor_FormatQuote" xml:space="preserve"><value>Цитата</value></data>
+  <data name="Editor_FormatTable" xml:space="preserve"><value>Таблиця</value></data>
+  <data name="Editor_TablePickerHint" xml:space="preserve"><value>Виберіть розмір таблиці</value></data>
+  <data name="Editor_TableAddRow" xml:space="preserve"><value>Додати рядок</value></data>
+  <data name="Editor_TableDeleteRow" xml:space="preserve"><value>Видалити рядок</value></data>
+  <data name="Editor_TableAddColumn" xml:space="preserve"><value>Додати стовпець</value></data>
+  <data name="Editor_TableDeleteColumn" xml:space="preserve"><value>Видалити стовпець</value></data>
+  <data name="Editor_TableDelete" xml:space="preserve"><value>Видалити таблицю</value></data>
   <data name="Editor_FormatExpander" xml:space="preserve"><value>Розгортаний контейнер</value></data>
   <data name="Editor_FormatAddLineBelow" xml:space="preserve"><value>Додати порожній рядок під поточним рядком</value></data>
   <data name="Editor_FormatDivider" xml:space="preserve"><value>Розділювач</value></data>

@@ -30,6 +30,7 @@
     const allowedRichTags = new Set([
         'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'CODE', 'A',
         'BLOCKQUOTE', 'DETAILS', 'SUMMARY', 'HR', 'OL', 'UL', 'LI',
+        'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD',
         'DIV', 'P', 'BR', 'SPAN'
     ]);
     const quickSymbols = ['—', '•', '◉', '◎', '★', '☑', '☒', '☐', '✓', '➢', 'ℹ️', '🔥', '❤️', '❓', '❗', '💡', '🟥', '🟩', '🟨'];
@@ -198,7 +199,10 @@
 
                 if (child.nodeType !== Node.ELEMENT_NODE) continue;
 
-                if (child.hasAttribute('data-expander-boundary')) {
+                if (
+                    child.hasAttribute('data-expander-boundary') ||
+                    child.hasAttribute('data-table-toolbar')
+                ) {
                     child.remove();
                     continue;
                 }
@@ -1328,6 +1332,399 @@
         notifyRichInput(richEditor);
     }
 
+
+    function tableCellForSelection(richEditor, table = null) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        const node = selection.anchorNode;
+        const element = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+        const cell = element?.closest?.('th, td');
+        if (!cell || !richEditor.contains(cell)) return null;
+        if (table && cell.closest('table') !== table) return null;
+        return cell;
+    }
+
+    function placeCaretInTableCell(richEditor, cell, atEnd = false) {
+        if (!cell?.isConnected || !richEditor.contains(cell)) return;
+
+        richEditor.focus({ preventScroll: true });
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        const range = document.createRange();
+        range.selectNodeContents(cell);
+        range.collapse(!atEnd);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+        richEditor._savedRange = range.cloneRange();
+    }
+
+    function createBlankTableRow(columnCount, useHeaders = false) {
+        const row = document.createElement('tr');
+
+        for (let index = 0; index < columnCount; index++) {
+            const cell = document.createElement(useHeaders ? 'th' : 'td');
+            cell.appendChild(document.createElement('br'));
+            row.appendChild(cell);
+        }
+
+        return row;
+    }
+
+    function removeRichTable(richEditor, table) {
+        if (!table?.isConnected || !richEditor.contains(table)) return;
+
+        const toolbar = table.previousElementSibling?.hasAttribute('data-table-toolbar')
+            ? table.previousElementSibling
+            : null;
+        const next = table.nextSibling;
+        const previous = toolbar?.previousSibling || table.previousSibling;
+
+        toolbar?.remove();
+        table.remove();
+
+        if (!richEditor.hasChildNodes()) {
+            richEditor.appendChild(document.createElement('br'));
+        }
+
+        const selection = window.getSelection();
+        if (selection) {
+            const target = next?.isConnected ? next : previous?.isConnected ? previous : richEditor;
+            const range = document.createRange();
+
+            if (target === richEditor) {
+                range.selectNodeContents(richEditor);
+                range.collapse(false);
+            } else if (target.nodeType === Node.TEXT_NODE) {
+                range.setStart(target, target.nodeValue?.length || 0);
+                range.collapse(true);
+            } else {
+                range.selectNodeContents(target);
+                range.collapse(false);
+            }
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+            richEditor._savedRange = range.cloneRange();
+        }
+
+        notifyRichInput(richEditor);
+    }
+
+    function addRichTableRow(richEditor, table, focusNewRow = true) {
+        if (!table?.isConnected || !richEditor.contains(table)) return null;
+
+        const referenceCell = tableCellForSelection(richEditor, table);
+        const referenceRow = referenceCell?.parentElement || null;
+        const columnCount = Math.max(1, table.rows[0]?.cells.length || 1);
+        const row = createBlankTableRow(columnCount);
+        const body = table.tBodies[0] || table.createTBody();
+
+        if (referenceRow && referenceRow.parentElement === body) {
+            referenceRow.after(row);
+        } else {
+            body.prepend(row);
+        }
+
+        if (focusNewRow) {
+            placeCaretInTableCell(richEditor, row.cells[0]);
+        }
+
+        notifyRichInput(richEditor);
+        return row;
+    }
+
+    function deleteRichTableRow(richEditor, table) {
+        if (!table?.isConnected || !richEditor.contains(table)) return;
+
+        const cell = tableCellForSelection(richEditor, table) || table.querySelector('th, td');
+        const row = cell?.parentElement;
+        if (!row) return;
+
+        const rows = Array.from(table.rows);
+        const rowIndex = Math.max(0, rows.indexOf(row));
+        const columnIndex = Math.max(0, Array.from(row.cells).indexOf(cell));
+        row.remove();
+
+        const emptyHead = table.tHead && table.tHead.rows.length === 0;
+        if (emptyHead) table.tHead.remove();
+
+        const remainingRows = Array.from(table.rows);
+        if (remainingRows.length === 0) {
+            removeRichTable(richEditor, table);
+            return;
+        }
+
+        const targetRow = remainingRows[Math.min(rowIndex, remainingRows.length - 1)];
+        const targetCell = targetRow.cells[Math.min(columnIndex, targetRow.cells.length - 1)];
+        placeCaretInTableCell(richEditor, targetCell);
+        notifyRichInput(richEditor);
+    }
+
+    function addRichTableColumn(richEditor, table) {
+        if (!table?.isConnected || !richEditor.contains(table)) return;
+
+        const referenceCell = tableCellForSelection(richEditor, table) || table.querySelector('th, td');
+        const referenceRow = referenceCell?.parentElement || table.rows[0];
+        if (!referenceRow) return;
+
+        const referenceColumn = Math.max(0, Array.from(referenceRow.cells).indexOf(referenceCell));
+        const targetColumn = referenceColumn + 1;
+        const targetRowIndex = Math.max(0, Array.from(table.rows).indexOf(referenceRow));
+        let targetCell = null;
+
+        Array.from(table.rows).forEach((row, rowIndex) => {
+            const sourceCell = row.cells[Math.min(referenceColumn, row.cells.length - 1)];
+            const tagName = sourceCell?.tagName === 'TH' || row.parentElement?.tagName === 'THEAD'
+                ? 'th'
+                : 'td';
+            const newCell = document.createElement(tagName);
+            newCell.appendChild(document.createElement('br'));
+
+            const before = row.cells[targetColumn] || null;
+            row.insertBefore(newCell, before);
+
+            if (rowIndex === targetRowIndex) {
+                targetCell = newCell;
+            }
+        });
+
+        placeCaretInTableCell(richEditor, targetCell);
+        notifyRichInput(richEditor);
+    }
+
+    function deleteRichTableColumn(richEditor, table) {
+        if (!table?.isConnected || !richEditor.contains(table)) return;
+
+        const referenceCell = tableCellForSelection(richEditor, table) || table.querySelector('th, td');
+        const referenceRow = referenceCell?.parentElement;
+        if (!referenceRow) return;
+
+        const columnIndex = Math.max(0, Array.from(referenceRow.cells).indexOf(referenceCell));
+        const maxColumns = Math.max(...Array.from(table.rows).map((row) => row.cells.length), 0);
+
+        if (maxColumns <= 1) {
+            removeRichTable(richEditor, table);
+            return;
+        }
+
+        const targetRowIndex = Math.max(0, Array.from(table.rows).indexOf(referenceRow));
+
+        Array.from(table.rows).forEach((row) => {
+            row.cells[columnIndex]?.remove();
+        });
+
+        const targetRow = table.rows[Math.min(targetRowIndex, table.rows.length - 1)];
+        const targetCell = targetRow?.cells[Math.min(columnIndex, targetRow.cells.length - 1)];
+        placeCaretInTableCell(richEditor, targetCell);
+        notifyRichInput(richEditor);
+    }
+
+    function createRichTableToolbar(richEditor, table) {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'rich-table-toolbar';
+        toolbar.dataset.tableToolbar = 'true';
+        toolbar.contentEditable = 'false';
+
+        const addControl = (label, title, action, className = '') => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `rich-table-control ${className}`.trim();
+            button.textContent = label;
+            button.title = title;
+            button.setAttribute('aria-label', title);
+            button.contentEditable = 'false';
+
+            button.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                saveRichSelection(richEditor);
+            });
+
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                action();
+            });
+
+            toolbar.appendChild(button);
+        };
+
+        addControl('＋↕', strings.tableAddRow, () => addRichTableRow(richEditor, table));
+        addControl('−↕', strings.tableDeleteRow, () => deleteRichTableRow(richEditor, table));
+        addControl('＋↔', strings.tableAddColumn, () => addRichTableColumn(richEditor, table));
+        addControl('−↔', strings.tableDeleteColumn, () => deleteRichTableColumn(richEditor, table));
+        addControl('×', strings.tableDelete, () => removeRichTable(richEditor, table), 'is-danger');
+
+        return toolbar;
+    }
+
+    function decorateTables(richEditor) {
+        richEditor.querySelectorAll('[data-table-toolbar]').forEach((toolbar) => {
+            if (toolbar.nextElementSibling?.tagName !== 'TABLE') {
+                toolbar.remove();
+            }
+        });
+
+        richEditor.querySelectorAll('table').forEach((table) => {
+            const previous = table.previousElementSibling;
+            if (previous?.hasAttribute('data-table-toolbar')) return;
+
+            table.before(createRichTableToolbar(richEditor, table));
+        });
+    }
+
+    function insertRichTable(richEditor, rowCount, columnCount) {
+        const rows = Math.max(1, Math.min(8, Number(rowCount) || 1));
+        const columns = Math.max(1, Math.min(8, Number(columnCount) || 1));
+
+        restoreRichSelection(richEditor);
+
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        const range = selection.getRangeAt(0);
+        if (!richEditor.contains(range.commonAncestorContainer) &&
+            range.commonAncestorContainer !== richEditor) {
+            return;
+        }
+
+        const currentCell = tableCellForSelection(richEditor);
+        if (currentCell) {
+            const currentTable = currentCell.closest('table');
+            const afterTable = document.createRange();
+            afterTable.setStartAfter(currentTable);
+            afterTable.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(afterTable);
+            richEditor._savedRange = afterTable.cloneRange();
+        }
+
+        const headerCells = Array.from(
+            { length: columns },
+            () => '<th><br></th>'
+        ).join('');
+
+        const bodyRows = Array.from(
+            { length: Math.max(0, rows - 1) },
+            () => `<tr>${Array.from({ length: columns }, () => '<td><br></td>').join('')}</tr>`
+        ).join('');
+
+        const html =
+            `<table data-nk-new-table="true"><thead><tr>${headerCells}</tr></thead>` +
+            `<tbody>${bodyRows}</tbody></table><div><br></div>`;
+
+        document.execCommand('insertHTML', false, html);
+
+        const table = richEditor.querySelector('table[data-nk-new-table="true"]');
+        table?.removeAttribute('data-nk-new-table');
+        decorateTables(richEditor);
+
+        if (table) {
+            placeCaretInTableCell(richEditor, table.querySelector('th, td'));
+        }
+
+        notifyRichInput(richEditor);
+    }
+
+    function createTablePicker(richEditor) {
+        const picker = document.createElement('details');
+        picker.className = 'table-picker';
+
+        const summary = document.createElement('summary');
+        summary.className = 'format-button';
+        summary.title = strings.formatTable;
+        summary.setAttribute('aria-label', strings.formatTable);
+        summary.textContent = '▦';
+        summary.addEventListener('mousedown', () => saveRichSelection(richEditor));
+
+        const panel = document.createElement('div');
+        panel.className = 'table-picker-panel';
+
+        const label = document.createElement('div');
+        label.className = 'table-picker-label';
+        label.textContent = strings.tablePickerHint;
+
+        const grid = document.createElement('div');
+        grid.className = 'table-picker-grid';
+
+        const updateHighlight = (rows, columns) => {
+            grid.querySelectorAll('.table-picker-cell').forEach((button) => {
+                const highlighted =
+                    Number(button.dataset.row) <= rows &&
+                    Number(button.dataset.column) <= columns;
+                button.classList.toggle('is-highlighted', highlighted);
+            });
+
+            label.textContent = rows && columns
+                ? `${rows} × ${columns}`
+                : strings.tablePickerHint;
+        };
+
+        for (let row = 1; row <= 8; row++) {
+            for (let column = 1; column <= 8; column++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'table-picker-cell';
+                button.dataset.row = String(row);
+                button.dataset.column = String(column);
+                button.title = `${row} × ${column}`;
+                button.setAttribute('aria-label', `${row} × ${column}`);
+
+                button.addEventListener('mouseenter', () => updateHighlight(row, column));
+                button.addEventListener('focus', () => updateHighlight(row, column));
+                button.addEventListener('mousedown', (event) => {
+                    event.preventDefault();
+                    saveRichSelection(richEditor);
+                });
+                button.addEventListener('click', () => {
+                    picker.open = false;
+                    insertRichTable(richEditor, row, column);
+                });
+
+                grid.appendChild(button);
+            }
+        }
+
+        panel.addEventListener('mouseleave', () => updateHighlight(0, 0));
+        panel.append(label, grid);
+        picker.append(summary, panel);
+        return picker;
+    }
+
+    function handleTableTab(richEditor, event) {
+        if (event.key !== 'Tab') return false;
+
+        const cell = tableCellForSelection(richEditor);
+        if (!cell) return false;
+
+        const table = cell.closest('table');
+        const cells = Array.from(table.querySelectorAll('th, td'));
+        const index = cells.indexOf(cell);
+        if (index < 0) return false;
+
+        if (event.shiftKey) {
+            if (index === 0) return false;
+
+            event.preventDefault();
+            placeCaretInTableCell(richEditor, cells[index - 1]);
+            return true;
+        }
+
+        event.preventDefault();
+
+        if (index === cells.length - 1) {
+            const row = addRichTableRow(richEditor, table, false);
+            placeCaretInTableCell(richEditor, row?.cells[0]);
+            return true;
+        }
+
+        placeCaretInTableCell(richEditor, cells[index + 1]);
+        return true;
+    }
+
     function makeFormatButton(label, title, onClick, className = '') {
         const button = document.createElement('button');
         button.type = 'button';
@@ -1379,7 +1776,9 @@
                 : '0px';
 
             if (!shouldShow) {
-                floatingToolbar.querySelectorAll('.symbol-picker[open]').forEach((picker) => {
+                floatingToolbar.querySelectorAll(
+                    '.symbol-picker[open], .table-picker[open]'
+                ).forEach((picker) => {
                     picker.open = false;
                 });
 
@@ -1426,6 +1825,7 @@
             makeFormatButton('▸', strings.formatExpander, () => {
                 insertExpandableContainer(richEditor);
             }),
+            createTablePicker(richEditor),
             makeFormatButton('―', strings.formatDivider, () => {
                 insertBlockWithContinuation(richEditor, document.createElement('hr'));
             }),
@@ -1569,6 +1969,7 @@
 
         setRichEditorContent(richEditor, data.textContent || '');
         decorateExpanders(richEditor);
+        decorateTables(richEditor);
         richEditor.addEventListener('mouseup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('keyup', () => saveRichSelection(richEditor));
         richEditor.addEventListener('focus', () => saveRichSelection(richEditor));
@@ -1582,6 +1983,7 @@
             // caret anchors when needed.
             decorateExpanders(richEditor);
             ensureExpandableBoundaries(richEditor);
+            decorateTables(richEditor);
         });
         richEditor.addEventListener('click', (event) => {
             const summary = event.target.closest?.('summary');
@@ -1623,6 +2025,10 @@
             }
         });
         richEditor.addEventListener('keydown', (event) => {
+            if (handleTableTab(richEditor, event)) {
+                return;
+            }
+
             if (event.key === ' ' && summaryForSelection(richEditor)) {
                 event.preventDefault();
                 event.stopPropagation();

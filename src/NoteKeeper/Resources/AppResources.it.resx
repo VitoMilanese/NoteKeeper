@@ -144,6 +144,13 @@
   <data name="Editor_HyperlinkSelectText" xml:space="preserve"><value>Seleziona prima del testo.</value></data>
   <data name="Editor_HyperlinkInvalidUrl" xml:space="preserve"><value>Inserisci un URL HTTP o HTTPS valido.</value></data>
   <data name="Editor_FormatQuote" xml:space="preserve"><value>Citazione</value></data>
+  <data name="Editor_FormatTable" xml:space="preserve"><value>Tabella</value></data>
+  <data name="Editor_TablePickerHint" xml:space="preserve"><value>Seleziona le dimensioni della tabella</value></data>
+  <data name="Editor_TableAddRow" xml:space="preserve"><value>Aggiungi riga</value></data>
+  <data name="Editor_TableDeleteRow" xml:space="preserve"><value>Elimina riga</value></data>
+  <data name="Editor_TableAddColumn" xml:space="preserve"><value>Aggiungi colonna</value></data>
+  <data name="Editor_TableDeleteColumn" xml:space="preserve"><value>Elimina colonna</value></data>
+  <data name="Editor_TableDelete" xml:space="preserve"><value>Elimina tabella</value></data>
   <data name="Editor_FormatExpander" xml:space="preserve"><value>Contenitore espandibile</value></data>
   <data name="Editor_FormatAddLineBelow" xml:space="preserve"><value>Aggiungi una riga vuota sotto la riga corrente</value></data>
   <data name="Editor_FormatDivider" xml:space="preserve"><value>Separatore</value></data>

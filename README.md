@@ -8,7 +8,7 @@ NoteKeeper combines structured notes, a rich block-based editor, project organiz
 
 - Project-based note organization
 - Rich block editor with text, links, and images
-- Rich-text formatting, hyperlinks, lists, quotes, expandable sections, dividers, symbols, emoji, text colors, and fixed text sizes
+- Rich-text formatting, hyperlinks, Jira-style tables, lists, quotes, expandable sections, dividers, symbols, emoji, text colors, and fixed text sizes
 - Drag-and-drop block reordering
 - Tags extracted automatically from note content and link comments
 - Advanced tag filtering, grouping, autocomplete, and priority tags
@@ -50,6 +50,7 @@ Text blocks support rich formatting including:
 - ordered and unordered lists;
 - quotes;
 - expandable containers;
+- Jira-style tables with a size picker, editable header/cells, row/column controls, and Tab navigation;
 - dividers;
 - hyperlinks with keyboard support;
 - fixed text sizes and custom text colors;
