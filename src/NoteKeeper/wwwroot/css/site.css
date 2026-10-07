@@ -2564,7 +2564,7 @@ html[data-theme="light"] .emoji-item:hover {
     box-shadow: 0 -2px 0 rgba(255, 110, 129, 0.16);
 }
 
-.rich-table-toolbar {
+.rich-text-editor .rich-table-toolbar {
     width: max-content;
     max-width: 100%;
     display: flex;
